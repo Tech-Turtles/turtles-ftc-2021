@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.util.Range;
 import org.openftc.revextensions2.*;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.*;
 import org.firstinspires.ftc.teamcode.Menu.InteractiveInitialization;
@@ -80,7 +81,10 @@ public class RobotHardware extends OpMode {
         }
 
         public void stopResetAllMotors() {
-            motors.forEach((k, v) -> v.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER));
+            for (Map.Entry<Motors, ExpansionHubMotor> entry : motors.entrySet()) {
+                ExpansionHubMotor v = entry.getValue();
+                v.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            }
         }
 
         public void stopResetMotor(Motors motor) {
@@ -125,13 +129,12 @@ public class RobotHardware extends OpMode {
 
         private void initializeMotors() {
             stopResetAllMotors();
-            motors.forEach((k,v) -> {
+            for (Map.Entry<Motors, ExpansionHubMotor> entry : motors.entrySet()) {
+                Motors k = entry.getKey();
+                ExpansionHubMotor v = entry.getValue();
                 v.setMode(k.getRunMode());
                 v.setZeroPowerBehavior(k.getZeroPowerBehavior());
                 v.setDirection(k.getDirection());
-            });
-            for (Motors m : motors.keySet()) {
-
             }
         }
     }
