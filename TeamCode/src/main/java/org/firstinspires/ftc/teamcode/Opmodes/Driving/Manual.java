@@ -1,7 +1,10 @@
 package org.firstinspires.ftc.teamcode.Opmodes.Driving;
 
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
 import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 
+@TeleOp(name="Manual", group="A")
 public class Manual extends RobotHardware {
 
     @Override
