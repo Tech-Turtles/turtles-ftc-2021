@@ -31,6 +31,8 @@ public class RobotHardware extends OpMode {
 
     public final ElapsedTimer timer = new ElapsedTimer();
 
+    public Controller primary, secondary;
+
     public class MotorUtility {
 
         private ExpansionHubMotor m;

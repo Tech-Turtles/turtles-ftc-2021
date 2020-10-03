@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.Opmodes.Driving;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.Utility.Controller;
 import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 
 @TeleOp(name="Manual", group="A")
@@ -10,6 +11,9 @@ public class Manual extends RobotHardware {
     @Override
     public void init() {
         super.init();
+        primary = new Controller(gamepad1);
+        secondary = new Controller(gamepad2);
+
     }
 
     @Override
@@ -25,6 +29,9 @@ public class Manual extends RobotHardware {
     @Override
     public void loop() {
         super.loop();
+
+        primary.update();
+        secondary.update();
     }
 
 }
