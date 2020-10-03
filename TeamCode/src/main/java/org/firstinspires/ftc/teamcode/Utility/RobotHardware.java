@@ -189,11 +189,6 @@ public class RobotHardware extends OpMode {
     public void init() {
 
         // Need to test whether or not these vars can be changed post-init
-        msStuckDetectInit = msStuckInit;
-        msStuckDetectInitLoop = msStuckInitLoop;
-        msStuckDetectStart = msStuckStart;
-        msStuckDetectLoop = msStuckLoop;
-        msStuckDetectStop = msStuckStop;
 
         try {
             expansionHub1 = hardwareMap.get(ExpansionHubEx.class, ExpansionHubs.HUB1.name());
