@@ -24,6 +24,9 @@ public class RobotHardware extends OpMode {
     private static final HashMap<Motors, ExpansionHubMotor> motors = new HashMap<>();
     private static final HashMap<Servos, Servo> servos = new HashMap<>();
 
+    public final MotorUtility motorUtility = new MotorUtility();
+    public final ServoUtility servoUtility = new ServoUtility();
+
     private ExpansionHubEx expansionHub1, expansionHub2;
     private RevBulkData bulkDataHub1, bulkDataHub2;
 
@@ -138,6 +141,50 @@ public class RobotHardware extends OpMode {
                 v.setZeroPowerBehavior(k.getZeroPowerBehavior());
                 v.setDirection(k.getDirection());
             }
+        }
+
+        /**
+         * Sets the drive chain power.
+         *
+         * @param left  The power for the left two motors.
+         * @param right The power for the right two motors.
+         */
+        public void setDriveForTank(double left, double right) {
+            setPower(Motors.FRONT_LEFT,  left);
+            setPower(Motors.BACK_LEFT,   left);
+            setPower(Motors.FRONT_RIGHT, right);
+            setPower(Motors.BACK_RIGHT,  right);
+        }
+
+        /**
+         * Apply motor power matching the wheels object.
+         *
+         * @param wheels Provides all four mecanum wheel powers, [-1, 1].
+         */
+        public void setDriveForMecanumWheels(Mecanum.Wheels wheels) {
+            setPower(Motors.FRONT_LEFT,  wheels.frontLeft);
+            setPower(Motors.BACK_LEFT,   wheels.backLeft);
+            setPower(Motors.FRONT_RIGHT, wheels.frontRight);
+            setPower(Motors.BACK_RIGHT,  wheels.backRight);
+        }
+
+        public void setDriveForMecanumCommand(Mecanum.Command command) {
+            Mecanum.Wheels wheels = Mecanum.commandToWheels(command);
+            setDriveForMecanumWheels(wheels);
+        }
+
+        /**
+         * Sets mecanum drive chain power using simplistic calculations.
+         *
+         * @param leftStickX Unmodified Gamepad leftStickX inputs.
+         * @param leftStickY Unmodified Gamepad leftStickY inputs.
+         * @param rightStickX Unmodified Gamepad rightStickX inputs.
+         * @param rightStickY Unmodified Gamepad rightStickY inputs.
+         */
+        public void setDriveForSimpleMecanum(double leftStickX, double leftStickY,
+                                             double rightStickX, double rightStickY) {
+            Mecanum.Wheels wheels = Mecanum.simpleJoystickToWheels (leftStickX, leftStickY, rightStickX, rightStickY);
+            setDriveForMecanumWheels(wheels);
         }
     }
 

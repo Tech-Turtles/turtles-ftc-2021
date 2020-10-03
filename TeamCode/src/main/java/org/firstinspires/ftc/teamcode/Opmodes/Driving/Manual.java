@@ -32,6 +32,8 @@ public class Manual extends RobotHardware {
 
         primary.update();
         secondary.update();
+
+        motorUtility.setDriveForSimpleMecanum(primary.left_stick_x, primary.left_stick_y, primary.right_stick_x, primary.right_stick_y);
     }
 
 }
