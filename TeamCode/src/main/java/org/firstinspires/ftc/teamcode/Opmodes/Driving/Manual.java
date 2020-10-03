@@ -12,6 +12,7 @@ import org.firstinspires.ftc.teamcode.Utility.TelemetryTools;
 public class Manual extends RobotHardware {
 
     private final StringBuilder driveMenu = new StringBuilder();
+    private double drivespeed = 1.0;
 
     @Override
     public void init() {
@@ -40,7 +41,15 @@ public class Manual extends RobotHardware {
         primary.update();
         secondary.update();
 
-        motorUtility.setDriveForSimpleMecanum(primary.left_stick_x, primary.left_stick_y, primary.right_stick_x, primary.right_stick_y);
+        motorUtility.setDriveForSimpleMecanum(primary.left_stick_x * drivespeed, primary.left_stick_y * drivespeed,
+                primary.right_stick_x * drivespeed, primary.right_stick_y * drivespeed);
+
+        if(primary.leftBumperOnce()) {
+            drivespeed = drivespeed <= 0.0 ? 0.0 : drivespeed - 0.1;
+        } else if(primary.rightBumperOnce()) {
+            drivespeed = drivespeed >= 1.0 ? 1.0 : drivespeed + 0.1;
+        }
+
         for (MotorTypes type : MotorTypes.values()) {
             driveMenu.append(TelemetryTools.setHeader(4, type.name())).append("\n");
             for (Motors motor : Motors.values()) {
@@ -52,6 +61,7 @@ public class Manual extends RobotHardware {
             }
         }
 
+        driveMenu.append(TelemetryTools.setHeader(6, "Drive speed: " + TelemetryTools.setFontColor("Grey", drivespeed + "")));
 
         telemetry.addLine(driveMenu.toString());
     }
