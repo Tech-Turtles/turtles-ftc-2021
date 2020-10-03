@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.openftc.revextensions2.*;
 
 import java.util.HashMap;
@@ -237,7 +238,7 @@ public class RobotHardware extends OpMode {
     @Override
     public void init() {
 
-        // Need to test whether or not these vars can be changed post-init
+        telemetry.setDisplayFormat(Telemetry.DisplayFormat.HTML);
 
         try {
             expansionHub1 = hardwareMap.get(ExpansionHubEx.class, ExpansionHubs.HUB1.name());

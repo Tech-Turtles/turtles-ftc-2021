@@ -4,9 +4,12 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Utility.Controller;
 import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
+import org.firstinspires.ftc.teamcode.Utility.TelemetryTools;
 
 @TeleOp(name="Manual", group="A")
 public class Manual extends RobotHardware {
+
+    private final StringBuilder driveMenu = new StringBuilder();
 
     @Override
     public void init() {
@@ -24,6 +27,7 @@ public class Manual extends RobotHardware {
     @Override
     public void start() {
         super.start();
+        driveMenu.append(TelemetryTools.setHeader(2, "Drive Menu"));
     }
 
     @Override

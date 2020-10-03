@@ -25,17 +25,10 @@ public class InteractiveInitialization {
         this.gamepad = robot.gamepad1 == null ? robot.gamepad2 : robot.gamepad1;
         this.telemetry = robot.telemetry;
         this.controller = new Controller(gamepad);
-
-        telemetry.setDisplayFormat(Telemetry.DisplayFormat.HTML);
     }
 
     public void loop() {
-//        telemetry.setAutoClear(false); Test out if telemetry keeps blinking
-        builder.append("-------Menu-------")
-                .append("\n\n")
-                .append("Option 1 test 123")
-                .append("<p style=\"color:red\">This is a paragraph.</p>");
-        telemetry.addLine(builder.toString());
+        builder.setLength(0);
     }
 
     private boolean updateInputs() {
