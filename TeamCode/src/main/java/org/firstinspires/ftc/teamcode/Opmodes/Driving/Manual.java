@@ -50,6 +50,14 @@ public class Manual extends RobotHardware {
             drivespeed = drivespeed >= 1.0 ? 1.0 : drivespeed + 0.1;
         }
 
+        if(primary.right_trigger > 0.6f) {
+            motorUtility.setPower(Motors.LAUNCHER, 1f);
+        } else {
+            motorUtility.setPower(Motors.LAUNCHER, 0f);
+        }
+        
+        driveMenu.append(TelemetryTools.setHeader(6, "Drive speed: " + TelemetryTools.setFontColor("Grey", drivespeed + "")));
+
         for (MotorTypes type : MotorTypes.values()) {
             driveMenu.append(TelemetryTools.setHeader(4, type.name())).append("\n");
             for (Motors motor : Motors.values()) {
@@ -60,8 +68,6 @@ public class Manual extends RobotHardware {
                         .append("\n");
             }
         }
-
-        driveMenu.append(TelemetryTools.setHeader(6, "Drive speed: " + TelemetryTools.setFontColor("Grey", drivespeed + "")));
 
         telemetry.addLine(driveMenu.toString());
     }
