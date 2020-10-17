@@ -10,6 +10,9 @@
 // Custom definitions may go here
 // Include common definitions from above.
 apply from: '../build.common.gradle'
+repositories {
+    mavenCentral()
+}
 dependencies {
     /*
      * Other Modules
@@ -17,4 +20,5 @@ dependencies {
     implementation project(':FtcRobotController')
 
     implementation 'org.openftc:rev-extensions-2:1.2'
+    implementation 'org.openftc:easyopencv:1.4.1'
 }
