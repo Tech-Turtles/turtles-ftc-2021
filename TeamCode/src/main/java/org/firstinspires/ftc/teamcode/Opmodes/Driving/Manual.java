@@ -56,7 +56,7 @@ public class Manual extends RobotHardware {
             motorUtility.setPower(Motors.LAUNCHER, 0f);
         }
         
-        driveMenu.append(TelemetryTools.setHeader(6, "Drive speed: " + TelemetryTools.setFontColor("Grey", drivespeed + "")));
+        driveMenu.append(TelemetryTools.setHeader(6, "Drive speed: " + TelemetryTools.setFontColor("Grey", Double.toString(drivespeed))));
 
         for (MotorTypes type : MotorTypes.values()) {
             driveMenu.append(TelemetryTools.setHeader(4, type.name())).append("\n");
@@ -68,6 +68,8 @@ public class Manual extends RobotHardware {
                         .append("\n");
             }
         }
+
+        driveMenu.append("Loop time: ").append(timer.getAveragePeriodSec());
 
         telemetry.addLine(driveMenu.toString());
     }
