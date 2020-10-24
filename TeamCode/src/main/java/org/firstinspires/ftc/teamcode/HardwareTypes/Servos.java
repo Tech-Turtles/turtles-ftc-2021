@@ -3,9 +3,10 @@ package org.firstinspires.ftc.teamcode.HardwareTypes;
 import com.qualcomm.robotcore.hardware.Servo;
 
 public enum Servos {
-    CLAW_RIGHT("claw r", Servo.Direction.FORWARD, ServoTypes.LINKED),
-    CLAW_LEFT("claw l", Servo.Direction.REVERSE, ServoTypes.LINKED),
-    ARM("arm", Servo.Direction.FORWARD, ServoTypes.INDEPENDENT);
+    ;
+//    CLAW_RIGHT("claw r", Servo.Direction.FORWARD, ServoTypes.LINKED),
+//    CLAW_LEFT("claw l", Servo.Direction.REVERSE, ServoTypes.LINKED),
+//    ARM("arm", Servo.Direction.FORWARD, ServoTypes.INDEPENDENT);
 
     private final String configName;
     private final Servo.Direction direction;

@@ -50,11 +50,11 @@ public class Manual extends RobotHardware {
             drivespeed = drivespeed >= 1.0 ? 1.0 : drivespeed + 0.1;
         }
 
-        if(primary.right_trigger > 0.6f) {
-            motorUtility.setPower(Motors.LAUNCHER, 1f);
-        } else {
-            motorUtility.setPower(Motors.LAUNCHER, 0f);
-        }
+//        if(primary.right_trigger > 0.6f) {
+//            motorUtility.setPower(Motors.LAUNCHER, 1f);
+//        } else {
+//            motorUtility.setPower(Motors.LAUNCHER, 0f);
+//        }
         
         driveMenu.append(TelemetryTools.setHeader(6, "Drive speed: " + TelemetryTools.setFontColor("Grey", Double.toString(drivespeed))));
 

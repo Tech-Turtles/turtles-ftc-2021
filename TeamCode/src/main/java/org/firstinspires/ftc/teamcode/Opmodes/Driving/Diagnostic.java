@@ -12,7 +12,7 @@ import org.firstinspires.ftc.teamcode.Utility.TelemetryTools;
  * @author Christian
  * An opmode that shows as much data about the robot as possible.
  */
-@TeleOp(name="Manual", group="C")
+@TeleOp(name="Diagnostic", group="C")
 public class Diagnostic extends Manual {
 
     IMUUtilities imuUtil;
@@ -61,5 +61,7 @@ public class Diagnostic extends Manual {
             imuUtil.updateNow();
             imuUtil.displayTelemetry();
         }
+
+        telemetry.addLine(driveMenu.toString());
     }
 }

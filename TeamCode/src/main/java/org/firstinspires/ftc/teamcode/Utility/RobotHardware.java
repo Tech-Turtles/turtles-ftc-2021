@@ -242,6 +242,19 @@ public class RobotHardware extends OpMode {
         }
     }
 
+    private void readBulkData() {
+        try {
+            bulkDataHub1 = expansionHub1.getBulkInputData();
+        } catch (Exception e) {
+            telemetry.addLine(e.getMessage());
+        }
+        try {
+            bulkDataHub2 = expansionHub2.getBulkInputData();
+        } catch (Exception e) {
+            telemetry.addLine(e.getMessage());
+        }
+    }
+
     @Override
     public void init() {
 
@@ -281,24 +294,20 @@ public class RobotHardware extends OpMode {
     @Override
     public void init_loop() {
         initMenu.loop();
-
-        bulkDataHub1 = expansionHub1.getBulkInputData();
-        bulkDataHub2 = expansionHub2.getBulkInputData();
+        readBulkData();
         period.updatePeriodTime();
     }
 
     @Override
     public void start() {
         motorUtility.stopAllMotors();
-        bulkDataHub1 = expansionHub1.getBulkInputData();
-        bulkDataHub2 = expansionHub2.getBulkInputData();
+        readBulkData();
         period.reset();
     }
 
     @Override
     public void loop() {
-        bulkDataHub1 = expansionHub1.getBulkInputData();
-        bulkDataHub2 = expansionHub2.getBulkInputData();
+        readBulkData();
         period.updatePeriodTime();
     }
 
