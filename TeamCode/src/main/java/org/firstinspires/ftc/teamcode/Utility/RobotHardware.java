@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.Utility.DriveTrain.Mecanum;
+import org.firstinspires.ftc.teamcode.Utility.Mecanum.Mecanum;
 import org.firstinspires.ftc.teamcode.Utility.Math.ElapsedTimer;
 import org.openftc.revextensions2.*;
 

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.Utility;
+package org.firstinspires.ftc.teamcode.Utility.Math;
 
 import java.util.Vector;
 

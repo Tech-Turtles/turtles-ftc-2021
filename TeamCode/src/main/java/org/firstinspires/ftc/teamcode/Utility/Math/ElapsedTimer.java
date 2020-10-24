@@ -1,11 +1,11 @@
-package org.firstinspires.ftc.teamcode.Utility;
+package org.firstinspires.ftc.teamcode.Utility.Math;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import java.util.Collections;
 import java.util.Vector;
 
-import static org.firstinspires.ftc.teamcode.Utility.VectorMath.average;
+import static org.firstinspires.ftc.teamcode.Utility.Math.VectorMath.average;
 
 public class ElapsedTimer extends ElapsedTime {
 
