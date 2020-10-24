@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.Utility.TelemetryTools;
 @TeleOp(name="Manual", group="A")
 public class Manual extends RobotHardware {
 
-    private final StringBuilder driveMenu = new StringBuilder();
+    public final StringBuilder driveMenu = new StringBuilder();
     private double drivespeed = 1.0;
 
     @Override
@@ -57,17 +57,6 @@ public class Manual extends RobotHardware {
         }
         
         driveMenu.append(TelemetryTools.setHeader(6, "Drive speed: " + TelemetryTools.setFontColor("Grey", Double.toString(drivespeed))));
-
-        for (MotorTypes type : MotorTypes.values()) {
-            driveMenu.append(TelemetryTools.setHeader(4, type.name())).append("\n");
-            for (Motors motor : Motors.values()) {
-                if(type != motor.getType()) continue;
-                driveMenu.append(motor.name())
-                        .append(": ")
-                        .append(motorUtility.getEncoderValue(motor))
-                        .append("\n");
-            }
-        }
 
         driveMenu.append("Loop time: ").append(period.getAveragePeriodSec());
 

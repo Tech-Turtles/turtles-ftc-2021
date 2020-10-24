@@ -1,14 +1,27 @@
 package org.firstinspires.ftc.teamcode.Opmodes.Driving;
 
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
+import org.firstinspires.ftc.teamcode.HardwareTypes.MotorTypes;
+import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
+import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
+import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
+import org.firstinspires.ftc.teamcode.Utility.TelemetryTools;
+
 /**
  * @author Christian
  * An opmode that shows as much data about the robot as possible.
  */
+@TeleOp(name="Manual", group="C")
 public class Diagnostic extends Manual {
+
+    IMUUtilities imuUtil;
 
     @Override
     public void init() {
         super.init();
+        imuUtil = new IMUUtilities(this, "IMU_1", IMUUtilities.ImuMode.FAST_HEADING_ONLY);
+        telemetry.addLine("Diagnostic Initialized");
     }
 
     @Override
@@ -24,6 +37,29 @@ public class Diagnostic extends Manual {
     @Override
     public void loop() {
         super.loop();
-    }
 
+        for (MotorTypes type : MotorTypes.values()) {
+            driveMenu.append(TelemetryTools.setHeader(4, type.name())).append("\n");
+            for (Motors motor : Motors.values()) {
+                if(type != motor.getType()) continue;
+                driveMenu.append(motor.name()).append(": ")
+                        .append(motorUtility.getEncoderValue(motor))
+                        .append("\n");
+            }
+        }
+
+        for (Servos servo : Servos.values()) {
+            driveMenu.append(servo.name()).append(": ")
+                    .append(servoUtility.getAngle(servo))
+                    .append("\n");
+        }
+
+        driveMenu.append("Period Average (sec)").append(df_precise.format(period.getAveragePeriodSec()))
+                .append("Period Max (sec)").append(df_precise.format(period.getMaxPeriodSec()));
+
+        if(imuUtil.imu != null) {
+            imuUtil.updateNow();
+            imuUtil.displayTelemetry();
+        }
+    }
 }
