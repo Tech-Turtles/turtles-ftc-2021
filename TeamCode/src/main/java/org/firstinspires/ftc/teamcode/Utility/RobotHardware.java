@@ -30,12 +30,15 @@ public class RobotHardware extends OpMode {
     public final MotorUtility motorUtility = new MotorUtility();
     public final ServoUtility servoUtility = new ServoUtility();
 
+    public DecimalFormat df = new DecimalFormat("0.00");
+    public DecimalFormat df_precise = new DecimalFormat("0.0000");
+
     private ExpansionHubEx expansionHub1, expansionHub2;
     private RevBulkData bulkDataHub1, bulkDataHub2;
 
     public InteractiveInitialization initMenu;
 
-    public final ElapsedTimer timer = new ElapsedTimer();
+    public final ElapsedTimer period = new ElapsedTimer();
 
     public Controller primary, secondary;
 
@@ -225,7 +228,7 @@ public class RobotHardware extends OpMode {
             double direction = targetPos > currentPosition ? 1 : -1;
             double nextPosition;
             if ( Math.abs(distance) > distanceThreshold ) {
-                nextPosition = rate * direction * timer.getLastPeriodSec() + currentPosition;
+                nextPosition = rate * direction * period.getLastPeriodSec() + currentPosition;
             } else {
                 nextPosition = targetPos;
                 isMovementDone = true;
@@ -270,6 +273,7 @@ public class RobotHardware extends OpMode {
 
         initMenu = new InteractiveInitialization(this);
         motorUtility.stopAllMotors();
+        period.reset();
     }
 
     @Override
@@ -278,6 +282,7 @@ public class RobotHardware extends OpMode {
 
         bulkDataHub1 = expansionHub1.getBulkInputData();
         bulkDataHub2 = expansionHub2.getBulkInputData();
+        period.updatePeriodTime();
     }
 
     @Override
@@ -285,12 +290,14 @@ public class RobotHardware extends OpMode {
         motorUtility.stopAllMotors();
         bulkDataHub1 = expansionHub1.getBulkInputData();
         bulkDataHub2 = expansionHub2.getBulkInputData();
+        period.reset();
     }
 
     @Override
     public void loop() {
         bulkDataHub1 = expansionHub1.getBulkInputData();
         bulkDataHub2 = expansionHub2.getBulkInputData();
+        period.updatePeriodTime();
     }
 
     @Override

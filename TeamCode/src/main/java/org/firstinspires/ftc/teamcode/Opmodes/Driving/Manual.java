@@ -69,7 +69,7 @@ public class Manual extends RobotHardware {
             }
         }
 
-        driveMenu.append("Loop time: ").append(timer.getAveragePeriodSec());
+        driveMenu.append("Loop time: ").append(period.getAveragePeriodSec());
 
         telemetry.addLine(driveMenu.toString());
     }
