@@ -6,10 +6,10 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
-import org.firstinspires.ftc.teamcode.Utility.Color;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
+import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
 
 import java.util.ArrayList;
 
@@ -25,7 +25,7 @@ public class SkystoneDetector {
 
     private RobotHardware opmode;
     private HardwareMap hardwareMap;
-    private Color.Ftc teamColor;
+    private AllianceColor teamColor;
     private OpenCvCamera webcam;
     public AveragingPipeline averagingPipeline;
 
@@ -37,7 +37,7 @@ public class SkystoneDetector {
         opmode.telemetry.addData("SkystoneDetector","DO NOT USE THIS CONSTRUCTOR!");
     }
 
-    public SkystoneDetector(RobotHardware opmode, Color.Ftc teamColor) {
+    public SkystoneDetector(RobotHardware opmode, AllianceColor teamColor) {
        this.teamColor = teamColor;
        this.opmode = opmode;
        this.hardwareMap = opmode.hardwareMap;
@@ -167,7 +167,7 @@ public class SkystoneDetector {
     }
 
     // Static to make unit testing easier.
-    static public SkystoneRelativeLocation getSkystoneRelativeLocation(AveragingPipeline averagingPipeline, Color.Ftc teamColor) {
+    static public SkystoneRelativeLocation getSkystoneRelativeLocation(AveragingPipeline averagingPipeline, AllianceColor teamColor) {
         SkystoneRelativeLocation skystoneRelativeLocation = SkystoneRelativeLocation.UNKNOWN;
         Integer background_Cb = averagingPipeline.getBackground();
         ArrayList<Integer> averageDate = averagingPipeline.getData();
