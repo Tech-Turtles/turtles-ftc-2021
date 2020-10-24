@@ -1,20 +1,22 @@
 package org.firstinspires.ftc.teamcode.Utility;
 
+import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.Utility.DriveTrain.Mecanum;
+import org.firstinspires.ftc.teamcode.Utility.Math.ElapsedTimer;
 import org.openftc.revextensions2.*;
 
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.*;
 import org.firstinspires.ftc.teamcode.Menu.InteractiveInitialization;
-
-import static org.firstinspires.ftc.teamcode.Utility.Configuration.*;
 
 /**
  * @author Christian
@@ -241,8 +243,8 @@ public class RobotHardware extends OpMode {
         telemetry.setDisplayFormat(Telemetry.DisplayFormat.HTML);
 
         try {
-            expansionHub1 = hardwareMap.get(ExpansionHubEx.class, ExpansionHubs.HUB1.name());
-            expansionHub2 = hardwareMap.get(ExpansionHubEx.class, ExpansionHubs.HUB2.name());
+            expansionHub1 = hardwareMap.get(ExpansionHubEx.class, ExpansionHubs.HUB1.getHub());
+            expansionHub2 = hardwareMap.get(ExpansionHubEx.class, ExpansionHubs.HUB2.getHub());
         } catch (IllegalArgumentException e) {
             telemetry.addData("Failed to find Expansion Hub", e.getMessage());
         }
@@ -267,27 +269,32 @@ public class RobotHardware extends OpMode {
         }
 
         initMenu = new InteractiveInitialization(this);
+        motorUtility.stopAllMotors();
     }
 
     @Override
     public void init_loop() {
-        super.init_loop();
         initMenu.loop();
+
+        bulkDataHub1 = expansionHub1.getBulkInputData();
+        bulkDataHub2 = expansionHub2.getBulkInputData();
     }
 
     @Override
     public void start() {
-        super.start();
-        timer.reset();
+        motorUtility.stopAllMotors();
+        bulkDataHub1 = expansionHub1.getBulkInputData();
+        bulkDataHub2 = expansionHub2.getBulkInputData();
     }
 
     @Override
     public void loop() {
-        timer.updatePeriodTime();
+        bulkDataHub1 = expansionHub1.getBulkInputData();
+        bulkDataHub2 = expansionHub2.getBulkInputData();
     }
 
     @Override
     public void stop() {
-        super.stop();
+        motorUtility.stopAllMotors();
     }
 }
