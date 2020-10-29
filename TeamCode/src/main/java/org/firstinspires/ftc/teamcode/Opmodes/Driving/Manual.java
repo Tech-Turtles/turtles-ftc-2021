@@ -2,11 +2,7 @@ package org.firstinspires.ftc.teamcode.Opmodes.Driving;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.HardwareTypes.MotorTypes;
-import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
-import org.firstinspires.ftc.teamcode.Utility.Controller;
-import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
-import org.firstinspires.ftc.teamcode.Utility.TelemetryTools;
+import org.firstinspires.ftc.teamcode.Utility.*;
 
 @TeleOp(name="Manual", group="A")
 public class Manual extends RobotHardware {

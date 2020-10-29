@@ -2,9 +2,7 @@ package org.firstinspires.ftc.teamcode.Opmodes.Driving;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.HardwareTypes.MotorTypes;
-import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
-import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
+import org.firstinspires.ftc.teamcode.HardwareTypes.*;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
 import org.firstinspires.ftc.teamcode.Utility.TelemetryTools;
 
@@ -20,8 +18,8 @@ public class Diagnostic extends Manual {
     @Override
     public void init() {
         super.init();
-        imuUtil = new IMUUtilities(this, "IMU_1", IMUUtilities.ImuMode.FAST_HEADING_ONLY);
-        telemetry.addLine("Diagnostic Initialized");
+        imuUtil = new IMUUtilities(this, "IMU_1", IMUUtilities.ImuMode.SLOW_ALL_MEASUREMENTS);
+        telemetry.addLine("\n\nDiagnostic Initialized");
     }
 
     @Override
@@ -37,6 +35,7 @@ public class Diagnostic extends Manual {
     @Override
     public void loop() {
         super.loop();
+        driveMenu.setLength(0);
 
         for (MotorTypes type : MotorTypes.values()) {
             driveMenu.append(TelemetryTools.setHeader(4, type.name())).append("\n");
