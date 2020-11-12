@@ -1,7 +1,0 @@
-Opmode group codes
-
-#A - Competition
-#B - Debug
-#C - Diagnostic
-#D - Fun/Misc
-#E - Unused/Calibration
