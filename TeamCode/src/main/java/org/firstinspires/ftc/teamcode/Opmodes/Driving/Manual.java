@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.Opmodes.Driving;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.Utility.*;
 
 @TeleOp(name="Manual", group="A")
@@ -9,6 +10,7 @@ public class Manual extends RobotHardware {
 
     public final StringBuilder driveMenu = new StringBuilder();
     private double drivespeed = 1.0;
+    private final double deadzone = 0.49f;
 
     @Override
     public void init() {
@@ -46,17 +48,18 @@ public class Manual extends RobotHardware {
             drivespeed = drivespeed >= 1.0 ? 1.0 : drivespeed + 0.1;
         }
 
-//        if(primary.right_trigger > 0.6f) {
-//            motorUtility.setPower(Motors.LAUNCHER, 1f);
-//        } else {
-//            motorUtility.setPower(Motors.LAUNCHER, 0f);
-//        }
+        if(primary.right_trigger > deadzone) {
+            motorUtility.setPower(Motors.INTAKE, 1f);
+        } else if(primary.left_trigger > deadzone) {
+            motorUtility.setPower(Motors.INTAKE, -1f);
+        } else {
+            motorUtility.setPower(Motors.INTAKE, 0f);
+        }
         
-        driveMenu.append(TelemetryTools.setHeader(6, "Drive speed: " + TelemetryTools.setFontColor("Grey", Double.toString(drivespeed))));
-
+        driveMenu.append("Drive speed: ").append(df.format(drivespeed));
+        driveMenu.append("\n");
         driveMenu.append("Loop time: ").append(period.getAveragePeriodSec());
-
+        driveMenu.append("\n\n");
         telemetry.addLine(driveMenu.toString());
     }
-
 }
