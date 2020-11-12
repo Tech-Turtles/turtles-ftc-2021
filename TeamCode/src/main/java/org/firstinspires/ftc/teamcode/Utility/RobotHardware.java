@@ -1,19 +1,19 @@
 package org.firstinspires.ftc.teamcode.Utility;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.Mecanum;
 import org.firstinspires.ftc.teamcode.Utility.Math.ElapsedTimer;
-import org.openftc.revextensions2.*;
 
 import java.text.DecimalFormat;
 import java.util.HashMap;
-import java.util.Map;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.*;
 import org.firstinspires.ftc.teamcode.Menu.InteractiveInitialization;
@@ -24,7 +24,7 @@ import org.firstinspires.ftc.teamcode.Menu.InteractiveInitialization;
  */
 public class RobotHardware extends OpMode {
 
-    private static final HashMap<Motors, ExpansionHubMotor> motors = new HashMap<>();
+    private static final HashMap<Motors, DcMotorEx> motors = new HashMap<>();
     private static final HashMap<Servos, Servo> servos = new HashMap<>();
 
     public final MotorUtility motorUtility = new MotorUtility();
@@ -35,10 +35,10 @@ public class RobotHardware extends OpMode {
 
     public BNO055IMU imu;
 
-    private ExpansionHubEx expansionHub1, expansionHub2;
-    private RevBulkData bulkDataHub1, bulkDataHub2;
-
     public InteractiveInitialization initMenu;
+
+    protected LynxModule expansionHub1;
+    protected LynxModule expansionHub2;
 
     public final ElapsedTimer period = new ElapsedTimer();
 
@@ -46,9 +46,9 @@ public class RobotHardware extends OpMode {
 
     public class MotorUtility {
 
-        private ExpansionHubMotor m;
+        private DcMotorEx m;
 
-        private ExpansionHubMotor getMotor(Motors motor) {
+        private DcMotorEx getMotor(Motors motor) {
             m = motors.get(motor);
             if(m == null)
                 telemetry.addData("Motor Missing", motor.name());
@@ -71,20 +71,6 @@ public class RobotHardware extends OpMode {
         public int getEncoderValue(Motors motor) {
             m = getMotor(motor);
             if(m == null) return -1;
-            RevBulkData bulkData = null;
-            for (Motors motorName : Motors.values()) {
-                switch(motorName.getExpansionHub()) {
-                    case HUB1:
-                        bulkData = bulkDataHub1;
-                        break;
-                    case HUB2:
-                        bulkData = bulkDataHub2;
-                }
-                if(bulkData == null) continue;
-                if(motor.name().equals(motorName.name()))
-                    return bulkData.getMotorCurrentPosition(m);
-            }
-            telemetry.addData("Not using bulk reads", motor.name());
             return m.getCurrentPosition();
         }
 
@@ -94,10 +80,7 @@ public class RobotHardware extends OpMode {
         }
 
         public void stopResetAllMotors() {
-            for (Map.Entry<Motors, ExpansionHubMotor> entry : motors.entrySet()) {
-                ExpansionHubMotor v = entry.getValue();
-                v.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            }
+            motors.forEach((k,v)->v.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER));
         }
 
         public void stopResetMotor(Motors motor) {
@@ -142,13 +125,11 @@ public class RobotHardware extends OpMode {
 
         private void initializeMotors() {
             stopResetAllMotors();
-            for (Map.Entry<Motors, ExpansionHubMotor> entry : motors.entrySet()) {
-                Motors k = entry.getKey();
-                ExpansionHubMotor v = entry.getValue();
+            motors.forEach((k,v)->{
                 v.setMode(k.getRunMode());
                 v.setZeroPowerBehavior(k.getZeroPowerBehavior());
                 v.setDirection(k.getDirection());
-            }
+            });
         }
 
         /**
@@ -242,34 +223,24 @@ public class RobotHardware extends OpMode {
         }
     }
 
-    private void readBulkData() {
-        try {
-            bulkDataHub1 = expansionHub1.getBulkInputData();
-        } catch (Exception e) {
-            telemetry.addLine(e.getMessage());
-        }
-        try {
-            bulkDataHub2 = expansionHub2.getBulkInputData();
-        } catch (Exception e) {
-            telemetry.addLine(e.getMessage());
-        }
-    }
-
     @Override
     public void init() {
 
         telemetry.setDisplayFormat(Telemetry.DisplayFormat.HTML);
 
         try {
-            expansionHub1 = hardwareMap.get(ExpansionHubEx.class, ExpansionHubs.HUB1.getHub());
-            expansionHub2 = hardwareMap.get(ExpansionHubEx.class, ExpansionHubs.HUB2.getHub());
-        } catch (IllegalArgumentException e) {
-            telemetry.addData("Failed to find Expansion Hub", e.getMessage());
+            expansionHub1 = hardwareMap.get(LynxModule.class, ExpansionHubs.HUB1.getHub());
+            expansionHub2 = hardwareMap.get(LynxModule.class, ExpansionHubs.HUB2.getHub());
+
+            expansionHub1.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+            expansionHub2.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            telemetry.addLine(e.getMessage());
         }
 
         for(Motors m : Motors.values()) {
             try {
-                motors.put(m, hardwareMap.get(ExpansionHubMotor.class, m.getConfigName()));
+                motors.put(m, hardwareMap.get(DcMotorEx.class, m.getConfigName()));
             } catch (IllegalArgumentException ignore) {
                 telemetry.addData("Motor Missing", m.name());
             }
@@ -294,20 +265,17 @@ public class RobotHardware extends OpMode {
     @Override
     public void init_loop() {
         initMenu.loop();
-        readBulkData();
         period.updatePeriodTime();
     }
 
     @Override
     public void start() {
         motorUtility.stopAllMotors();
-        readBulkData();
         period.reset();
     }
 
     @Override
     public void loop() {
-        readBulkData();
         period.updatePeriodTime();
     }
 
