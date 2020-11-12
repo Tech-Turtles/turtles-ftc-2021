@@ -6,9 +6,9 @@ import java.util.ListIterator;
 class InitCategory {
 
     private InitOption val;
-    private String name;
-    private ArrayList<InitOption> options;
-    private ListIterator<InitOption> current;
+    private final String name;
+    private final ArrayList<InitOption> options;
+    private final ListIterator<InitOption> current;
     public int index = 0;
 
     public InitCategory(String name, ArrayList<InitOption> vars) {

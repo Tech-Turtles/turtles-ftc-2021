@@ -7,9 +7,9 @@ import java.util.ListIterator;
 class InitOption<T> {
 
     private T value;
-    private ListIterator<T> current;
-    private String name;
-    private Mutable<T> var;
+    private final ListIterator<T> current;
+    private final String name;
+    private final Mutable<T> var;
 
     InitOption(Mutable<T> variable, String name, T... args) {
         this.var = variable;
