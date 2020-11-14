@@ -48,6 +48,10 @@ public class RobotHardware extends OpMode {
 
         private DcMotorEx m;
 
+        /**
+         * Do not make this function public.
+         * If the motor is null, any function run on it will cause a fatal error.
+         */
         private DcMotorEx getMotor(Motors motor) {
             m = motors.get(motor);
             if(m == null)
@@ -72,6 +76,12 @@ public class RobotHardware extends OpMode {
             m = getMotor(motor);
             if(m == null) return -1;
             return m.getCurrentPosition();
+        }
+
+        public double getVelocity(Motors motor) {
+            m = getMotor(motor);
+            if(m == null) return 0;
+            return m.getVelocity();
         }
 
         public void stopAllMotors() {

@@ -10,6 +10,7 @@ public class Manual extends RobotHardware {
 
     public final StringBuilder driveMenu = new StringBuilder();
     private double drivespeed = 1.0;
+    private double launchspeed = 1.0;
     private final double deadzone = 0.49f;
 
     @Override
@@ -17,7 +18,6 @@ public class Manual extends RobotHardware {
         super.init();
         primary = new Controller(gamepad1);
         secondary = new Controller(gamepad2);
-
     }
 
     @Override
@@ -34,7 +34,7 @@ public class Manual extends RobotHardware {
     public void loop() {
         super.loop();
         driveMenu.setLength(0);
-        driveMenu.append(TelemetryTools.setHeader(1, "Drive Menu"));
+        driveMenu.append("Drive Menu");
 
         primary.update();
         secondary.update();
@@ -48,6 +48,18 @@ public class Manual extends RobotHardware {
             drivespeed = drivespeed >= 1.0 ? 1.0 : drivespeed + 0.1;
         }
 
+        if(primary.dpadUpOnce()) {
+            launchspeed = launchspeed >= 1.0 ? 1.0 : launchspeed + 0.01;
+        } else if(primary.dpadDownOnce()) {
+            launchspeed = launchspeed <= 0.0 ? 0.0 : launchspeed - 0.01;
+        }
+
+        if(primary.A()) {
+            motorUtility.setPower(Motors.LAUNCHER, launchspeed);
+        } else {
+            motorUtility.setPower(Motors.LAUNCHER, 0f);
+        }
+
         if(primary.right_trigger > deadzone) {
             motorUtility.setPower(Motors.INTAKE, 1f);
         } else if(primary.left_trigger > deadzone) {
@@ -55,11 +67,28 @@ public class Manual extends RobotHardware {
         } else {
             motorUtility.setPower(Motors.INTAKE, 0f);
         }
-        
-        driveMenu.append("Drive speed: ").append(df.format(drivespeed));
-        driveMenu.append("\n");
-        driveMenu.append("Loop time: ").append(period.getAveragePeriodSec());
-        driveMenu.append("\n\n");
+
+        driveMenu.append("Launch velocity A: ").append(getLauncherTicksPerSecond())
+            .append("\n")
+            .append("Launch velocity B:").append(motorUtility.getVelocity(Motors.LAUNCHER))
+            .append("\n")
+            .append("Drive speed: ").append(df.format(drivespeed))
+            .append("\n")
+            .append("Launcher speed: ").append(df.format(launchspeed))
+            .append("\n")
+            .append("Loop time: ").append(period.getAveragePeriodSec())
+            .append("\n\n");
         telemetry.addLine(driveMenu.toString());
+    }
+
+    int launcherTicks, launcherPreviousTicks, launcherDeltaTicks = 0;
+    double ticksPerSecond = 0;
+
+    int getLauncherTicksPerSecond() {
+        launcherTicks = motorUtility.getEncoderValue(Motors.LAUNCHER);
+        launcherDeltaTicks = launcherTicks - launcherPreviousTicks;
+        ticksPerSecond = launcherDeltaTicks / period.getLastPeriodSec();
+        launcherPreviousTicks = launcherTicks;
+        return (int) ticksPerSecond;
     }
 }
