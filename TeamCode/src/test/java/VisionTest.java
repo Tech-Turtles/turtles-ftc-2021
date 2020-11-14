@@ -34,6 +34,8 @@ public class VisionTest {
         try {
             System.load("C:/opencv/build/java/x64/opencv_java412.dll");
             // https://sourceforge.net/projects/opencvlibrary/files/opencv-win/3.4.3/
+            // https://sourceforge.net/projects/opencvlibrary/files/4.1.2/opencv-4.1.2-vc14_vc15.exe/
+            // https://sourceforge.net/projects/opencvlibrary/files/4.1.2/OpenCV%204.1.2.zip/download
         } catch (UnsatisfiedLinkError e) {
             System.err.println("Native code library failed to load.\n" + e);
             System.err.println("For windows 10, download OpenCV Library from:");
@@ -45,8 +47,8 @@ public class VisionTest {
         }
     }
 
-    String IMAGE_READ_PATH = "./TestData/openCV_input/";
-    String IMAGE_WRITE_PATH = "./TestData/openCV_output/";
+    String IMAGE_READ_PATH = "./TestData/openCV_input/skystone/";
+    String IMAGE_WRITE_PATH = "./TestData/openCV_output/skystone/";
 
 
     Mat input = new Mat();
