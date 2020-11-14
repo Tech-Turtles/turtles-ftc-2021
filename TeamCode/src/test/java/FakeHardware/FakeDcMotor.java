@@ -1,28 +1,25 @@
 package FakeHardware;
 
 
-import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
+import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 
 // Does not extend DcMotor
 // Need to return a MotorConfigurationType object
-public class FakeDcMotor{
+public class FakeDcMotor {
 
     double power = 0.0;
     double ticks = 0;
-    RobotHardware.MotorName motorName;
+    Motors motor;
     private double time = 0.0;
 
-    FakeDcMotor(RobotHardware.MotorName motorName) {
-        this.motorName = motorName;
+    FakeDcMotor(Motors motor) {
+        this.motor = motor;
     }
 
-
     // Fake Physics - basic acceleration limit
-    private double maxTicksPerSecond = 2300; // Telemetry suggests velocity of 2500 ticks/second
-    private double maxTicksPerSecondPerSecond = 6000; // Telemetry suggests acceleration of 9000 ticks/s/s
+    private final double maxTicksPerSecond = 2300;            // Telemetry suggests velocity of 2500 ticks/second
+    private final double maxTicksPerSecondPerSecond = 6000;   // Telemetry suggests acceleration of 9000 ticks/s/s
     private double currentTicksPerSecond = 0;
-
-
 
     public void updateAndIntegratePosition(double time) {
         double deltaTime = time - this.time;
@@ -35,7 +32,7 @@ public class FakeDcMotor{
             double accelerationSign = desiredAcceleration_TicksPerSecPerSec / Math.abs(desiredAcceleration_TicksPerSecPerSec);
             // Limit the acceleration
             currentTicksPerSecond += accelerationSign * maxTicksPerSecondPerSecond * deltaTime;
-//                System.out.println("ACCELERATION LIMIT ACTIVATED");
+//            System.out.println("ACCELERATION LIMIT ACTIVATED");
         } else {
             currentTicksPerSecond = desiredTicksPerSecond;
         }
@@ -44,7 +41,6 @@ public class FakeDcMotor{
         if(Math.abs(currentTicksPerSecond) > maxTicksPerSecond) {
             currentTicksPerSecond *= Math.abs(maxTicksPerSecond/currentTicksPerSecond);
         }
-
 
         this.ticks += currentTicksPerSecond * deltaTime;
         this.time = time;
@@ -65,7 +61,4 @@ public class FakeDcMotor{
     public double getTicks() {
         return ticks;
     }
-
-
-
 }

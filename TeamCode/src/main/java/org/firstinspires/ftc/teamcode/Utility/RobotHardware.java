@@ -223,6 +223,10 @@ public class RobotHardware extends OpMode {
         }
     }
 
+    public double getTime() {
+        return time;
+    }
+
     @Override
     public void init() {
 
