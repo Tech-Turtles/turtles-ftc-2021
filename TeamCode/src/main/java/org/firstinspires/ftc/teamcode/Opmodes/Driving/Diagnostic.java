@@ -13,8 +13,6 @@ import org.firstinspires.ftc.teamcode.Utility.TelemetryTools;
 @TeleOp(name="Diagnostic", group="C")
 public class Diagnostic extends Manual {
 
-    IMUUtilities imuUtil;
-
     @Override
     public void init() {
         super.init();

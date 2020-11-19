@@ -17,6 +17,8 @@ import java.util.HashMap;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.*;
 import org.firstinspires.ftc.teamcode.Menu.InteractiveInitialization;
+import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
+import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
 
 /**
  * @author Christian
@@ -34,6 +36,7 @@ public class RobotHardware extends OpMode {
     public DecimalFormat df_precise = new DecimalFormat("0.0000");
 
     public BNO055IMU imu;
+    public IMUUtilities imuUtil;
 
     public InteractiveInitialization initMenu;
 
@@ -43,6 +46,8 @@ public class RobotHardware extends OpMode {
     public final ElapsedTimer period = new ElapsedTimer();
 
     public Controller primary, secondary;
+
+    public MecanumNavigation mecanumNavigation;
 
     public class MotorUtility {
 
@@ -54,7 +59,7 @@ public class RobotHardware extends OpMode {
          */
         private DcMotorEx getMotor(Motors motor) {
             m = motors.get(motor);
-            if(m == null)
+            if (m == null)
                 telemetry.addData("Motor Missing", motor.name());
             return m;
         }
@@ -74,68 +79,68 @@ public class RobotHardware extends OpMode {
 
         public int getEncoderValue(Motors motor) {
             m = getMotor(motor);
-            if(m == null) return -1;
+            if (m == null) return -1;
             return m.getCurrentPosition();
         }
 
         public double getVelocity(Motors motor) {
             m = getMotor(motor);
-            if(m == null) return 0;
+            if (m == null) return 0;
             return m.getVelocity();
         }
 
         public void stopAllMotors() {
-            for(Motors motor : Motors.values())
+            for (Motors motor : Motors.values())
                 setPower(motor, 0f);
         }
 
         public void stopResetAllMotors() {
-            motors.forEach((k,v)->v.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER));
+            motors.forEach((k, v) -> v.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER));
         }
 
         public void stopResetMotor(Motors motor) {
             m = getMotor(motor);
-            if(m != null)
+            if (m != null)
                 m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         }
 
         public void setTypeMotorsRunmode(MotorTypes type, DcMotor.RunMode runMode) {
-            for(Motors motor : Motors.values()) {
-                if(!motor.getType().equals(type)) continue;
+            for (Motors motor : Motors.values()) {
+                if (!motor.getType().equals(type)) continue;
                 m = getMotor(motor);
-                if(m == null) continue;
+                if (m == null) continue;
                 m.setMode(runMode);
             }
         }
 
         public void setMotorsRunMode(DcMotor.RunMode runMode, Motors... motors) {
-            for(Motors motor : motors) {
+            for (Motors motor : motors) {
                 m = getMotor(motor);
-                if(m == null) continue;
+                if (m == null) continue;
                 m.setMode(runMode);
             }
         }
 
         public void setTypeMotorsZeroPowerBehavior(MotorTypes type, DcMotor.ZeroPowerBehavior behavior) {
-            for(Motors motor : Motors.values()) {
-                if(!motor.getType().equals(type)) continue;
+            for (Motors motor : Motors.values()) {
+                if (!motor.getType().equals(type)) continue;
                 m = getMotor(motor);
-                if(m == null) continue;
+                if (m == null) continue;
                 m.setZeroPowerBehavior(behavior);
             }
         }
 
         public void setMotorsZeroPowerBehavior(DcMotor.ZeroPowerBehavior behavior, Motors... motors) {
-            for(Motors motor : motors) {
+            for (Motors motor : motors) {
                 m = getMotor(motor);
-                if(m == null) continue;
+                if (m == null) continue;
                 m.setZeroPowerBehavior(behavior);
             }
         }
 
         private void initializeMotors() {
             stopResetAllMotors();
-            motors.forEach((k,v)->{
+            motors.forEach((k, v) -> {
                 v.setMode(k.getRunMode());
                 v.setZeroPowerBehavior(k.getZeroPowerBehavior());
                 v.setDirection(k.getDirection());
@@ -149,10 +154,10 @@ public class RobotHardware extends OpMode {
          * @param right The power for the right two motors.
          */
         public void setDriveForTank(double left, double right) {
-            setPower(Motors.FRONT_LEFT,  left);
-            setPower(Motors.BACK_LEFT,   left);
+            setPower(Motors.FRONT_LEFT, left);
+            setPower(Motors.BACK_LEFT, left);
             setPower(Motors.FRONT_RIGHT, right);
-            setPower(Motors.BACK_RIGHT,  right);
+            setPower(Motors.BACK_RIGHT, right);
         }
 
         /**
@@ -161,10 +166,10 @@ public class RobotHardware extends OpMode {
          * @param wheels Provides all four mecanum wheel powers, [-1, 1].
          */
         public void setDriveForMecanumWheels(Mecanum.Wheels wheels) {
-            setPower(Motors.FRONT_LEFT,  wheels.frontLeft);
-            setPower(Motors.BACK_LEFT,   wheels.backLeft);
+            setPower(Motors.FRONT_LEFT, wheels.frontLeft);
+            setPower(Motors.BACK_LEFT, wheels.backLeft);
             setPower(Motors.FRONT_RIGHT, wheels.frontRight);
-            setPower(Motors.BACK_RIGHT,  wheels.backRight);
+            setPower(Motors.BACK_RIGHT, wheels.backRight);
         }
 
         public void setDriveForMecanumCommand(Mecanum.Command command) {
@@ -175,14 +180,14 @@ public class RobotHardware extends OpMode {
         /**
          * Sets mecanum drive chain power using simplistic calculations.
          *
-         * @param leftStickX Unmodified Gamepad leftStickX inputs.
-         * @param leftStickY Unmodified Gamepad leftStickY inputs.
+         * @param leftStickX  Unmodified Gamepad leftStickX inputs.
+         * @param leftStickY  Unmodified Gamepad leftStickY inputs.
          * @param rightStickX Unmodified Gamepad rightStickX inputs.
          * @param rightStickY Unmodified Gamepad rightStickY inputs.
          */
         public void setDriveForSimpleMecanum(double leftStickX, double leftStickY,
                                              double rightStickX, double rightStickY) {
-            Mecanum.Wheels wheels = Mecanum.simpleJoystickToWheels (leftStickX, leftStickY, rightStickX, rightStickY);
+            Mecanum.Wheels wheels = Mecanum.simpleJoystickToWheels(leftStickX, leftStickY, rightStickX, rightStickY);
             setDriveForMecanumWheels(wheels);
         }
     }
@@ -192,7 +197,7 @@ public class RobotHardware extends OpMode {
 
         private Servo getServo(Servos servo) {
             s = servos.get(servo);
-            if(s == null) {
+            if (s == null) {
                 telemetry.addData("Servo Missing", servo.name());
             }
             return s;
@@ -214,23 +219,28 @@ public class RobotHardware extends OpMode {
         public boolean moveServoAtRate(Servos servo, double targetPos, double rate) {
             boolean isMovementDone = false;
             double distanceThreshold = 0.05;
-            rate = Range.clip(rate,0,10);
-            targetPos = Range.clip(targetPos,0,1);
+            rate = Range.clip(rate, 0, 10);
+            targetPos = Range.clip(targetPos, 0, 1);
             double currentPosition = getAngle(servo);
             double distance = targetPos - currentPosition;
             double direction = targetPos > currentPosition ? 1 : -1;
             double nextPosition;
-            if ( Math.abs(distance) > distanceThreshold ) {
+            if (Math.abs(distance) > distanceThreshold) {
                 nextPosition = rate * direction * period.getLastPeriodSec() + currentPosition;
             } else {
                 nextPosition = targetPos;
                 isMovementDone = true;
             }
-            nextPosition = Range.clip(nextPosition,0,1);
+            nextPosition = Range.clip(nextPosition, 0, 1);
             setAngle(servo, nextPosition);
 
             return isMovementDone;
         }
+    }
+
+    public enum StartPosition {
+        WALL,
+        CENTER
     }
 
     @Override
@@ -248,7 +258,7 @@ public class RobotHardware extends OpMode {
             telemetry.addLine(e.getMessage());
         }
 
-        for(Motors m : Motors.values()) {
+        for (Motors m : Motors.values()) {
             try {
                 motors.put(m, hardwareMap.get(DcMotorEx.class, m.getConfigName()));
             } catch (IllegalArgumentException ignore) {
@@ -257,7 +267,7 @@ public class RobotHardware extends OpMode {
         }
         new MotorUtility().initializeMotors();
 
-        for(Servos s : Servos.values()) {
+        for (Servos s : Servos.values()) {
             try {
                 Servo servo = hardwareMap.get(Servo.class, s.getConfigName());
                 servos.put(s, servo);
