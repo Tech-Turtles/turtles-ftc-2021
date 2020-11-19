@@ -1,14 +1,13 @@
 package org.firstinspires.ftc.teamcode.Utility.Mecanum;
 
-import org.firstinspires.ftc.teamcode.RobotHardware;
+import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
-import org.firstinspires.ftc.teamcode.deadWheels.Localizer;
 
 /**
  * Created by Ashley on 12/8/2017.
  */
 
-public class MecanumNavigation implements Localizer {
+public class MecanumNavigation {
 
     private RobotHardware opMode;
     public DriveTrainMecanum driveTrainMecanum;
@@ -51,18 +50,18 @@ public class MecanumNavigation implements Localizer {
 
     public void update(RobotHardware robotHardware) {
         update(new org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation.WheelTicks(
-                robotHardware.getEncoderValue(RobotHardware.MotorName.DRIVE_FRONT_LEFT),
-                robotHardware.getEncoderValue(RobotHardware.MotorName.DRIVE_FRONT_RIGHT),
-                robotHardware.getEncoderValue(RobotHardware.MotorName.DRIVE_BACK_LEFT),
-                robotHardware.getEncoderValue(RobotHardware.MotorName.DRIVE_BACK_RIGHT)));
+                robotHardware.motorUtility.getEncoderValue(Motors.FRONT_LEFT),
+                robotHardware.motorUtility.getEncoderValue(Motors.FRONT_RIGHT),
+                robotHardware.motorUtility.getEncoderValue(Motors.BACK_LEFT),
+                robotHardware.motorUtility.getEncoderValue(Motors.BACK_RIGHT)));
     }
 
     public void update() {
         update(new org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation.WheelTicks(
-                opMode.getEncoderValue(RobotHardware.MotorName.DRIVE_FRONT_LEFT),
-                opMode.getEncoderValue(RobotHardware.MotorName.DRIVE_FRONT_RIGHT),
-                opMode.getEncoderValue(RobotHardware.MotorName.DRIVE_BACK_LEFT),
-                opMode.getEncoderValue(RobotHardware.MotorName.DRIVE_BACK_RIGHT)));
+                opMode.motorUtility.getEncoderValue(Motors.FRONT_LEFT),
+                opMode.motorUtility.getEncoderValue(Motors.FRONT_RIGHT),
+                opMode.motorUtility.getEncoderValue(Motors.BACK_LEFT),
+                opMode.motorUtility.getEncoderValue(Motors.BACK_RIGHT)));
     }
 
     public Frame2D  getRobotFrame() {
@@ -573,11 +572,11 @@ public class MecanumNavigation implements Localizer {
 
     // Quality of life function for enclosing class.
     public WheelTicks getCurrentWheelTicks() {
-        return new org.firstinspires.ftc.teamcode.Utilities.MecanumNavigation.WheelTicks(
-                opMode.getEncoderValue(RobotHardware.MotorName.DRIVE_FRONT_LEFT),
-                opMode.getEncoderValue(RobotHardware.MotorName.DRIVE_FRONT_RIGHT),
-                opMode.getEncoderValue(RobotHardware.MotorName.DRIVE_BACK_LEFT),
-                opMode.getEncoderValue(RobotHardware.MotorName.DRIVE_BACK_RIGHT));
+        return new org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation.WheelTicks(
+                opMode.motorUtility.getEncoderValue(Motors.FRONT_LEFT),
+                opMode.motorUtility.getEncoderValue(Motors.FRONT_RIGHT),
+                opMode.motorUtility.getEncoderValue(Motors.BACK_LEFT),
+                opMode.motorUtility.getEncoderValue(Motors.BACK_RIGHT));
     }
 
 
