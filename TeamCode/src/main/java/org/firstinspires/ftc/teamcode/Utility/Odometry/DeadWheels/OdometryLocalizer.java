@@ -1,8 +1,9 @@
-package org.firstinspires.ftc.teamcode.Odometry.deadWheels;
+package org.firstinspires.ftc.teamcode.Utility.Odometry.DeadWheels;
 
-import org.firstinspires.ftc.teamcode.RobotHardware;
-import org.firstinspires.ftc.teamcode.Utilities.MecanumNavigation.Frame2D;
-import org.firstinspires.ftc.teamcode.Utilities.MecanumNavigation.Navigation2D;
+import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
+import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation.Frame2D;
+import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation.Navigation2D;
+import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 
 public class OdometryLocalizer implements Localizer {
 
@@ -23,12 +24,13 @@ public class OdometryLocalizer implements Localizer {
 
     /** update() supporting the Localizer interface.
      *
-     * @param robotHardware
+     * @param opmode
      */
-    public void update(RobotHardware robotHardware){
-        update(new OdometryTicks(robotHardware.getEncoderValue(RobotHardware.MotorName.LEFT_WHEEL),
-                robotHardware.getEncoderValue(RobotHardware.MotorName.CENTER_WHEEL),
-                robotHardware.getEncoderValue(RobotHardware.MotorName.RIGHT_WHEEL)));
+    public void update(RobotHardware opmode){
+        update(new OdometryTicks(
+                opmode.motorUtility.getEncoderValue(Motors.LEFT_WHEEL),
+                opmode.motorUtility.getEncoderValue(Motors.CENTER_WHEEL),
+                opmode.motorUtility.getEncoderValue(Motors.RIGHT_WHEEL)));
     }
 
     public void update(OdometryTicks newTicks) {
@@ -95,11 +97,12 @@ public class OdometryLocalizer implements Localizer {
         this.encoderPosition = encoderPosition;
     }
 
-    public void setEncoderPosition(RobotHardware robotHardware) {
+    public void setEncoderPosition(RobotHardware opmode) {
         this.encoderPosition =
-                new OdometryTicks(robotHardware.getEncoderValue(RobotHardware.MotorName.LEFT_WHEEL),
-                robotHardware.getEncoderValue(RobotHardware.MotorName.CENTER_WHEEL),
-                robotHardware.getEncoderValue(RobotHardware.MotorName.RIGHT_WHEEL));
+                new OdometryTicks(
+                    opmode.motorUtility.getEncoderValue(Motors.LEFT_WHEEL),
+                    opmode.motorUtility.getEncoderValue(Motors.CENTER_WHEEL),
+                    opmode.motorUtility.getEncoderValue(Motors.RIGHT_WHEEL));
     }
 
     public boolean isInitialized() {

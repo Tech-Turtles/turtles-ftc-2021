@@ -1,18 +1,18 @@
-package org.firstinspires.ftc.teamcode.Odometry.deadWheels;
-
-import android.support.annotation.NonNull;
+package org.firstinspires.ftc.teamcode.Utility.Odometry.DeadWheels;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.localization.ThreeTrackingWheelLocalizer;
 
-import org.firstinspires.ftc.teamcode.RobotHardware;
-import org.firstinspires.ftc.teamcode.RobotHardware.MotorName;
-import org.firstinspires.ftc.teamcode.Utilities.MecanumNavigation;
-import org.firstinspires.ftc.teamcode.Utilities.MecanumNavigation.Frame2D;
-import org.firstinspires.ftc.teamcode.Utilities.MecanumNavigation.Navigation2D;
+import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
+import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
+import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation.Frame2D;
+import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation.Navigation2D;
+import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 
 import java.util.Arrays;
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 /*
  * Sample tracking wheel localizer implementation assuming the standard configuration:
@@ -66,9 +66,9 @@ public class StandardTrackingWheelLocalizer extends ThreeTrackingWheelLocalizer 
     @Override
     public List<Double> getWheelPositions() {
         return Arrays.asList(
-                encoderTicksToInches(opmode.getEncoderValue(MotorName.LEFT_WHEEL)),
-                encoderTicksToInches(opmode.getEncoderValue(MotorName.RIGHT_WHEEL)),
-                encoderTicksToInches(opmode.getEncoderValue(MotorName.CENTER_WHEEL))
+                encoderTicksToInches(opmode.motorUtility.getEncoderValue(Motors.LEFT_WHEEL)),
+                encoderTicksToInches(opmode.motorUtility.getEncoderValue(Motors.RIGHT_WHEEL)),
+                encoderTicksToInches(opmode.motorUtility.getEncoderValue(Motors.CENTER_WHEEL))
         );
     }
 
