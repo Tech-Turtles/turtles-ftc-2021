@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.Utility;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -247,6 +249,7 @@ public class RobotHardware extends OpMode {
     public void init() {
 
         telemetry.setDisplayFormat(Telemetry.DisplayFormat.HTML);
+        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
         try {
             expansionHub1 = hardwareMap.get(LynxModule.class, ExpansionHubs.HUB1.getHub());
@@ -278,6 +281,8 @@ public class RobotHardware extends OpMode {
         }
 
         initMenu = new InteractiveInitialization(this);
+        primary = new Controller(gamepad1);
+        secondary = new Controller(gamepad2);
         motorUtility.stopAllMotors();
         period.reset();
     }
@@ -286,6 +291,8 @@ public class RobotHardware extends OpMode {
     public void init_loop() {
         initMenu.loop();
         period.updatePeriodTime();
+        primary.update();
+        secondary.update();
     }
 
     @Override
@@ -297,6 +304,8 @@ public class RobotHardware extends OpMode {
     @Override
     public void loop() {
         period.updatePeriodTime();
+        primary.update();
+        secondary.update();
     }
 
     @Override

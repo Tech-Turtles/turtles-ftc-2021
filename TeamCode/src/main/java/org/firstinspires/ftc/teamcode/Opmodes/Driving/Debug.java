@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.Opmodes.Driving;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.HardwareTypes.IMU;
 import org.firstinspires.ftc.teamcode.HardwareTypes.MotorTypes;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
@@ -20,8 +21,8 @@ public class Debug extends Manual {
     @Override
     public void init() {
         super.init();
-        imuUtil = new IMUUtilities(this, "IMU_1", IMUUtilities.ImuMode.FAST_HEADING_ONLY);
-        telemetry.addLine("\n\nDebug Initialized");
+        imuUtil = new IMUUtilities(this, IMU.IMU1.getName(), IMUUtilities.ImuMode.FAST_HEADING_ONLY);
+        telemetry.addLine("\n----Debug Initialized----");
     }
 
     @Override
@@ -37,32 +38,25 @@ public class Debug extends Manual {
     @Override
     public void loop() {
         super.loop();
-        driveMenu.setLength(0);
 
         for (MotorTypes type : MotorTypes.values()) {
-            driveMenu.append(TelemetryTools.setHeader(4, type.name())).append("\n");
+            telemetry.addLine(type.name());
             for (Motors motor : Motors.values()) {
                 if(type != motor.getType()) continue;
-                driveMenu.append(motor.name()).append(": ")
-                        .append(motorUtility.getEncoderValue(motor))
-                        .append("\n");
+                telemetry.addData(motor.name() + ": ", motorUtility.getEncoderValue(motor));
             }
         }
 
         for (Servos servo : Servos.values()) {
-            driveMenu.append(servo.name()).append(": ")
-                    .append(servoUtility.getAngle(servo))
-                    .append("\n");
+            telemetry.addData(servo.name() + ": ", servoUtility.getAngle(servo));
         }
 
-        driveMenu.append("Period Average (sec)").append(df_precise.format(period.getAveragePeriodSec()))
-                .append("Period Max (sec)").append(df_precise.format(period.getMaxPeriodSec()));
+        telemetry.addData("Period Average: ", df_precise.format(period.getAveragePeriodSec()) + "s");
+        telemetry.addData("Period Max:     ", df_precise.format(period.getMaxPeriodSec()) + "s");
 
         if(imuUtil.imu != null) {
             imuUtil.updateNow();
             imuUtil.displayTelemetry();
         }
-
-        telemetry.addLine(driveMenu.toString());
     }
 }

@@ -17,8 +17,7 @@ public class AutoOpmode extends RobotHardware {
     StartPosition robotStartPos;
     private Executive.RobotStateMachineContextInterface robotStateContext;
 
-
-    @Autonomous(name="Wall Red", group="A-R")
+    @Autonomous(name="Wall Red", group="A")
     public static class AutoRedPickup extends AutoOpmode {
         @Override public void init() {
             robotColor = AllianceColor.RED;
@@ -27,7 +26,7 @@ public class AutoOpmode extends RobotHardware {
         }
     }
 
-    @Autonomous(name="Center Red", group="A-R")
+    @Autonomous(name="Center Red", group="A")
     public static class AutoRedBuild extends AutoOpmode {
         @Override public void init() {
             robotColor = AllianceColor.RED;
@@ -36,7 +35,7 @@ public class AutoOpmode extends RobotHardware {
         }
     }
 
-    @Autonomous(name="Wall Blue", group="A-B")
+    @Autonomous(name="Wall Blue", group="A")
     public static class AutoBluePickup extends AutoOpmode {
         @Override public void init() {
             robotColor = AllianceColor.BLUE;
@@ -45,7 +44,7 @@ public class AutoOpmode extends RobotHardware {
         }
     }
 
-    @Autonomous(name="Center Blue", group="A-B")
+    @Autonomous(name="Center Blue", group="A")
     public static class AutoBlueBuild extends AutoOpmode {
         @Override public void init() {
             robotColor = AllianceColor.BLUE;
@@ -57,7 +56,6 @@ public class AutoOpmode extends RobotHardware {
     @Override
     public void init() {
         super.init();
-        primary = new Controller(gamepad1);
         imuUtil = new IMUUtilities(this, IMU.IMU1.getName());
         robotStateContext = new RobotStateContext(AutoOpmode.this, robotColor, robotStartPos);
         telemetry.addData("Initialization: ", "Successful!");
@@ -86,24 +84,23 @@ public class AutoOpmode extends RobotHardware {
     @Override
     public void loop() {
         super.loop();
-        primary.update();
+
         mecanumNavigation.update();
         robotStateContext.update();
+
         if (imuUtil != null)
             imuUtil.update();
 
         mecanumNavigation.displayPosition();
 
-        telemetry.addData("Period Average (sec)", df_precise.format(period.getAveragePeriodSec()));
-        telemetry.addData("Period Max (sec)", df_precise.format(period.getMaxPeriodSec()));
-
-        telemetry.addData("State: ", robotStateContext.getCurrentState());
+        telemetry.addData("Period Average: ", df_precise.format(period.getAveragePeriodSec()) + "s");
+        telemetry.addData("Period Max:     ", df_precise.format(period.getMaxPeriodSec()) + "s");
+        telemetry.addData("State:          ", robotStateContext.getCurrentState());
     }
 
     /**
      * Updates the mecanumNavigation heading from the imu heading.
-     * This function forces the IMU to refresh immediately, which
-     * causes up to 6ms of latency.
+     * This function forces the IMU to refresh immediately.
      */
     public void updateMecanumHeadingFromGyroNow() {
         imuUtil.updateNow();

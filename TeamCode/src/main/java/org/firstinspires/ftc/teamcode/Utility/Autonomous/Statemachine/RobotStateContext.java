@@ -18,25 +18,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     private RobotHardware.StartPosition startPosition;
     private Waypoints waypoints;
 
-    private boolean manualEnd = false;
-
-    private final int liftRaised = 500;
-    private final int liftLowered = 0;
-    private final double courseTolerance = 0.5;
-    private final double liftSpeed = 1.0;
-    private final double grabSpeed = 0.3;
-    private final double backupSpeed = 0.5;
-    private final double wallStoneSpeed = 0.5;
-    private final double foundationDragSpeed = 0.5;
-
-    private final Navigation2D fudge = new Navigation2D(0,0,0);
-
-    // Delays
-    private final double start_Delay = 0.25;
-    private final double scan_Delay = 0.5;
-    private final double grab_Delay = 0.5;
-    private final double placeFoundation_Delay = 0.25;
-
     private Controller controller1;
 
 
@@ -45,7 +26,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         this.teamColor = teamColor;
         this.startPosition = startPosition;
         this.stateMachine = new Executive.StateMachine<>(opMode);
-        this.waypoints = new Waypoints();
+        this.waypoints = new Waypoints(opMode);
         stateMachine.update();
 
         controller1 = opMode.primary;

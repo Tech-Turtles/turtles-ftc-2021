@@ -1,23 +1,28 @@
 package org.firstinspires.ftc.teamcode.Opmodes.Driving;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.Utility.*;
+import org.firstinspires.ftc.teamcode.Utility.Autonomous.Waypoints;
+
+import static org.firstinspires.ftc.teamcode.Opmodes.Driving.Manual.DashboardVariables.*;
 
 @TeleOp(name="Manual", group="A")
 public class Manual extends RobotHardware {
 
-    public final StringBuilder driveMenu = new StringBuilder();
-    private double drivespeed = 1.0;
-    private double launchspeed = 1.0;
+    @Config
+    static class DashboardVariables {
+        public static double drivespeed = 1.0;
+        public static double launchspeed = 1.0;
+    }
+
     private final double deadzone = 0.49f;
 
     @Override
     public void init() {
         super.init();
-        primary = new Controller(gamepad1);
-        secondary = new Controller(gamepad2);
     }
 
     @Override
@@ -28,16 +33,11 @@ public class Manual extends RobotHardware {
     @Override
     public void start() {
         super.start();
+        Waypoints waypoints = new Waypoints(this);
+        waypoints.test();
     }
-
-    @Override
-    public void loop() {
+    @Override public void loop() {
         super.loop();
-        driveMenu.setLength(0);
-        driveMenu.append("Drive Menu");
-
-        primary.update();
-        secondary.update();
 
         motorUtility.setDriveForSimpleMecanum(primary.left_stick_x * drivespeed, primary.left_stick_y * drivespeed,
                 primary.right_stick_x * drivespeed, primary.right_stick_y * drivespeed);
@@ -68,17 +68,11 @@ public class Manual extends RobotHardware {
             motorUtility.setPower(Motors.INTAKE, 0f);
         }
 
-        driveMenu.append("Launch velocity A: ").append(getLauncherTicksPerSecond())
-            .append("\n")
-            .append("Launch velocity B:").append(motorUtility.getVelocity(Motors.LAUNCHER))
-            .append("\n")
-            .append("Drive speed: ").append(df.format(drivespeed))
-            .append("\n")
-            .append("Launcher speed: ").append(df.format(launchspeed))
-            .append("\n")
-            .append("Loop time: ").append(period.getAveragePeriodSec())
-            .append("\n\n");
-        telemetry.addLine(driveMenu.toString());
+        telemetry.addData("Launch velocity A:   ", getLauncherTicksPerSecond());
+        telemetry.addData("Launch velocity B:   ", motorUtility.getVelocity(Motors.LAUNCHER));
+        telemetry.addData("Drive speed:         ", df.format(drivespeed));
+        telemetry.addData("Launcher speed:      ", df.format(launchspeed));
+        telemetry.addData("Loop time:           ", df_precise.format(period.getAveragePeriodSec()) + "s");
     }
 
     int launcherTicks, launcherPreviousTicks, launcherDeltaTicks = 0;

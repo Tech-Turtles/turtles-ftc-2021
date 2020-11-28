@@ -16,8 +16,8 @@ public class Diagnostic extends Manual {
     @Override
     public void init() {
         super.init();
-        imuUtil = new IMUUtilities(this, "IMU_1", IMUUtilities.ImuMode.SLOW_ALL_MEASUREMENTS);
-        telemetry.addLine("\n\nDiagnostic Initialized");
+        imuUtil = new IMUUtilities(this, IMU.IMU1.getName(), IMUUtilities.ImuMode.SLOW_ALL_MEASUREMENTS);
+        telemetry.addLine("\n----Diagnostic Initialized----");
     }
 
     @Override
@@ -33,32 +33,25 @@ public class Diagnostic extends Manual {
     @Override
     public void loop() {
         super.loop();
-        driveMenu.setLength(0);
 
         for (MotorTypes type : MotorTypes.values()) {
-            driveMenu.append(TelemetryTools.setHeader(4, type.name())).append("\n");
+            telemetry.addLine(type.name());
             for (Motors motor : Motors.values()) {
                 if(type != motor.getType()) continue;
-                driveMenu.append(motor.name()).append(": ")
-                        .append(motorUtility.getEncoderValue(motor))
-                        .append("\n");
+                telemetry.addData(motor.name() + ": ", motorUtility.getEncoderValue(motor));
             }
         }
 
         for (Servos servo : Servos.values()) {
-            driveMenu.append(servo.name()).append(": ")
-                    .append(servoUtility.getAngle(servo))
-                    .append("\n");
+            telemetry.addData(servo.name() + ": ", servoUtility.getAngle(servo));
         }
 
-        driveMenu.append("Period Average (sec)").append(df_precise.format(period.getAveragePeriodSec()))
-                .append("Period Max (sec)").append(df_precise.format(period.getMaxPeriodSec()));
+        telemetry.addData("Period Average: ", df_precise.format(period.getAveragePeriodSec()) + "s");
+        telemetry.addData("Period Max:     ", df_precise.format(period.getMaxPeriodSec()) + "s");
 
         if(imuUtil.imu != null) {
             imuUtil.updateNow();
             imuUtil.displayTelemetry();
         }
-
-        telemetry.addLine(driveMenu.toString());
     }
 }
