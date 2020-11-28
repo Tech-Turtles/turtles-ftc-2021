@@ -40,8 +40,8 @@ public class Executive {
          */
         public enum StateType {
             DRIVE,
-            ARM,
-            LIFT,
+            LAUNCHER,
+            OTHER
         }
 
         public StateMachine(T_opmode opMode) {
@@ -174,7 +174,6 @@ public class Executive {
         ElapsedTime statePeriod; // Time how long since state has been executed.
         double lastStatePeriod = -1;
         boolean arrived = false;
-        boolean armStateSet = false;
 
         private boolean initialized = false;
         private boolean deleteRequested = false;
@@ -208,9 +207,6 @@ public class Executive {
         }
 
         protected void nextState(StateMachine.StateType stateType, StateBase state, boolean isActive) {
-            if(stateType.equals(StateMachine.StateType.ARM))
-                armStateSet = true;
-
             stateMachine.changeState(isActive, stateType, state);
             stateMachine.stateMap.get(stateType).init(stateMachine);
         }
@@ -236,11 +232,6 @@ public class Executive {
 //        public boolean driveTo(MecanumNavigation.Navigation2D waypoint, double driveSpeed, double tolerance) {
 //            return opMode.autoDrive.driveToPositionTranslateOnly(waypoint, driveSpeed, 0.05, tolerance);
 //        }
-
-        public boolean isArmArrived() {
-            StateBase armState = stateMachine.getStateReference(StateMachine.StateType.ARM);
-            return armState.arrived;
-        }
 
         public String getAuxData() {
             return "";

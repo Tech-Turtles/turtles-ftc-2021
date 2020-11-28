@@ -18,9 +18,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     private RobotHardware.StartPosition startPosition;
     private Waypoints waypoints;
 
-    private Controller controller1;
-
-
     public RobotStateContext(AutoOpmode opMode, AllianceColor teamColor, AutoOpmode.StartPosition startPosition) {
         this.opMode = opMode;
         this.teamColor = teamColor;
@@ -28,8 +25,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         this.stateMachine = new Executive.StateMachine<>(opMode);
         this.waypoints = new Waypoints(opMode);
         stateMachine.update();
-
-        controller1 = opMode.primary;
     }
 
     public void init() {

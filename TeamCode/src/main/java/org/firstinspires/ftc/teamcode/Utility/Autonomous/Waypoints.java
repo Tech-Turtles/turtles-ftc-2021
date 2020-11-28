@@ -19,16 +19,17 @@ public class Waypoints {
 
     public Waypoints(RobotHardware opmode) {
         this.opmode = opmode;
-    }
-
-    public void test() {
         try {
-            waypoints = new JSONObject(getFileContents(R.raw.waypoints));
+            waypoints = new JSONObject(getWaypointFile());
         } catch(JSONException ignore) {}
     }
 
-    public String getFileContents(int file) {
-        InputStream is = opmode.hardwareMap.appContext.getResources().openRawResource(file);
+    public JSONObject getWaypoint(String name) throws JSONException {
+        return waypoints.has(name) ? waypoints.getJSONObject(name) : null;
+    }
+
+    private String getWaypointFile() {
+        InputStream is = opmode.hardwareMap.appContext.getResources().openRawResource(R.raw.waypoints);
         Writer writer = new StringWriter();
         char[] buffer = new char[1024];
         try {
@@ -39,7 +40,6 @@ public class Waypoints {
             }
             is.close();
         } catch(IOException ignore) {}
-
         return writer.toString();
     }
 }

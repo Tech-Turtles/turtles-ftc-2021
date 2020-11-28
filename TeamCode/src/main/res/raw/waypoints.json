@@ -1,34 +1,42 @@
 {
   "StartWall": {
     "X": 24,
-    "Y": 52
+    "Y": 52,
+    "Theta": 0
   },
   "StartCenter": {
     "X": 48,
-    "Y": 52
+    "Y": 52,
+    "Theta": 0
   },
   "Rings": {
     "X": 36,
-    "Y": 24
+    "Y": 24,
+    "Theta": 0
   },
   "ZoneA": {
     "X": 60,
-    "Y": -12
+    "Y": -12,
+    "Theta": 0
   },
   "ZoneB": {
     "X": 36,
-    "Y": -36
+    "Y": -36,
+    "Theta": 0
   },
   "ZoneC": {
     "X": 60,
-    "Y": -60
+    "Y": -60,
+    "Theta": 0
   },
   "Shoot": {
     "X": 24,
-    "Y": 0
+    "Y": 0,
+    "Theta": 0
   },
   "Park": {
     "X": 16,
-    "Y": -12
+    "Y": -12,
+    "Theta": 0
   }
 }
