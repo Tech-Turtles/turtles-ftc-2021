@@ -245,6 +245,10 @@ public class RobotHardware extends OpMode {
         CENTER
     }
 
+    public double getTime() {
+        return time;
+    }
+
     @Override
     public void init() {
 
