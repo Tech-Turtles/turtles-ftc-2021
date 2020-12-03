@@ -1,45 +1,42 @@
 package org.firstinspires.ftc.teamcode.Utility.Autonomous;
 
-import org.firstinspires.ftc.teamcode.R;
-import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringWriter;
-import java.io.Writer;
+import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount;
 
 public class Waypoints {
-    JSONObject waypoints;
-    RobotHardware opmode;
 
-    public Waypoints(RobotHardware opmode) {
-        this.opmode = opmode;
-        try {
-            waypoints = new JSONObject(getWaypointFile());
-        } catch(JSONException ignore) {}
+    private AllianceColor allianceColor;
+    private RingDetectionAmount ringDetectionAmount;
+
+    public Waypoints(AllianceColor allianceColor, RingDetectionAmount ringDetectionAmount) {
+        this.allianceColor = allianceColor;
+        this.ringDetectionAmount = ringDetectionAmount;
+
+        configureWaypoints(allianceColor, ringDetectionAmount);
     }
 
-    public JSONObject getWaypoint(String name) throws JSONException {
-        return waypoints.has(name) ? waypoints.getJSONObject(name) : null;
+    public Waypoints(AllianceColor allianceColor) {
+        this(allianceColor, RingDetectionAmount.ZERO);
     }
 
-    private String getWaypointFile() {
-        InputStream is = opmode.hardwareMap.appContext.getResources().openRawResource(R.raw.waypoints);
-        Writer writer = new StringWriter();
-        char[] buffer = new char[1024];
-        try {
-            Reader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-            int n;
-            while ((n = reader.read(buffer)) != -1) {
-                writer.write(buffer, 0, n);
-            }
-            is.close();
-        } catch(IOException ignore) {}
-        return writer.toString();
+    private void configureWaypoints(AllianceColor allianceColor, RingDetectionAmount ringDetectionAmount) {
+        if(allianceColor.equals(AllianceColor.BLUE)) {
+            for(Positions position : Positions.values())
+                position.reflectInX();
+        }
+
+        for(Positions position : Positions.values())
+            position.setLabel(position.name());
+    }
+
+    public void setRingDetectionAmount(RingDetectionAmount ringDetectionAmount) {
+        this.ringDetectionAmount = ringDetectionAmount;
+    }
+
+    public AllianceColor getAllianceColor() {
+        return allianceColor;
+    }
+
+    public RingDetectionAmount getRingDetectionAmount() {
+        return ringDetectionAmount;
     }
 }
