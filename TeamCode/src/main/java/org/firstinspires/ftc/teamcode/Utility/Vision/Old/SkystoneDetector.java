@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.Utility.Vision;
+package org.firstinspires.ftc.teamcode.Utility.Vision.Old;
 
 import android.util.Log;
 
@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
 
 import java.util.ArrayList;
 
-import static org.firstinspires.ftc.teamcode.Utility.Vision.TernarySkystonePipeline.NormalizedRectangle;
+import static org.firstinspires.ftc.teamcode.Utility.Vision.Old.TernarySkystonePipeline.NormalizedRectangle;
 
 /**
  * Initializes a pipeline and starts streaming.

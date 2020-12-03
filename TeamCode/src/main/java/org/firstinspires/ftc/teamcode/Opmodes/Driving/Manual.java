@@ -6,7 +6,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.HardwareTypes.IMU;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.Utility.*;
-import org.firstinspires.ftc.teamcode.Utility.Autonomous.Waypoints;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
 
@@ -47,8 +46,11 @@ public class Manual extends RobotHardware {
     public void loop() {
         super.loop();
 
-        motorUtility.setDriveForSimpleMecanum(primary.left_stick_x * drivespeed, primary.left_stick_y * drivespeed,
-                primary.right_stick_x * drivespeed, primary.right_stick_y * drivespeed);
+        motorUtility.setDriveForSimpleMecanum(
+                primary.left_stick_x  * drivespeed,
+                primary.left_stick_y  * drivespeed,
+                primary.right_stick_x * drivespeed,
+                primary.right_stick_y * drivespeed);
 
         imuUtil.update();
 

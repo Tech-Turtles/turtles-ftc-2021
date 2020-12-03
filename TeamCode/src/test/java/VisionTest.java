@@ -1,11 +1,9 @@
 import static com.google.common.truth.Truth.assertThat;
 
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
-import org.firstinspires.ftc.teamcode.Utility.Vision.AveragingPipeline;
-import org.firstinspires.ftc.teamcode.Utility.Vision.SinglePixelPipeline;
+import org.firstinspires.ftc.teamcode.Utility.Vision.Old.AveragingPipeline;
 
-import org.firstinspires.ftc.teamcode.Utility.Vision.SkystoneDetector;
-import org.firstinspires.ftc.teamcode.Utility.Vision.TernarySkystonePipeline;
+import org.firstinspires.ftc.teamcode.Utility.Vision.Old.SkystoneDetector;
 import org.junit.Before;
 import org.junit.Test;
 import org.opencv.core.Core;
@@ -17,11 +15,8 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
-import org.openftc.easyopencv.OpenCvPipeline;
 
-import static org.firstinspires.ftc.teamcode.Utility.Vision.TernarySkystonePipeline.NormalizedValue;
-import static org.firstinspires.ftc.teamcode.Utility.Vision.TernarySkystonePipeline.NormalizedPair;
-import static org.firstinspires.ftc.teamcode.Utility.Vision.TernarySkystonePipeline.NormalizedRectangle;
+import static org.firstinspires.ftc.teamcode.Utility.Vision.Old.TernarySkystonePipeline.NormalizedRectangle;
 
 import java.io.File;
 import java.util.ArrayList;
