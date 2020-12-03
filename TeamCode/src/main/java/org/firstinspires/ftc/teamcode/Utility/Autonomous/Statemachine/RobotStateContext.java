@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine;
 import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.AutoOpmode;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Waypoints;
-import org.firstinspires.ftc.teamcode.Utility.Controller;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation.*;
 import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 
@@ -14,16 +13,16 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     // Required class variables
     private AutoOpmode opMode;
     private Executive.StateMachine<AutoOpmode> stateMachine;
-    private AllianceColor teamColor;
+    private AllianceColor allianceColor;
     private RobotHardware.StartPosition startPosition;
     private Waypoints waypoints;
 
-    public RobotStateContext(AutoOpmode opMode, AllianceColor teamColor, AutoOpmode.StartPosition startPosition) {
+    public RobotStateContext(AutoOpmode opMode, AllianceColor allianceColor, AutoOpmode.StartPosition startPosition) {
         this.opMode = opMode;
-        this.teamColor = teamColor;
+        this.allianceColor = allianceColor;
         this.startPosition = startPosition;
         this.stateMachine = new Executive.StateMachine<>(opMode);
-        this.waypoints = new Waypoints(opMode);
+        this.waypoints = new Waypoints(allianceColor);
         stateMachine.update();
     }
 

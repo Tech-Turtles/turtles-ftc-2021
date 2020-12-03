@@ -4,7 +4,7 @@ import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount;
 
 public class Waypoints {
 
-    private AllianceColor allianceColor;
+    private final AllianceColor allianceColor;
     private RingDetectionAmount ringDetectionAmount;
 
     public Waypoints(AllianceColor allianceColor, RingDetectionAmount ringDetectionAmount) {
