@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine;
 
 import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.AutoOpmode;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
+import org.firstinspires.ftc.teamcode.Utility.Autonomous.Positions;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Waypoints;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation.*;
 import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
@@ -51,11 +52,11 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.init(stateMachine);
             switch (startPosition) {
                 case WALL:
-                    setupInitialPosition(new Navigation2D(0, 0, 0));
+                    setupInitialPosition(Positions.START_WALL.getNav2D());
                     nextState(DRIVE, new Auto_State());
                     break;
                 case CENTER:
-                    setupInitialPosition(new Navigation2D(0, 0, 0));
+                    setupInitialPosition(Positions.START_CENTER.getNav2D());
                     nextState(DRIVE, new Auto_State());
                     break;
                 default:
@@ -65,6 +66,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
 
         private void setupInitialPosition(Navigation2D initialPosition) {
             opMode.mecanumNavigation.setCurrentPosition(initialPosition);
+            opMode.imuUtil.updateNow();
+            opMode.imuUtil.setCompensatedHeading(Math.toDegrees(initialPosition.theta));
         }
     }
 

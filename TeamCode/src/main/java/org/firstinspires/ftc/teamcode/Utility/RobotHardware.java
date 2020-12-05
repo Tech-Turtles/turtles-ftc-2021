@@ -21,6 +21,9 @@ import org.firstinspires.ftc.teamcode.HardwareTypes.*;
 import org.firstinspires.ftc.teamcode.Menu.InteractiveInitialization;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
+import org.firstinspires.ftc.teamcode.Utility.Vision.UGCoffeeDetector;
+import org.firstinspires.ftc.teamcode.Utility.Vision.UGContourRingDetector;
+import org.firstinspires.ftc.teamcode.Utility.Vision.UGContourRingPipeline;
 
 /**
  * @author Christian
@@ -50,6 +53,8 @@ public class RobotHardware extends OpMode {
     public Controller primary, secondary;
 
     public MecanumNavigation mecanumNavigation;
+
+    public UGCoffeeDetector ringDetector;
 
     public class MotorUtility {
 
@@ -243,6 +248,11 @@ public class RobotHardware extends OpMode {
     public enum StartPosition {
         WALL,
         CENTER
+    }
+
+    public void loadVision(boolean debug) {
+        ringDetector = new UGCoffeeDetector(hardwareMap, Webcam.WEBCAM_1.getName(), telemetry, debug);
+        ringDetector.init();
     }
 
     public double getTime() {

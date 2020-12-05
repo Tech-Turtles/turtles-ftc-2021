@@ -74,17 +74,12 @@ class UGContourRingPipeline(
         var debug: Boolean = false,
 ): OpenCvPipeline() {
     /** variable to store the calculated height of the stack **/
-    var height: Height
+    var height: RingDetectionAmount
         private set
 
     /** variables that will be reused for calculations **/
     private var mat: Mat
     private var ret: Mat
-
-    /** enum class for Height of the stone **/
-    enum class Height {
-        ZERO, ONE, FOUR
-    }
 
     /** companion object to store all static variables needed **/
     companion object Config {
@@ -113,7 +108,7 @@ class UGContourRingPipeline(
      * default init call, body of constructors
      */
     init {
-        height = Height.ZERO
+        height = RingDetectionAmount.ZERO
         ret = Mat()
         mat = Mat()
     }
@@ -199,11 +194,11 @@ class UGContourRingPipeline(
                  * to determine whether stack is ONE or FOUR
                  */
                 if (aspectRatio > BOUND_RATIO)
-                    Height.FOUR // height variable is now FOUR
+                    RingDetectionAmount.FOUR // height variable is now FOUR
                 else
-                    Height.ONE // height variable is now ONE
+                    RingDetectionAmount.ONE // height variable is now ONE
             } else {
-                Height.ZERO // height variable is now ZERO
+                RingDetectionAmount.ZERO // height variable is now ZERO
             }
 
             if (debug) telemetry?.addData("Vision: Height", height)

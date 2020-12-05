@@ -16,8 +16,6 @@ import org.firstinspires.ftc.teamcode.Utility.TelemetryTools;
 @TeleOp(name="Debug", group="B")
 public class Debug extends Manual {
 
-    IMUUtilities imuUtil;
-
     @Override
     public void init() {
         super.init();

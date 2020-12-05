@@ -79,7 +79,7 @@ class UGContourRingDetector( // primary constructor
     }
 
     // returns the height detected by the pipeline
-    val height: UGContourRingPipeline.Height
+    val height: RingDetectionAmount
         get() = ftcLibPipeline.height
 
     // init function to initialize camera and pipeline
@@ -101,11 +101,11 @@ class UGContourRingDetector( // primary constructor
 //                            hardwareMap.get(WebcamName::class.java, webcamName), cameraMonitorViewId,
 //                    )
 //        } else {
-            OpenCvCameraFactory
-                    .getInstance()
-                    .createInternalCamera(
-                            cameraDirection, cameraMonitorViewId,
-                    )
+                OpenCvCameraFactory
+                        .getInstance()
+                        .createInternalCamera(
+                                cameraDirection, cameraMonitorViewId,
+                        )
 //        }
 
         camera.setPipeline(
