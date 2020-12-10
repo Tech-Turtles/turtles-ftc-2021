@@ -25,7 +25,7 @@ public class IMUUtilities {
 
     // Convenience numbers for when IMUUtilities is actually instantiated.
     public BNO055IMU imu;
-    public double heading;
+    private double heading;
     public double roll;
     public double pitch;
     public double xAccel;

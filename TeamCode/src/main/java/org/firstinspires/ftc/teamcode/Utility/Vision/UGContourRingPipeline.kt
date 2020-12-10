@@ -178,7 +178,7 @@ class UGContourRingPipeline(
                             255.0)
             )
 
-            if (debug) telemetry?.addData("Vision: maxW", maxWidth)
+            if (debug) telemetry?.addData("Vision maxW: ", maxWidth)
 
             /** checking if widest width is greater than equal to minimum width
              * using Kotlin if expression (Java ternary) to set height variable
@@ -188,7 +188,7 @@ class UGContourRingPipeline(
             height = if (maxWidth >= MIN_WIDTH) {
                 val aspectRatio: Double = maxRect.height.toDouble() / maxRect.width.toDouble()
 
-                if(debug) telemetry?.addData("Vision: Aspect Ratio", aspectRatio)
+                if(debug) telemetry?.addData("Vision Aspect Ratio: ", aspectRatio)
 
                 /** checks if aspectRatio is greater than BOUND_RATIO
                  * to determine whether stack is ONE or FOUR
@@ -201,7 +201,7 @@ class UGContourRingPipeline(
                 RingDetectionAmount.ZERO // height variable is now ZERO
             }
 
-            if (debug) telemetry?.addData("Vision: Height", height)
+            if (debug) telemetry?.addData("Vision Height: ", height)
 
             // releasing all mats after use
             mat.release()
@@ -213,7 +213,6 @@ class UGContourRingPipeline(
             telemetry?.addData("[ERROR]", e)
             e.stackTrace.toList().stream().forEach { x -> telemetry?.addLine(x.toString()) }
         }
-        telemetry?.update()
 
         /**returns the black and orange mask with contours drawn to see logic in action**/
         return ret

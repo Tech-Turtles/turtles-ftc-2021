@@ -12,7 +12,7 @@ public enum Motors {
     BACK_RIGHT("back right", ExpansionHubs.HUB1, MotorTypes.DRIVE, DcMotorSimple.Direction.REVERSE, ZeroPowerBehavior.FLOAT, RunMode.RUN_WITHOUT_ENCODER),
 
     INTAKE("intake", ExpansionHubs.HUB2, MotorTypes.OTHER, DcMotorSimple.Direction.FORWARD, ZeroPowerBehavior.FLOAT, RunMode.RUN_USING_ENCODER),
-    LAUNCHER("launcher", ExpansionHubs.HUB2, MotorTypes.OTHER, DcMotorSimple.Direction.REVERSE, ZeroPowerBehavior.FLOAT, RunMode.RUN_USING_ENCODER),
+    LAUNCHER("launcher", ExpansionHubs.HUB2, MotorTypes.OTHER, DcMotorSimple.Direction.FORWARD, ZeroPowerBehavior.FLOAT, RunMode.RUN_USING_ENCODER),
 
     LEFT_WHEEL("left dead", ExpansionHubs.HUB2, MotorTypes.ODOMETRY, DcMotorSimple.Direction.FORWARD, ZeroPowerBehavior.FLOAT, RunMode.RUN_USING_ENCODER),
     CENTER_WHEEL("center dead", ExpansionHubs.HUB2, MotorTypes.ODOMETRY, DcMotorSimple.Direction.FORWARD, ZeroPowerBehavior.FLOAT, RunMode.RUN_USING_ENCODER),

@@ -40,7 +40,6 @@ public class RobotHardware extends OpMode {
     public DecimalFormat df = new DecimalFormat("0.00");
     public DecimalFormat df_precise = new DecimalFormat("0.0000");
 
-    public BNO055IMU imu;
     public IMUUtilities imuUtil;
 
     public InteractiveInitialization initMenu;

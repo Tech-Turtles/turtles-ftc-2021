@@ -16,9 +16,9 @@ public class DiagnosticVision extends Diagnostic {
     public void init_loop(){
         super.init_loop();
         if (ringDetector == null)
-            telemetry.addData("Vision:", "LOADING...");
+            telemetry.addData("Vision: ", "LOADING...");
         else
-            telemetry.addData("Vision:", "INITIALIZED");
+            telemetry.addData("Vision: ", "INITIALIZED");
     }
 
     @Override

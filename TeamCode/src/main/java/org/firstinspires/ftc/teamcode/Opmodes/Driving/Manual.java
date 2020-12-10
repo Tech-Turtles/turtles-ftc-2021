@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.IMU;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
+import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
 import org.firstinspires.ftc.teamcode.Utility.*;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
@@ -17,7 +18,8 @@ public class Manual extends RobotHardware {
     @Config
     static class DashboardVariables {
         public static double drivespeed = 1.0;
-        public static double launchspeed = 1.0;
+        public static double launchspeed = 0.6;
+        public static double hopperPosition = .0;
     }
 
     private final double deadzone = 0.49f;
@@ -25,6 +27,7 @@ public class Manual extends RobotHardware {
     @Override
     public void init() {
         super.init();
+        hopperPosition = servoUtility.getAngle(Servos.HOPPER);
     }
 
     @Override
@@ -54,22 +57,20 @@ public class Manual extends RobotHardware {
 
         imuUtil.update();
 
-        if(primary.leftBumperOnce()) {
-            drivespeed = drivespeed <= 0.0 ? 0.0 : drivespeed - 0.1;
-        } else if(primary.rightBumperOnce()) {
-            drivespeed = drivespeed >= 1.0 ? 1.0 : drivespeed + 0.1;
-        }
-
-        if(primary.dpadUpOnce()) {
-            launchspeed = launchspeed >= 1.0 ? 1.0 : launchspeed + 0.1;
-        } else if(primary.dpadDownOnce()) {
-            launchspeed = launchspeed <= 0.0 ? 0.0 : launchspeed - 0.1;
-        }
-
         if(primary.A()) {
             motorUtility.setPower(Motors.LAUNCHER, launchspeed);
         } else {
             motorUtility.setPower(Motors.LAUNCHER, 0f);
+        }
+
+        if(primary.YOnce()) {
+            imuUtil.setCompensatedHeading(0);
+        }
+
+        if(primary.rightBumper()) {
+            servoUtility.setAngle(Servos.HOPPER, 0.23);
+        } else {
+            servoUtility.setAngle(Servos.HOPPER, 0.32);
         }
 
         if(primary.right_trigger > deadzone) {
@@ -80,22 +81,11 @@ public class Manual extends RobotHardware {
             motorUtility.setPower(Motors.INTAKE, 0f);
         }
 
-        telemetry.addData("Launch velocity A:   ", getLauncherTicksPerSecond());
-        telemetry.addData("Launch velocity B:   ", motorUtility.getVelocity(Motors.LAUNCHER));
+        telemetry.addData("Launch velocity:     ", motorUtility.getVelocity(Motors.LAUNCHER));
         telemetry.addData("Drive speed:         ", df.format(drivespeed));
         telemetry.addData("Launcher speed:      ", df.format(launchspeed));
         telemetry.addData("Loop time:           ", df_precise.format(period.getAveragePeriodSec()) + "s");
         telemetry.addData("IMU Heading:         ", imuUtil.getCompensatedHeading());
-    }
-
-    int launcherTicks, launcherPreviousTicks, launcherDeltaTicks = 0;
-    double ticksPerSecond = 0;
-
-    int getLauncherTicksPerSecond() {
-        launcherTicks = motorUtility.getEncoderValue(Motors.LAUNCHER);
-        launcherDeltaTicks = launcherTicks - launcherPreviousTicks;
-        ticksPerSecond = launcherDeltaTicks / period.getLastPeriodSec();
-        launcherPreviousTicks = launcherTicks;
-        return (int) ticksPerSecond;
+        telemetry.addData("Hopper Position:     ", servoUtility.getAngle(Servos.HOPPER));
     }
 }
