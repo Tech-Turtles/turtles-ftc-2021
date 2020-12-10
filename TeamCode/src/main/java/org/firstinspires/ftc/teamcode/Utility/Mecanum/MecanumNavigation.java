@@ -1,13 +1,14 @@
 package org.firstinspires.ftc.teamcode.Utility.Mecanum;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
+import org.firstinspires.ftc.teamcode.Utility.Odometry.DeadWheels.Localizer;
 import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 
 /**
  * Created by Ashley on 12/8/2017.
  */
 
-public class MecanumNavigation {
+public class MecanumNavigation implements Localizer {
 
     private RobotHardware opMode;
     public DriveTrainMecanum driveTrainMecanum;

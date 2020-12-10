@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.Utility.Mecanum.AutoDrive;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.Mecanum;
 import org.firstinspires.ftc.teamcode.Utility.Math.ElapsedTimer;
 
@@ -52,6 +53,7 @@ public class RobotHardware extends OpMode {
     public Controller primary, secondary;
 
     public MecanumNavigation mecanumNavigation;
+    public AutoDrive autoDrive;
 
     public UGCoffeeDetector ringDetector;
 

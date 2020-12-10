@@ -73,6 +73,12 @@ public class Manual extends RobotHardware {
             servoUtility.setAngle(Servos.HOPPER, 0.32);
         }
 
+        if(primary.dpadUpOnce()) {
+            launchspeed = Math.min(launchspeed + 0.01, 1.0);
+        } else if(primary.dpadDownOnce()) {
+            launchspeed = Math.max(launchspeed - 0.01, 0);
+        }
+
         if(primary.right_trigger > deadzone) {
             motorUtility.setPower(Motors.INTAKE, 1f);
         } else if(primary.left_trigger > deadzone) {
@@ -81,9 +87,9 @@ public class Manual extends RobotHardware {
             motorUtility.setPower(Motors.INTAKE, 0f);
         }
 
+        telemetry.addData("Launcher speed:      ", df.format(launchspeed));
         telemetry.addData("Launch velocity:     ", motorUtility.getVelocity(Motors.LAUNCHER));
         telemetry.addData("Drive speed:         ", df.format(drivespeed));
-        telemetry.addData("Launcher speed:      ", df.format(launchspeed));
         telemetry.addData("Loop time:           ", df_precise.format(period.getAveragePeriodSec()) + "s");
         telemetry.addData("IMU Heading:         ", imuUtil.getCompensatedHeading());
         telemetry.addData("Hopper Position:     ", servoUtility.getAngle(Servos.HOPPER));

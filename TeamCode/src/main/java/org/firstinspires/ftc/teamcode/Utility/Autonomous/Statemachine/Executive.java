@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
 import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 
 import java.util.HashMap;
@@ -220,18 +221,18 @@ public class Executive {
             return iteration;
         }
 
-//        public boolean driveTo(MecanumNavigation.Navigation2D waypoint, double driveSpeed) {
-//            return opMode.autoDrive.driveToPositionTranslateOnly(waypoint, driveSpeed);
-////            return opMode.positionController.driveTo(waypoint, driveSpeed);  // New positioning system
-//        }
-//
-//        public boolean driveTo(MecanumNavigation.Navigation2D waypoint, double driveSpeed, double minRate, double tolerance) {
-//            return opMode.autoDrive.driveToPositionTranslateOnly(waypoint, driveSpeed, minRate, tolerance);
-//        }
-//
-//        public boolean driveTo(MecanumNavigation.Navigation2D waypoint, double driveSpeed, double tolerance) {
-//            return opMode.autoDrive.driveToPositionTranslateOnly(waypoint, driveSpeed, 0.05, tolerance);
-//        }
+        public boolean driveTo(MecanumNavigation.Navigation2D waypoint, double driveSpeed) {
+            return opMode.autoDrive.driveToPositionTranslateOnly(waypoint, driveSpeed);
+//            return opMode.positionController.driveTo(waypoint, driveSpeed);  // New positioning system
+        }
+
+        public boolean driveTo(MecanumNavigation.Navigation2D waypoint, double driveSpeed, double minRate, double tolerance) {
+            return opMode.autoDrive.driveToPositionTranslateOnly(waypoint, driveSpeed, minRate, tolerance);
+        }
+
+        public boolean driveTo(MecanumNavigation.Navigation2D waypoint, double driveSpeed, double tolerance) {
+            return opMode.autoDrive.driveToPositionTranslateOnly(waypoint, driveSpeed, 0.05, tolerance);
+        }
 
         public String getAuxData() {
             return "";

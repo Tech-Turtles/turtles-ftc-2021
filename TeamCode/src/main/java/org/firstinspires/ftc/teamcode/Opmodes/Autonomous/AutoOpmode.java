@@ -7,6 +7,7 @@ import org.firstinspires.ftc.teamcode.Utility.*;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext;
+import org.firstinspires.ftc.teamcode.Utility.Mecanum.AutoDrive;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
 
@@ -73,6 +74,8 @@ public class AutoOpmode extends RobotHardware {
         // Navigation and control
         mecanumNavigation = new MecanumNavigation(this, Configuration.getDriveTrainMecanum());
         mecanumNavigation.initialize(new MecanumNavigation.Navigation2D(0, 0, 0));
+
+        autoDrive = new AutoDrive(this, mecanumNavigation, mecanumNavigation);
 
         // Ensure starting position at origin, even if wheels turned since initialize.
         mecanumNavigation.update();
