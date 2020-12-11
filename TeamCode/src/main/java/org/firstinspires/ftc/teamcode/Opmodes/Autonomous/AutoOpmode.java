@@ -100,16 +100,4 @@ public class AutoOpmode extends RobotHardware {
         telemetry.addData("Period Max:     ", df_precise.format(period.getMaxPeriodSec()) + "s");
         telemetry.addData("State:          ", robotStateContext.getCurrentState());
     }
-
-    /**
-     * Updates the mecanumNavigation heading from the imu heading.
-     * This function forces the IMU to refresh immediately.
-     */
-    public void updateMecanumHeadingFromGyroNow() {
-        imuUtil.updateNow();
-        double gyroHeading = imuUtil.getCompensatedHeading();
-        MecanumNavigation.Navigation2D currentPosition = mecanumNavigation.getCurrentPosition();
-        currentPosition.theta = Math.toRadians(gyroHeading);
-        mecanumNavigation.setCurrentPosition(currentPosition);
-    }
 }

@@ -56,12 +56,12 @@ public class MecanumNavigation implements Localizer {
                 robotHardware.motorUtility.getEncoderValue(Motors.BACK_LEFT),
                 robotHardware.motorUtility.getEncoderValue(Motors.BACK_RIGHT)));
     }
-
+    //TODO: Back_Left negative is bad.  Find the real problem.
     public void update() {
         update(new org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation.WheelTicks(
                 opMode.motorUtility.getEncoderValue(Motors.FRONT_LEFT),
                 opMode.motorUtility.getEncoderValue(Motors.FRONT_RIGHT),
-                opMode.motorUtility.getEncoderValue(Motors.BACK_LEFT),
+                -opMode.motorUtility.getEncoderValue(Motors.BACK_LEFT),
                 opMode.motorUtility.getEncoderValue(Motors.BACK_RIGHT)));
     }
 

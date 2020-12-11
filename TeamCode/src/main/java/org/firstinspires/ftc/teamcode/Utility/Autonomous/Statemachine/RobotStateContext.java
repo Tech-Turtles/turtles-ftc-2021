@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount;
 
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.DRIVE;
-import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.DashboardVariables.*;
+import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.AutoDashboardVariables.*;
 
 public class RobotStateContext implements Executive.RobotStateMachineContextInterface {
 
@@ -25,7 +25,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     private Waypoints waypoints;
 
     @Config
-    static class DashboardVariables {
+    static class AutoDashboardVariables {
         public static double  hopperOpen = 0.32;
         public static double  hopperPush = 0.23;
 

@@ -256,6 +256,18 @@ public class RobotHardware extends OpMode {
         ringDetector.init();
     }
 
+    /**
+     * Updates the mecanumNavigation heading from the imu heading.
+     * This function forces the IMU to refresh immediately.
+     */
+    public void updateMecanumHeadingFromGyroNow() {
+        if(imuUtil == null || mecanumNavigation == null) return;
+        imuUtil.updateNow();
+        MecanumNavigation.Navigation2D currentPosition = mecanumNavigation.getCurrentPosition();
+        currentPosition.theta = Math.toRadians(imuUtil.getCompensatedHeading());
+        mecanumNavigation.setCurrentPosition(currentPosition);
+    }
+
     public double getTime() {
         return time;
     }

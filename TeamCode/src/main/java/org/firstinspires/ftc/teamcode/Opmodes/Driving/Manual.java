@@ -19,7 +19,8 @@ public class Manual extends RobotHardware {
     static class DashboardVariables {
         public static double drivespeed = 1.0;
         public static double launchspeed = 0.6;
-        public static double hopperPosition = .0;
+        public static double hopperOpenPos = 0.32;
+        public static double hopperPushPos = 0.23;
     }
 
     private final double deadzone = 0.49f;
@@ -27,7 +28,7 @@ public class Manual extends RobotHardware {
     @Override
     public void init() {
         super.init();
-        hopperPosition = servoUtility.getAngle(Servos.HOPPER);
+
     }
 
     @Override
@@ -54,7 +55,7 @@ public class Manual extends RobotHardware {
                 primary.left_stick_y  * drivespeed,
                 primary.right_stick_x * drivespeed,
                 primary.right_stick_y * drivespeed);
-
+        mecanumNavigation.update();
         imuUtil.update();
 
         if(primary.A()) {
@@ -65,12 +66,13 @@ public class Manual extends RobotHardware {
 
         if(primary.YOnce()) {
             imuUtil.setCompensatedHeading(0);
+            mecanumNavigation.setCurrentPosition(new MecanumNavigation.Navigation2D(0,0,0));
         }
 
         if(primary.rightBumper()) {
-            servoUtility.setAngle(Servos.HOPPER, 0.23);
+            servoUtility.setAngle(Servos.HOPPER, hopperPushPos);
         } else {
-            servoUtility.setAngle(Servos.HOPPER, 0.32);
+            servoUtility.setAngle(Servos.HOPPER, hopperOpenPos);
         }
 
         if(primary.dpadUpOnce()) {
@@ -87,6 +89,7 @@ public class Manual extends RobotHardware {
             motorUtility.setPower(Motors.INTAKE, 0f);
         }
 
+        mecanumNavigation.displayPosition();
         telemetry.addData("Launcher speed:      ", df.format(launchspeed));
         telemetry.addData("Launch velocity:     ", motorUtility.getVelocity(Motors.LAUNCHER));
         telemetry.addData("Drive speed:         ", df.format(drivespeed));
