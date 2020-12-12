@@ -55,7 +55,7 @@ public class RobotHardware extends OpMode {
     public MecanumNavigation mecanumNavigation;
     public AutoDrive autoDrive;
 
-    public UGCoffeeDetector ringDetector;
+//    public UGCoffeeDetector ringDetector;
 
     public class MotorUtility {
 
@@ -252,8 +252,8 @@ public class RobotHardware extends OpMode {
     }
 
     public void loadVision(boolean debug) {
-        ringDetector = new UGCoffeeDetector(hardwareMap, Webcam.WEBCAM_1.getName(), telemetry, debug);
-        ringDetector.init();
+//        ringDetector = new UGCoffeeDetector(hardwareMap, Webcam.WEBCAM_1.getName(), telemetry, debug);
+//        ringDetector.init();
     }
 
     /**

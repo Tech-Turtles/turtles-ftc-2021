@@ -17,7 +17,7 @@ public enum Positions {
     ZONE_A(12,-60,0),
     ZONE_B(-36,36,0),
     ZONE_C(-60,60,0),
-    PARK(6,-42,180);
+    PARK(12,-42,180);
 
     private double x;
     private double y;

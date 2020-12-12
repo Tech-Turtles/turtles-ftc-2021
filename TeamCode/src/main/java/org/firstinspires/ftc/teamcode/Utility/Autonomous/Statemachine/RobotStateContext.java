@@ -130,7 +130,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             } else {
                 opmode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
                 opmode.motorUtility.setPower(Motors.LAUNCHER, 0);
-                nextState(DRIVE, new Stop());
+                nextState(DRIVE, new Park());
             }
         }
     }
@@ -139,9 +139,18 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void update() {
             super.update();
-            driveTo(Positions.PARK.getNewNavigation2D(), driveSpeed);
-            if(arrived)
+            opmode.motorUtility.setPower(Motors.FRONT_LEFT, -.5);
+            opmode.motorUtility.setPower(Motors.BACK_LEFT,  -.5);
+            opmode.motorUtility.setPower(Motors.FRONT_RIGHT, -.5);
+            opmode.motorUtility.setPower(Motors.BACK_RIGHT, -.5);
+            arrived = opmode.mecanumNavigation.getCurrentPosition().x > -16;
+            if(arrived) {
+                opmode.motorUtility.setPower(Motors.FRONT_LEFT, 0);
+                opmode.motorUtility.setPower(Motors.BACK_LEFT, 0);
+                opmode.motorUtility.setPower(Motors.FRONT_RIGHT, 0);
+                opmode.motorUtility.setPower(Motors.BACK_RIGHT, 0);
                 nextState(DRIVE, new Stop());
+            }
         }
     }
 

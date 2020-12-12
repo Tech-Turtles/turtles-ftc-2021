@@ -32,7 +32,6 @@ public class Manual extends RobotHardware {
     @Override
     public void init() {
         super.init();
-        motorUtility.setTypeMotorsRunmode(MotorTypes.DRIVE, DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     @Override

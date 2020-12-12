@@ -15,17 +15,17 @@ public class Vision extends Manual {
     @Override
     public void init_loop(){
         super.init_loop();
-        if (ringDetector == null)
-            telemetry.addData("Vision:", "LOADING...");
-        else
-            telemetry.addData("Vision:", "INITIALIZED");
+//        if (ringDetector == null)
+//            telemetry.addData("Vision:", "LOADING...");
+//        else
+//            telemetry.addData("Vision:", "INITIALIZED");
     }
 
     @Override
     public void loop() {
         super.loop();
 
-        if (ringDetector != null)
-            telemetry.addData("Ring Amount: ", ringDetector.getHeight().name());
+//        if (ringDetector != null)
+//            telemetry.addData("Ring Amount: ", ringDetector.getHeight().name());
     }
 }
