@@ -26,6 +26,7 @@ public class Manual extends RobotHardware {
         public static double precisionMode = 1.0;
         public static double precisionPercentage = 0.3;
         public static double rotationSpeed = 1.0;
+        public static boolean powershotMode = false;
     }
 
     @Override
@@ -66,6 +67,8 @@ public class Manual extends RobotHardware {
             mecanumNavigation.setCurrentPosition(new MecanumNavigation.Navigation2D(0,0,0));
         }
 
+        launchspeed = powershotMode ? 0.55 : 0.61;
+
         if(primary.AOnce()) {
             precisionMode = precisionMode == 1.0 ? precisionPercentage : 1.0;
         }
@@ -90,6 +93,10 @@ public class Manual extends RobotHardware {
             servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
         }
 
+        if(secondary.AOnce()) {
+            powershotMode = !powershotMode;
+        }
+
         if(secondary.dpadUpOnce()) {
             launchspeed = Math.min(launchspeed + 0.01, 1.0);
         } else if(secondary.dpadDownOnce()) {
@@ -100,6 +107,7 @@ public class Manual extends RobotHardware {
         mecanumNavigation.displayPosition();
         telemetry.addData("IMU heading:         ", imuUtil.getCompensatedHeading());
         telemetry.addData("Precision mode:      ", df.format(precisionMode));
+        telemetry.addData("Powershot mode:      ", powershotMode);
         telemetry.addLine("----Launcher----");
         telemetry.addData("Launcher speed:      ", df.format(launchspeed));
         telemetry.addData("Launch velocity:     ", motorUtility.getVelocity(Motors.LAUNCHER));

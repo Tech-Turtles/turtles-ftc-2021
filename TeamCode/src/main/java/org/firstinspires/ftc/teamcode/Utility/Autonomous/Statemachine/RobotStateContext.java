@@ -130,7 +130,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             } else {
                 opmode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
                 opmode.motorUtility.setPower(Motors.LAUNCHER, 0);
-                nextState(DRIVE, new Park());
+                nextState(DRIVE, new Stop());
             }
         }
     }
