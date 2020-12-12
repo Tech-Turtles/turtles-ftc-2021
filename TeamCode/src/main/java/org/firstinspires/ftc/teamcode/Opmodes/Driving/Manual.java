@@ -10,7 +10,9 @@ import org.firstinspires.ftc.teamcode.Utility.*;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
 
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.*;
 import static org.firstinspires.ftc.teamcode.Opmodes.Driving.Manual.DashboardVariables.*;
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.ConfigurationVariables.*;
 
 @TeleOp(name="Manual", group="A")
 public class Manual extends RobotHardware {
@@ -19,11 +21,9 @@ public class Manual extends RobotHardware {
     static class DashboardVariables {
         public static double drivespeed = 1.0;
         public static double launchspeed = 0.6;
-        public static double hopperOpenPos = 0.32;
-        public static double hopperPushPos = 0.23;
+        public static double precisionMode = 1.0;
+        public static double precisionPercentage = 0.4;
     }
-
-    private final double deadzone = 0.49f;
 
     @Override
     public void init() {
@@ -51,34 +51,20 @@ public class Manual extends RobotHardware {
         super.loop();
 
         motorUtility.setDriveForSimpleMecanum(
-                primary.left_stick_x  * drivespeed,
-                primary.left_stick_y  * drivespeed,
-                primary.right_stick_x * drivespeed,
-                primary.right_stick_y * drivespeed);
+                primary.left_stick_x  * (drivespeed * precisionMode),
+                primary.left_stick_y  * (drivespeed * precisionMode),
+                primary.right_stick_x * (drivespeed * precisionMode),
+                primary.right_stick_y * (drivespeed * precisionMode));
         mecanumNavigation.update();
         imuUtil.update();
-
-        if(primary.A()) {
-            motorUtility.setPower(Motors.LAUNCHER, launchspeed);
-        } else {
-            motorUtility.setPower(Motors.LAUNCHER, 0f);
-        }
 
         if(primary.YOnce()) {
             imuUtil.setCompensatedHeading(0);
             mecanumNavigation.setCurrentPosition(new MecanumNavigation.Navigation2D(0,0,0));
         }
 
-        if(primary.rightBumper()) {
-            servoUtility.setAngle(Servos.HOPPER, hopperPushPos);
-        } else {
-            servoUtility.setAngle(Servos.HOPPER, hopperOpenPos);
-        }
-
-        if(primary.dpadUpOnce()) {
-            launchspeed = Math.min(launchspeed + 0.01, 1.0);
-        } else if(primary.dpadDownOnce()) {
-            launchspeed = Math.max(launchspeed - 0.01, 0);
+        if(primary.AOnce()) {
+            precisionMode = precisionMode == 1.0 ? precisionPercentage : 1.0;
         }
 
         if(primary.right_trigger > deadzone) {
@@ -89,12 +75,35 @@ public class Manual extends RobotHardware {
             motorUtility.setPower(Motors.INTAKE, 0f);
         }
 
+        if(secondary.right_trigger > deadzone) {
+            motorUtility.setPower(Motors.LAUNCHER, launchspeed);
+        } else {
+            motorUtility.setPower(Motors.LAUNCHER, 0f);
+        }
+
+        if(secondary.rightBumper()) {
+            servoUtility.setAngle(Servos.HOPPER, HOPPER_PUSH_POS);
+        } else {
+            servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
+        }
+
+        if(secondary.dpadUpOnce()) {
+            launchspeed = Math.min(launchspeed + 0.05, 1.0);
+        } else if(secondary.dpadDownOnce()) {
+            launchspeed = Math.max(launchspeed - 0.05, 0);
+        }
+
+        telemetry.addLine("----Navigation----");
         mecanumNavigation.displayPosition();
+        telemetry.addData("IMU heading:         ", imuUtil.getCompensatedHeading());
+        telemetry.addData("Precision mode:      ", df.format(precisionMode));
+        telemetry.addLine("----Launcher----");
         telemetry.addData("Launcher speed:      ", df.format(launchspeed));
         telemetry.addData("Launch velocity:     ", motorUtility.getVelocity(Motors.LAUNCHER));
+        telemetry.addData("Hopper position:     ", servoUtility.getAngle(Servos.HOPPER));
+        telemetry.addLine();
         telemetry.addData("Drive speed:         ", df.format(drivespeed));
+        telemetry.addData("Precision speed:     ", df.format(precisionPercentage));
         telemetry.addData("Loop time:           ", df_precise.format(period.getAveragePeriodSec()) + "s");
-        telemetry.addData("IMU Heading:         ", imuUtil.getCompensatedHeading());
-        telemetry.addData("Hopper Position:     ", servoUtility.getAngle(Servos.HOPPER));
     }
 }

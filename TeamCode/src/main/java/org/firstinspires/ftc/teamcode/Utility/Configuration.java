@@ -1,8 +1,19 @@
 package org.firstinspires.ftc.teamcode.Utility;
 
+
+import com.acmerobotics.dashboard.config.Config;
+
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
 
 public class Configuration {
+
+    @Config
+    public static class ConfigurationVariables {
+        public static final double HOPPER_OPEN_POS = 0.32;
+        public static final double HOPPER_PUSH_POS = 0.18;
+    }
+
+    public static final double deadzone = 0.49f;
 
     public static final double DRIVE_WHEEL_DIAMETER_INCHES = 4.0;                   //todo Calibrate
 
