@@ -6,6 +6,7 @@ import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
 import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.AutoOpmode;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
+import org.firstinspires.ftc.teamcode.Utility.Autonomous.BehaviorSandBox;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Positions;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Waypoints;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation.*;
@@ -14,6 +15,7 @@ import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount;
 
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.DRIVE;
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.AutoDashboardVariables.*;
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.ConfigurationVariables.*;
 
 public class RobotStateContext implements Executive.RobotStateMachineContextInterface {
 
@@ -25,11 +27,9 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     private Waypoints waypoints;
 
     @Config
-    static class AutoDashboardVariables {
-        public static double  hopperOpen = 0.32;
-        public static double  hopperPush = 0.23;
-
-        public static double  launcherDelay = 0.4;
+    public static class AutoDashboardVariables {
+        public static double  launcherDelay = 2.0;
+        public static double  servoDelay = 0.75;
         public static double  scanDelay = 0.5;
 
         public static double  driveSpeed = 1.0;
@@ -95,103 +95,41 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opMode.servoUtility.setAngle(Servos.HOPPER, hopperOpen);
+            opmode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
         }
 
         @Override
         public void update() {
             super.update();
 
-            if(opMode.ringDetector != null) {
-                rings = opmode.ringDetector.getHeight();
-            }
+//            if(opmode.ringDetector != null) {
+//                rings = opmode.ringDetector.getHeight();
+//            }
 
-            if(stateTimer.seconds() > scanDelay)
-                nextState(DRIVE, new PrepShoot_A());
+//            if(stateTimer.seconds() > scanDelay)
+                nextState(DRIVE, new Shoot());
         }
     }
 
-    class PrepShoot_A extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void update() {
-            super.update();
-            driveTo(Positions.SHOOT.getNewNavigation2D(), driveSpeed);
-            if(arrived)
-                nextState(DRIVE, new Shoot_A());
-        }
-    }
-
-    class Shoot_A extends Executive.StateBase<AutoOpmode> {
+    class Shoot extends Executive.StateBase<AutoOpmode> {
         int index = 1;
 
         @Override
         public void update() {
             super.update();
             if(index < 4) {
-                if(stateTimer.seconds() > (launcherDelay * index)) {
-                    opMode.servoUtility.setAngle(Servos.HOPPER, hopperPush);
-                    opmode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
-                    index++;
-                }
-                opMode.servoUtility.setAngle(Servos.HOPPER, hopperOpen);
                 opmode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
-            } else {
-                opMode.servoUtility.setAngle(Servos.HOPPER, hopperOpen);
-                if(rings.equals(RingDetectionAmount.ZERO))
-                    nextState(DRIVE, new Park());
-                else
-                    nextState(DRIVE, new ToRings());
-            }
-        }
-    }
-
-    class ToRings extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void update() {
-            super.update();
-            driveTo(Positions.RINGS.getNewNavigation2D().addAndReturn(0,-10,0), driveSpeed);
-            if(arrived)
-                nextState(DRIVE, new GrabRings());
-        }
-    }
-
-    class GrabRings extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void update() {
-            super.update();
-            //todo change from hardcoded speed
-            opmode.motorUtility.setPower(Motors.INTAKE, 1.0);
-            driveTo(Positions.RINGS.getNewNavigation2D().addAndReturn(0,6,0), driveSpeed);
-            if(arrived)
-                nextState(DRIVE, new PrepShoot_B());
-        }
-    }
-
-    class PrepShoot_B extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void update() {
-            super.update();
-            driveTo(Positions.SHOOT.getNewNavigation2D(), driveSpeed);
-            if(arrived)
-                nextState(DRIVE, new Shoot_B());
-        }
-    }
-
-    class Shoot_B extends Executive.StateBase<AutoOpmode> {
-        int index = 1;
-
-        @Override
-        public void update() {
-            super.update();
-            if(index < 4) {
-                if(stateTimer.seconds() > (launcherDelay * index)) {
-                    opMode.servoUtility.setAngle(Servos.HOPPER, hopperPush);
-                    opmode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
+                if(stateTimer.seconds() < launcherDelay) {
+                    opmode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
+                } else if(stateTimer.seconds() < launcherDelay + servoDelay) {
+                    opmode.servoUtility.setAngle(Servos.HOPPER, HOPPER_PUSH_POS);
+                } else {
                     index++;
+                    stateTimer.reset();
                 }
-                opMode.servoUtility.setAngle(Servos.HOPPER, hopperOpen);
-                opmode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
             } else {
+                opmode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
+                opmode.motorUtility.setPower(Motors.LAUNCHER, 0);
                 nextState(DRIVE, new Park());
             }
         }

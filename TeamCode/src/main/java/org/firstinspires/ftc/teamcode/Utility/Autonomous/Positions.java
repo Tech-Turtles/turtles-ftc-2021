@@ -11,14 +11,13 @@ import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
  * All positions are based off the red side.
  */
 public enum Positions {
-    START_WALL(24,52,0),
-    START_CENTER(48,52,0),
-    RINGS(36,28,0),
-    ZONE_A(60,-12,0),
-    ZONE_B(36,-36,0),
-    ZONE_C(60,-60,0),
-    SHOOT(24,0,0),
-    PARK(16,-12,0);
+    START_WALL(-62,-42,180),
+    START_CENTER(-62,-24,0),
+    RINGS(-24,-36,0),
+    ZONE_A(12,-60,0),
+    ZONE_B(-36,36,0),
+    ZONE_C(-60,60,0),
+    PARK(6,-42,180);
 
     private double x;
     private double y;

@@ -9,8 +9,8 @@ public class Configuration {
 
     @Config
     public static class ConfigurationVariables {
-        public static final double HOPPER_OPEN_POS = 0.32;
-        public static final double HOPPER_PUSH_POS = 0.18;
+        public static double HOPPER_OPEN_POS = 0.32;
+        public static double HOPPER_PUSH_POS = 0.22;
     }
 
     public static final double deadzone = 0.49f;

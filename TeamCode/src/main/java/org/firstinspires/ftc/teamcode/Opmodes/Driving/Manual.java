@@ -2,8 +2,10 @@ package org.firstinspires.ftc.teamcode.Opmodes.Driving;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.IMU;
+import org.firstinspires.ftc.teamcode.HardwareTypes.MotorTypes;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
 import org.firstinspires.ftc.teamcode.Utility.*;
@@ -22,13 +24,14 @@ public class Manual extends RobotHardware {
         public static double drivespeed = 1.0;
         public static double launchspeed = 0.6;
         public static double precisionMode = 1.0;
-        public static double precisionPercentage = 0.4;
+        public static double precisionPercentage = 0.3;
+        public static double rotationSpeed = 1.0;
     }
 
     @Override
     public void init() {
         super.init();
-
+        motorUtility.setTypeMotorsRunmode(MotorTypes.DRIVE, DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     @Override
@@ -53,7 +56,7 @@ public class Manual extends RobotHardware {
         motorUtility.setDriveForSimpleMecanum(
                 primary.left_stick_x  * (drivespeed * precisionMode),
                 primary.left_stick_y  * (drivespeed * precisionMode),
-                primary.right_stick_x * (drivespeed * precisionMode),
+                primary.right_stick_x * (drivespeed * precisionMode) * rotationSpeed,
                 primary.right_stick_y * (drivespeed * precisionMode));
         mecanumNavigation.update();
         imuUtil.update();
@@ -88,9 +91,9 @@ public class Manual extends RobotHardware {
         }
 
         if(secondary.dpadUpOnce()) {
-            launchspeed = Math.min(launchspeed + 0.05, 1.0);
+            launchspeed = Math.min(launchspeed + 0.01, 1.0);
         } else if(secondary.dpadDownOnce()) {
-            launchspeed = Math.max(launchspeed - 0.05, 0);
+            launchspeed = Math.max(launchspeed - 0.01, 0);
         }
 
         telemetry.addLine("----Navigation----");
