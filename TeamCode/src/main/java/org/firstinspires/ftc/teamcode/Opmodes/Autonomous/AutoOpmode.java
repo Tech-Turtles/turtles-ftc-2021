@@ -25,6 +25,31 @@ public class AutoOpmode extends RobotHardware {
             robotColor = AllianceColor.RED;
             robotStartPos = StartPosition.WALL;
             super.init();
+            clearHubCache();
+        }
+
+        @Override
+        public void init_loop() {
+            super.init_loop();
+            clearHubCache();
+        }
+
+        @Override
+        public void start() {
+            super.start();
+            clearHubCache();
+        }
+
+        @Override
+        public void loop() {
+            super.loop();
+            clearHubCache();
+        }
+
+        @Override
+        public void stop() {
+            super.stop();
+            clearHubCache();
         }
     }
 
@@ -34,6 +59,31 @@ public class AutoOpmode extends RobotHardware {
             robotColor = AllianceColor.RED;
             robotStartPos = StartPosition.CENTER;
             super.init();
+            clearHubCache();
+        }
+
+        @Override
+        public void init_loop() {
+            super.init_loop();
+            clearHubCache();
+        }
+
+        @Override
+        public void start() {
+            super.start();
+            clearHubCache();
+        }
+
+        @Override
+        public void loop() {
+            super.loop();
+            clearHubCache();
+        }
+
+        @Override
+        public void stop() {
+            super.stop();
+            clearHubCache();
         }
     }
 
@@ -43,6 +93,31 @@ public class AutoOpmode extends RobotHardware {
             robotColor = AllianceColor.BLUE;
             robotStartPos = StartPosition.WALL;
             super.init();
+            clearHubCache();
+        }
+
+        @Override
+        public void init_loop() {
+            super.init_loop();
+            clearHubCache();
+        }
+
+        @Override
+        public void start() {
+            super.start();
+            clearHubCache();
+        }
+
+        @Override
+        public void loop() {
+            super.loop();
+            clearHubCache();
+        }
+
+        @Override
+        public void stop() {
+            super.stop();
+            clearHubCache();
         }
     }
 
@@ -52,11 +127,60 @@ public class AutoOpmode extends RobotHardware {
             robotColor = AllianceColor.BLUE;
             robotStartPos = StartPosition.CENTER;
             super.init();
+            clearHubCache();
+        }
+
+        @Override
+        public void init_loop() {
+            super.init_loop();
+            clearHubCache();
+        }
+
+        @Override
+        public void start() {
+            super.start();
+            clearHubCache();
+        }
+
+        @Override
+        public void loop() {
+            super.loop();
+            clearHubCache();
+        }
+
+        @Override
+        public void stop() {
+            super.stop();
+            clearHubCache();
         }
     }
 
     @Autonomous(name="Sandbox", group="E")
-    public static class Sandbox extends AutoOpmode {}
+    public static class Sandbox extends AutoOpmode {
+        @Override
+        public void init_loop() {
+            super.init_loop();
+            clearHubCache();
+        }
+
+        @Override
+        public void start() {
+            super.start();
+            clearHubCache();
+        }
+
+        @Override
+        public void loop() {
+            super.loop();
+            clearHubCache();
+        }
+
+        @Override
+        public void stop() {
+            super.stop();
+            clearHubCache();
+        }
+    }
 
     @Override
     public void init() {

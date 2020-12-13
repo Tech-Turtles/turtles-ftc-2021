@@ -12,7 +12,7 @@ import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 
 import static org.firstinspires.ftc.teamcode.Opmodes.Driving.Tank.TankVariables.useEncoders;
 
-@TeleOp(name="Tank Drive", group="E")
+
 public class Tank extends RobotHardware {
 
     DcMotor fLeft;

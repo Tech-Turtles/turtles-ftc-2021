@@ -1,16 +1,13 @@
 package org.firstinspires.ftc.teamcode.Opmodes.Driving;
 
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.*;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
-import org.firstinspires.ftc.teamcode.Utility.TelemetryTools;
 
 /**
  * @author Christian
  * An opmode that shows as much data about the robot as possible.
  */
-@TeleOp(name="Diagnostic", group="C")
 public class Diagnostic extends Manual {
 
     @Override

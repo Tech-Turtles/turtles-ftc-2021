@@ -1,19 +1,15 @@
 package org.firstinspires.ftc.teamcode.Opmodes.Driving;
 
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-
 import org.firstinspires.ftc.teamcode.HardwareTypes.IMU;
 import org.firstinspires.ftc.teamcode.HardwareTypes.MotorTypes;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
-import org.firstinspires.ftc.teamcode.Utility.TelemetryTools;
 
 /**
  * @author Christian
  * An opmode that shows data about commonly used things, including motors, servos, IMU.
  */
-@TeleOp(name="Debug", group="B")
 public class Debug extends Manual {
 
     @Override

@@ -16,7 +16,6 @@ import static org.firstinspires.ftc.teamcode.Utility.Configuration.*;
 import static org.firstinspires.ftc.teamcode.Opmodes.Driving.Manual.DashboardVariables.*;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.ConfigurationVariables.*;
 
-@TeleOp(name="Manual", group="A")
 public class Manual extends RobotHardware {
 
     @Config

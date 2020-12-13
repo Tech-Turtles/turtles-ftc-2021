@@ -1,8 +1,5 @@
 package org.firstinspires.ftc.teamcode.Opmodes.Driving;
 
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-
-@TeleOp(name="Vision", group="B")
 public class Vision extends Manual {
 
     @Override
