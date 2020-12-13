@@ -80,6 +80,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                     setupInitialPosition(Positions.START_CENTER.getNav2D());
                     nextState(DRIVE, new Initial());
                     break;
+                default:
+                   throw new IndexOutOfBoundsException("Invalid start position.");
             }
         }
 

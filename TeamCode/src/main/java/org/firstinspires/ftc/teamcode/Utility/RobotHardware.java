@@ -252,21 +252,8 @@ public class RobotHardware extends OpMode {
     }
 
     public void loadVision(boolean debug) {
-        ringDetector = new UGCoffeeDetector(hardwareMap, Webcam.WEBCAM_1.getName(), telemetry, debug);
-        ringDetector.init();
-    }
-
-    public void clearHubCache() {
-        try {
-            expansionHub1.clearBulkCache();
-        } catch (Exception e) {
-            telemetry.addLine("Error: " + e.getMessage());
-        }
-        try {
-            expansionHub2.clearBulkCache();
-        } catch (Exception e) {
-            telemetry.addLine("Error: " + e.getMessage());
-        }
+//        ringDetector = new UGCoffeeDetector(hardwareMap, Webcam.WEBCAM_1.getName(), telemetry, debug);
+//        ringDetector.init();
     }
 
     /**
@@ -295,8 +282,8 @@ public class RobotHardware extends OpMode {
             expansionHub1 = hardwareMap.get(LynxModule.class, ExpansionHubs.HUB1.getHub());
             expansionHub2 = hardwareMap.get(LynxModule.class, ExpansionHubs.HUB2.getHub());
 
-            expansionHub1.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
-            expansionHub2.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+            expansionHub1.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+            expansionHub2.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         } catch (IllegalArgumentException | NullPointerException e) {
             telemetry.addLine(e.getMessage());
         }
@@ -348,9 +335,6 @@ public class RobotHardware extends OpMode {
         secondary.update();
     }
 
-    /**
-     * Stops all motors and calls requestOpModeStop() to end the opmode
-     */
     @Override
     public void stop() {
         motorUtility.stopAllMotors();
