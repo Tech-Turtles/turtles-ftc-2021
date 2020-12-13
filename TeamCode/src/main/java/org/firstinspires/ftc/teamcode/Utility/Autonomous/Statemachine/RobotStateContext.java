@@ -49,7 +49,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
 
     public void init() {
         stateMachine.changeState(DRIVE, new Start());
-        new Thread(() -> opmode.loadVision(true)).start();
+        //ToDo: Issues with vision loading in a separate thread?
+//        new Thread(() -> opmode.loadVision(true)).start();
         stateMachine.init();
     }
 
@@ -102,11 +103,11 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
 
-//            if(opmode.ringDetector != null) {
-//                rings = opmode.ringDetector.getHeight();
-//            }
+            if(opmode.ringDetector != null) {
+                rings = opmode.ringDetector.getHeight();
+            }
 
-//            if(stateTimer.seconds() > scanDelay)
+            if(stateTimer.seconds() > scanDelay)
                 nextState(DRIVE, new Shoot());
         }
     }

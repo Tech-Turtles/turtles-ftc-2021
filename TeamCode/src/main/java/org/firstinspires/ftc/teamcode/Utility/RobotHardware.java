@@ -55,7 +55,7 @@ public class RobotHardware extends OpMode {
     public MecanumNavigation mecanumNavigation;
     public AutoDrive autoDrive;
 
-//    public UGCoffeeDetector ringDetector;
+    public UGCoffeeDetector ringDetector;
 
     public class MotorUtility {
 
