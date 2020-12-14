@@ -252,8 +252,21 @@ public class RobotHardware extends OpMode {
     }
 
     public void loadVision(boolean debug) {
-//        ringDetector = new UGCoffeeDetector(hardwareMap, Webcam.WEBCAM_1.getName(), telemetry, debug);
-//        ringDetector.init();
+        ringDetector = new UGCoffeeDetector(hardwareMap, Webcam.WEBCAM_1.getName(), telemetry, debug);
+        ringDetector.init();
+    }
+
+    public void clearHubCache() {
+        try {
+            expansionHub1.clearBulkCache();
+        } catch (Exception e) {
+            telemetry.addLine("Error: " + e.getMessage());
+        }
+        try {
+            expansionHub2.clearBulkCache();
+        } catch (Exception e) {
+            telemetry.addLine("Error: " + e.getMessage());
+        }
     }
 
     /**
@@ -274,7 +287,6 @@ public class RobotHardware extends OpMode {
 
     @Override
     public void init() {
-
         telemetry.setDisplayFormat(Telemetry.DisplayFormat.HTML);
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
@@ -282,11 +294,12 @@ public class RobotHardware extends OpMode {
             expansionHub1 = hardwareMap.get(LynxModule.class, ExpansionHubs.HUB1.getHub());
             expansionHub2 = hardwareMap.get(LynxModule.class, ExpansionHubs.HUB2.getHub());
 
-            expansionHub1.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
-            expansionHub2.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
+            expansionHub1.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
+            expansionHub2.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
         } catch (IllegalArgumentException | NullPointerException e) {
             telemetry.addLine(e.getMessage());
         }
+        clearHubCache();
 
         for (Motors m : Motors.values()) {
             try {
@@ -316,6 +329,7 @@ public class RobotHardware extends OpMode {
 
     @Override
     public void init_loop() {
+        clearHubCache();
         initMenu.loop();
         period.updatePeriodTime();
         primary.update();
@@ -324,19 +338,25 @@ public class RobotHardware extends OpMode {
 
     @Override
     public void start() {
+        clearHubCache();
         motorUtility.stopAllMotors();
         period.reset();
     }
 
     @Override
     public void loop() {
+        clearHubCache();
         period.updatePeriodTime();
         primary.update();
         secondary.update();
     }
-
+    
+    /**
+     * Stops all motors and calls requestOpModeStop() to end the opmode
+     */
     @Override
     public void stop() {
+        clearHubCache();
         motorUtility.stopAllMotors();
     }
 }
