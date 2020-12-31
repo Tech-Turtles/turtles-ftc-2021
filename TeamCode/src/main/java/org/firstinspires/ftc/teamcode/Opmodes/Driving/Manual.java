@@ -24,7 +24,7 @@ public class Manual extends RobotHardware {
         public static double drivespeed = 1.0;
         public static double launchspeed = 0.6;
         public static double precisionMode = 1.0;
-        public static double precisionPercentage = 0.3;
+        public static double precisionPercentage = 0.35;
         public static double rotationSpeed = 1.0;
         public static boolean powershotMode = false;
     }
@@ -66,8 +66,6 @@ public class Manual extends RobotHardware {
             mecanumNavigation.setCurrentPosition(new MecanumNavigation.Navigation2D(0,0,0));
         }
 
-        launchspeed = powershotMode ? 0.55 : 0.61;
-
         if(primary.AOnce()) {
             precisionMode = precisionMode == 1.0 ? precisionPercentage : 1.0;
         }
@@ -80,9 +78,23 @@ public class Manual extends RobotHardware {
             motorUtility.setPower(Motors.INTAKE, 0f);
         }
 
+        if(secondary.dpadUpOnce()) {
+            launchspeed = Math.min(launchspeed + 0.05, 1.0);
+        } else if(secondary.dpadDownOnce()) {
+            launchspeed = Math.max(launchspeed - 0.05, 0);
+        }
+//        else {
+//            launchspeed = powershotMode ? 0.55 : 0.61;
+//        }
+
         if(secondary.right_trigger > deadzone) {
             motorUtility.setPower(Motors.LAUNCHER, launchspeed);
-        } else {
+        }
+//       // Button to reverse the launcher in case we have trouble with rings not being pushed enough to launch
+//        else if(secondary.left_trigger > deadzone) {
+//            motorUtility.setPower(Motors.LAUNCHER, -launchspeed);
+//        }
+        else {
             motorUtility.setPower(Motors.LAUNCHER, 0f);
         }
 
@@ -94,12 +106,6 @@ public class Manual extends RobotHardware {
 
         if(secondary.AOnce()) {
             powershotMode = !powershotMode;
-        }
-
-        if(secondary.dpadUpOnce()) {
-            launchspeed = Math.min(launchspeed + 0.01, 1.0);
-        } else if(secondary.dpadDownOnce()) {
-            launchspeed = Math.max(launchspeed - 0.01, 0);
         }
 
         telemetry.addLine("----Navigation----");

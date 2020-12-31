@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.Utility;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -23,8 +22,6 @@ import org.firstinspires.ftc.teamcode.Menu.InteractiveInitialization;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
 import org.firstinspires.ftc.teamcode.Utility.Vision.UGCoffeeDetector;
-import org.firstinspires.ftc.teamcode.Utility.Vision.UGContourRingDetector;
-import org.firstinspires.ftc.teamcode.Utility.Vision.UGContourRingPipeline;
 
 /**
  * @author Christian
@@ -320,7 +317,7 @@ public class RobotHardware extends OpMode {
             }
         }
 
-        initMenu = new InteractiveInitialization(this);
+//        initMenu = new InteractiveInitialization(this);
         primary = new Controller(gamepad1);
         secondary = new Controller(gamepad2);
         motorUtility.stopAllMotors();
@@ -330,7 +327,7 @@ public class RobotHardware extends OpMode {
     @Override
     public void init_loop() {
         clearHubCache();
-        initMenu.loop();
+//        initMenu.loop();
         period.updatePeriodTime();
         primary.update();
         secondary.update();

@@ -6,7 +6,6 @@ import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
 import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.AutoOpmode;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
-import org.firstinspires.ftc.teamcode.Utility.Autonomous.BehaviorSandBox;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Positions;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Waypoints;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation.*;
@@ -28,11 +27,12 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
 
     @Config
     public static class AutoDashboardVariables {
-        public static double  launcherDelay = 2.0;
-        public static double  servoDelay = 0.75;
+        public static double  launcherDelay = 3.0;
+        public static double  servoDelay = 0.4;
         public static double  scanDelay = 0.5;
+        public static double launcherVelocity = 2010;
 
-        public static double  driveSpeed = 1.0;
+        public static double  driveSpeed = 0.7;
         public static double  launcherSpeed = 0.6;
     }
 
@@ -48,15 +48,15 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     }
 
     public void init() {
+        new Thread(() -> opmode.loadVision(false)).start();
         stateMachine.changeState(DRIVE, new Start());
-        //ToDo: Issues with vision loading in a separate thread?
-//        new Thread(() -> opmode.loadVision(true)).start();
         stateMachine.init();
     }
 
     public void update() {
         stateMachine.update();
         opmode.updateMecanumHeadingFromGyroNow();
+        opmode.telemetry.addData("Rings: ", rings.name());
     }
 
     public String getCurrentState() {
@@ -96,15 +96,15 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opmode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
+            opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
         }
 
         @Override
         public void update() {
             super.update();
 
-            if(opmode.ringDetector != null) {
-                rings = opmode.ringDetector.getHeight();
+            if(opMode.ringDetector != null) {
+                rings = opMode.ringDetector.getHeight();
             }
 
             if(stateTimer.seconds() > scanDelay)
@@ -113,25 +113,37 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     }
 
     class Shoot extends Executive.StateBase<AutoOpmode> {
-        int index = 1;
+        int index = 0;
+        boolean doneInitialOpen = false;
+        boolean finished = false;
 
         @Override
         public void update() {
             super.update();
-            if(index < 4) {
-                opmode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
-                if(stateTimer.seconds() < launcherDelay) {
-                    opmode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
-                } else if(stateTimer.seconds() < launcherDelay + servoDelay) {
-                    opmode.servoUtility.setAngle(Servos.HOPPER, HOPPER_PUSH_POS);
-                } else {
-                    index++;
-                    stateTimer.reset();
-                }
-            } else {
-                opmode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
-                opmode.motorUtility.setPower(Motors.LAUNCHER, 0);
-                nextState(DRIVE, new Park());
+            switch(index) {
+                case 0:
+                case 1:
+                case 2:
+                    opMode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
+                    if(opMode.motorUtility.getVelocity(Motors.LAUNCHER) > launcherVelocity && !doneInitialOpen) {
+                        opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
+                        doneInitialOpen = true;
+                        stateTimer.reset();
+                    } else if(opMode.motorUtility.getVelocity(Motors.LAUNCHER) > launcherVelocity && stateTimer.seconds() > servoDelay) {
+                        opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_PUSH_POS);
+                        finished = true;
+                        stateTimer.reset();
+                    } else if(finished && stateTimer.seconds() > servoDelay) {
+                        index++;
+                        doneInitialOpen = false;
+                        finished = false;
+                        stateTimer.reset();
+                    }
+                    break;
+                default:
+                    opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
+                    opMode.motorUtility.setPower(Motors.LAUNCHER, 0);
+                    nextState(DRIVE, new Stop());
             }
         }
     }
@@ -140,16 +152,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void update() {
             super.update();
-            opmode.motorUtility.setPower(Motors.FRONT_LEFT, -.5);
-            opmode.motorUtility.setPower(Motors.BACK_LEFT,  -.5);
-            opmode.motorUtility.setPower(Motors.FRONT_RIGHT, -.5);
-            opmode.motorUtility.setPower(Motors.BACK_RIGHT, -.5);
-            arrived = opmode.mecanumNavigation.getCurrentPosition().x > -16;
+            arrived = driveTo(Positions.PARK.getNewNavigation2D(), driveSpeed);
             if(arrived) {
-                opmode.motorUtility.setPower(Motors.FRONT_LEFT, 0);
-                opmode.motorUtility.setPower(Motors.BACK_LEFT, 0);
-                opmode.motorUtility.setPower(Motors.FRONT_RIGHT, 0);
-                opmode.motorUtility.setPower(Motors.BACK_RIGHT, 0);
                 nextState(DRIVE, new Stop());
             }
         }
@@ -159,7 +163,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void update() {
             super.update();
-            opmode.stop();
+            opMode.stop();
         }
     }
 

@@ -61,7 +61,7 @@ public class MecanumNavigation implements Localizer {
         update(new org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation.WheelTicks(
                 opMode.motorUtility.getEncoderValue(Motors.FRONT_LEFT),
                 opMode.motorUtility.getEncoderValue(Motors.FRONT_RIGHT),
-                -opMode.motorUtility.getEncoderValue(Motors.BACK_LEFT),
+                opMode.motorUtility.getEncoderValue(Motors.BACK_LEFT),
                 opMode.motorUtility.getEncoderValue(Motors.BACK_RIGHT)));
     }
 
