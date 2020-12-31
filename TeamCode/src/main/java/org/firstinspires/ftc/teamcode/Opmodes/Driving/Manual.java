@@ -2,8 +2,10 @@ package org.firstinspires.ftc.teamcode.Opmodes.Driving;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.IMU;
+import org.firstinspires.ftc.teamcode.HardwareTypes.MotorTypes;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
 import org.firstinspires.ftc.teamcode.Utility.*;
@@ -22,13 +24,14 @@ public class Manual extends RobotHardware {
         public static double drivespeed = 1.0;
         public static double launchspeed = 0.6;
         public static double precisionMode = 1.0;
-        public static double precisionPercentage = 0.4;
+        public static double precisionPercentage = 0.35;
+        public static double rotationSpeed = 1.0;
+        public static boolean powershotMode = false;
     }
 
     @Override
     public void init() {
         super.init();
-
     }
 
     @Override
@@ -53,7 +56,7 @@ public class Manual extends RobotHardware {
         motorUtility.setDriveForSimpleMecanum(
                 primary.left_stick_x  * (drivespeed * precisionMode),
                 primary.left_stick_y  * (drivespeed * precisionMode),
-                primary.right_stick_x * (drivespeed * precisionMode),
+                primary.right_stick_x * (drivespeed * precisionMode) * rotationSpeed,
                 primary.right_stick_y * (drivespeed * precisionMode));
         mecanumNavigation.update();
         imuUtil.update();
@@ -75,9 +78,23 @@ public class Manual extends RobotHardware {
             motorUtility.setPower(Motors.INTAKE, 0f);
         }
 
+        if(secondary.dpadUpOnce()) {
+            launchspeed = Math.min(launchspeed + 0.05, 1.0);
+        } else if(secondary.dpadDownOnce()) {
+            launchspeed = Math.max(launchspeed - 0.05, 0);
+        }
+//        else {
+//            launchspeed = powershotMode ? 0.55 : 0.61;
+//        }
+
         if(secondary.right_trigger > deadzone) {
             motorUtility.setPower(Motors.LAUNCHER, launchspeed);
-        } else {
+        }
+//       // Button to reverse the launcher in case we have trouble with rings not being pushed enough to launch
+//        else if(secondary.left_trigger > deadzone) {
+//            motorUtility.setPower(Motors.LAUNCHER, -launchspeed);
+//        }
+        else {
             motorUtility.setPower(Motors.LAUNCHER, 0f);
         }
 
@@ -87,16 +104,15 @@ public class Manual extends RobotHardware {
             servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
         }
 
-        if(secondary.dpadUpOnce()) {
-            launchspeed = Math.min(launchspeed + 0.05, 1.0);
-        } else if(secondary.dpadDownOnce()) {
-            launchspeed = Math.max(launchspeed - 0.05, 0);
+        if(secondary.AOnce()) {
+            powershotMode = !powershotMode;
         }
 
         telemetry.addLine("----Navigation----");
         mecanumNavigation.displayPosition();
         telemetry.addData("IMU heading:         ", imuUtil.getCompensatedHeading());
         telemetry.addData("Precision mode:      ", df.format(precisionMode));
+        telemetry.addData("Powershot mode:      ", powershotMode);
         telemetry.addLine("----Launcher----");
         telemetry.addData("Launcher speed:      ", df.format(launchspeed));
         telemetry.addData("Launch velocity:     ", motorUtility.getVelocity(Motors.LAUNCHER));

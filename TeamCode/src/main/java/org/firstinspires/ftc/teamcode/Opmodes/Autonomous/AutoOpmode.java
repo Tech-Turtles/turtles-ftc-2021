@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import org.firstinspires.ftc.teamcode.HardwareTypes.IMU;
 import org.firstinspires.ftc.teamcode.Utility.*;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
+import org.firstinspires.ftc.teamcode.Utility.Autonomous.BehaviorSandBox;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.AutoDrive;
@@ -54,11 +55,17 @@ public class AutoOpmode extends RobotHardware {
         }
     }
 
+    @Autonomous(name="Sandbox", group="E")
+    public static class Sandbox extends AutoOpmode {}
+
     @Override
     public void init() {
         super.init();
         imuUtil = new IMUUtilities(this, IMU.IMU1.getName());
-        robotStateContext = new RobotStateContext(AutoOpmode.this, robotColor, robotStartPos);
+        if(robotColor == null && robotStartPos == null)
+            robotStateContext = new BehaviorSandBox(AutoOpmode.this, AllianceColor.RED, StartPosition.CENTER);
+        else
+            robotStateContext = new RobotStateContext(AutoOpmode.this, robotColor, robotStartPos);
         telemetry.addData("Initialization: ", "Successful!");
     }
 

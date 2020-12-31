@@ -9,18 +9,18 @@ public class Configuration {
 
     @Config
     public static class ConfigurationVariables {
-        public static final double HOPPER_OPEN_POS = 0.32;
-        public static final double HOPPER_PUSH_POS = 0.18;
+        public static double HOPPER_OPEN_POS = 0.32;
+        public static double HOPPER_PUSH_POS = 0.22;
     }
 
     public static final double deadzone = 0.49f;
 
     public static final double DRIVE_WHEEL_DIAMETER_INCHES = 4.0;                   //todo Calibrate
 
-    public static final double DRIVE_WHEEL_LATERAL_RATIO = 72 / 73.2 * 72 / 80.87;  //todo Calibrate
+    public static final double DRIVE_WHEEL_LATERAL_RATIO = 0.87572 * 120 / 121.47;  //todo Calibrate
 
     public static final double MM_PER_IN = 25.4f;
-    private static double rotationScaleIncrease = 3600 / 3635.9;                    //todo Calibrate
+    private static double rotationScaleIncrease = 0.99012 * 3600 / 2973.89;                    //todo Calibrate
     public static final double WHEELBASE_WIDTH_IN = 16.9 / rotationScaleIncrease;
     public static final double WHEELBASE_LENGTH_IN = 16.0 / rotationScaleIncrease;
     public static final double WHEELBASE_WIDTH_MM = WHEELBASE_WIDTH_IN  * MM_PER_IN;

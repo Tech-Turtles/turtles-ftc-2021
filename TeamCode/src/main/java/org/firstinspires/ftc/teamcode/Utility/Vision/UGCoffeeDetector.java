@@ -42,7 +42,8 @@ public class UGCoffeeDetector {
         }
 
         //Set the pipeline the camera should use and start streaming
-        camera.setPipeline(pipeline = new UGContourRingPipeline(telemetry, debug));
+        pipeline = new UGContourRingPipeline();
+        camera.setPipeline(pipeline);
         camera.openCameraDeviceAsync(() -> camera.startStreaming(320, 240, OpenCvCameraRotation.UPRIGHT));
     }
 

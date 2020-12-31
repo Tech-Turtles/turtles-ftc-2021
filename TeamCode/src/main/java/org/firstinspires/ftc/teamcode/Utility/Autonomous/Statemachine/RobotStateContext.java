@@ -14,6 +14,7 @@ import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount;
 
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.DRIVE;
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.AutoDashboardVariables.*;
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.ConfigurationVariables.*;
 
 public class RobotStateContext implements Executive.RobotStateMachineContextInterface {
 
@@ -25,14 +26,13 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     private Waypoints waypoints;
 
     @Config
-    static class AutoDashboardVariables {
-        public static double  hopperOpen = 0.32;
-        public static double  hopperPush = 0.23;
-
-        public static double  launcherDelay = 0.4;
+    public static class AutoDashboardVariables {
+        public static double  launcherDelay = 3.0;
+        public static double  servoDelay = 0.4;
         public static double  scanDelay = 0.5;
+        public static double launcherVelocity = 2010;
 
-        public static double  driveSpeed = 1.0;
+        public static double  driveSpeed = 0.7;
         public static double  launcherSpeed = 0.6;
     }
 
@@ -48,14 +48,15 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     }
 
     public void init() {
+        new Thread(() -> opmode.loadVision(false)).start();
         stateMachine.changeState(DRIVE, new Start());
-        new Thread(() -> opmode.loadVision(true)).start();
         stateMachine.init();
     }
 
     public void update() {
         stateMachine.update();
         opmode.updateMecanumHeadingFromGyroNow();
+        opmode.telemetry.addData("Rings: ", rings.name());
     }
 
     public String getCurrentState() {
@@ -95,7 +96,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opMode.servoUtility.setAngle(Servos.HOPPER, hopperOpen);
+            opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
         }
 
         @Override
@@ -103,96 +104,46 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.update();
 
             if(opMode.ringDetector != null) {
-                rings = opmode.ringDetector.getHeight();
+                rings = opMode.ringDetector.getHeight();
             }
 
             if(stateTimer.seconds() > scanDelay)
-                nextState(DRIVE, new PrepShoot_A());
+                nextState(DRIVE, new Shoot());
         }
     }
 
-    class PrepShoot_A extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void update() {
-            super.update();
-            driveTo(Positions.SHOOT.getNewNavigation2D(), driveSpeed);
-            if(arrived)
-                nextState(DRIVE, new Shoot_A());
-        }
-    }
-
-    class Shoot_A extends Executive.StateBase<AutoOpmode> {
-        int index = 1;
+    class Shoot extends Executive.StateBase<AutoOpmode> {
+        int index = 0;
+        boolean doneInitialOpen = false;
+        boolean finished = false;
 
         @Override
         public void update() {
             super.update();
-            if(index < 4) {
-                if(stateTimer.seconds() > (launcherDelay * index)) {
-                    opMode.servoUtility.setAngle(Servos.HOPPER, hopperPush);
-                    opmode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
-                    index++;
-                }
-                opMode.servoUtility.setAngle(Servos.HOPPER, hopperOpen);
-                opmode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
-            } else {
-                opMode.servoUtility.setAngle(Servos.HOPPER, hopperOpen);
-                if(rings.equals(RingDetectionAmount.ZERO))
-                    nextState(DRIVE, new Park());
-                else
-                    nextState(DRIVE, new ToRings());
-            }
-        }
-    }
-
-    class ToRings extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void update() {
-            super.update();
-            driveTo(Positions.RINGS.getNewNavigation2D().addAndReturn(0,-10,0), driveSpeed);
-            if(arrived)
-                nextState(DRIVE, new GrabRings());
-        }
-    }
-
-    class GrabRings extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void update() {
-            super.update();
-            //todo change from hardcoded speed
-            opmode.motorUtility.setPower(Motors.INTAKE, 1.0);
-            driveTo(Positions.RINGS.getNewNavigation2D().addAndReturn(0,6,0), driveSpeed);
-            if(arrived)
-                nextState(DRIVE, new PrepShoot_B());
-        }
-    }
-
-    class PrepShoot_B extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void update() {
-            super.update();
-            driveTo(Positions.SHOOT.getNewNavigation2D(), driveSpeed);
-            if(arrived)
-                nextState(DRIVE, new Shoot_B());
-        }
-    }
-
-    class Shoot_B extends Executive.StateBase<AutoOpmode> {
-        int index = 1;
-
-        @Override
-        public void update() {
-            super.update();
-            if(index < 4) {
-                if(stateTimer.seconds() > (launcherDelay * index)) {
-                    opMode.servoUtility.setAngle(Servos.HOPPER, hopperPush);
-                    opmode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
-                    index++;
-                }
-                opMode.servoUtility.setAngle(Servos.HOPPER, hopperOpen);
-                opmode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
-            } else {
-                nextState(DRIVE, new Park());
+            switch(index) {
+                case 0:
+                case 1:
+                case 2:
+                    opMode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
+                    if(opMode.motorUtility.getVelocity(Motors.LAUNCHER) > launcherVelocity && !doneInitialOpen) {
+                        opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
+                        doneInitialOpen = true;
+                        stateTimer.reset();
+                    } else if(opMode.motorUtility.getVelocity(Motors.LAUNCHER) > launcherVelocity && stateTimer.seconds() > servoDelay) {
+                        opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_PUSH_POS);
+                        finished = true;
+                        stateTimer.reset();
+                    } else if(finished && stateTimer.seconds() > servoDelay) {
+                        index++;
+                        doneInitialOpen = false;
+                        finished = false;
+                        stateTimer.reset();
+                    }
+                    break;
+                default:
+                    opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
+                    opMode.motorUtility.setPower(Motors.LAUNCHER, 0);
+                    nextState(DRIVE, new Stop());
             }
         }
     }
@@ -201,9 +152,10 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void update() {
             super.update();
-            driveTo(Positions.PARK.getNewNavigation2D(), driveSpeed);
-            if(arrived)
+            arrived = driveTo(Positions.PARK.getNewNavigation2D(), driveSpeed);
+            if(arrived) {
                 nextState(DRIVE, new Stop());
+            }
         }
     }
 
@@ -211,7 +163,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void update() {
             super.update();
-            opmode.stop();
+            opMode.stop();
         }
     }
 
