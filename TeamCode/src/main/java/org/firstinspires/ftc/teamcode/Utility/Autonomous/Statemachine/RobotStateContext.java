@@ -143,7 +143,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 default:
                     opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
                     opMode.motorUtility.setPower(Motors.LAUNCHER, 0);
-                    nextState(DRIVE, new Stop());
+                    nextState(DRIVE, new Park());
             }
         }
     }
@@ -165,6 +165,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.update();
             opMode.stop();
         }
+
+
     }
 
     public double getDriveScale(double seconds) {

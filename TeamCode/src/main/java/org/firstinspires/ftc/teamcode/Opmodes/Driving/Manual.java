@@ -27,6 +27,8 @@ public class Manual extends RobotHardware {
         public static double precisionPercentage = 0.35;
         public static double rotationSpeed = 1.0;
         public static boolean powershotMode = false;
+        public static double highGoalSpeed = 0.61;
+        public static double powerShotSpeed = 0.55;
     }
 
     @Override
@@ -83,9 +85,6 @@ public class Manual extends RobotHardware {
         } else if(secondary.dpadDownOnce()) {
             launchspeed = Math.max(launchspeed - 0.05, 0);
         }
-//        else {
-//            launchspeed = powershotMode ? 0.55 : 0.61;
-//        }
 
         if(secondary.right_trigger > deadzone) {
             motorUtility.setPower(Motors.LAUNCHER, launchspeed);
@@ -105,8 +104,10 @@ public class Manual extends RobotHardware {
         }
 
         if(secondary.AOnce()) {
+            launchspeed = powershotMode ? powerShotSpeed : highGoalSpeed;
             powershotMode = !powershotMode;
         }
+
 
         telemetry.addLine("----Navigation----");
         mecanumNavigation.displayPosition();
