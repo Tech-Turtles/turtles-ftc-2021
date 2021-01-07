@@ -23,7 +23,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     private final Executive.StateMachine<AutoOpmode> stateMachine;
     private final AllianceColor allianceColor;
     private final RobotHardware.StartPosition startPosition;
-    private Waypoints waypoints;
+    private final Waypoints waypoints;
 
     @Config
     public static class AutoDashboardVariables {
@@ -55,7 +55,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
 
     public void update() {
         stateMachine.update();
-        opmode.updateMecanumHeadingFromGyroNow();
+        opmode.updateMecanumHeadingFromGyroNow(opmode.imuUtil, opmode.mecanumNavigation);
         opmode.telemetry.addData("Rings: ", rings.name());
     }
 
@@ -139,6 +139,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                         finished = false;
                         stateTimer.reset();
                     }
+
                     break;
                 default:
                     opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
@@ -165,8 +166,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.update();
             opMode.stop();
         }
-
-
     }
 
     public double getDriveScale(double seconds) {

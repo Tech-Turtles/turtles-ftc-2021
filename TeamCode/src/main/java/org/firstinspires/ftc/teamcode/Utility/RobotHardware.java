@@ -70,26 +70,26 @@ public class RobotHardware extends OpMode {
         }
 
         public double getPower(Motors motor) {
-            m = getMotor(motor);
-            if (m != null)
-                return m.getPower();
-            return 0;
+            getMotor(motor);
+            if (m == null)
+                return 0;
+            return m.getPower();
         }
 
         public void setPower(Motors motor, double power) {
-            m = getMotor(motor);
+            getMotor(motor);
             if (m != null)
                 m.setPower(power);
         }
 
         public int getEncoderValue(Motors motor) {
-            m = getMotor(motor);
+            getMotor(motor);
             if (m == null) return -1;
             return m.getCurrentPosition();
         }
 
         public double getVelocity(Motors motor) {
-            m = getMotor(motor);
+            getMotor(motor);
             if (m == null) return 0;
             return m.getVelocity();
         }
@@ -104,7 +104,7 @@ public class RobotHardware extends OpMode {
         }
 
         public void stopResetMotor(Motors motor) {
-            m = getMotor(motor);
+            getMotor(motor);
             if (m != null)
                 m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         }
@@ -112,7 +112,7 @@ public class RobotHardware extends OpMode {
         public void setTypeMotorsRunmode(MotorTypes type, DcMotor.RunMode runMode) {
             for (Motors motor : Motors.values()) {
                 if (!motor.getType().equals(type)) continue;
-                m = getMotor(motor);
+                getMotor(motor);
                 if (m == null) continue;
                 m.setMode(runMode);
             }
@@ -120,7 +120,7 @@ public class RobotHardware extends OpMode {
 
         public void setMotorsRunMode(DcMotor.RunMode runMode, Motors... motors) {
             for (Motors motor : motors) {
-                m = getMotor(motor);
+                getMotor(motor);
                 if (m == null) continue;
                 m.setMode(runMode);
             }
@@ -129,7 +129,7 @@ public class RobotHardware extends OpMode {
         public void setTypeMotorsZeroPowerBehavior(MotorTypes type, DcMotor.ZeroPowerBehavior behavior) {
             for (Motors motor : Motors.values()) {
                 if (!motor.getType().equals(type)) continue;
-                m = getMotor(motor);
+                getMotor(motor);
                 if (m == null) continue;
                 m.setZeroPowerBehavior(behavior);
             }
@@ -137,7 +137,7 @@ public class RobotHardware extends OpMode {
 
         public void setMotorsZeroPowerBehavior(DcMotor.ZeroPowerBehavior behavior, Motors... motors) {
             for (Motors motor : motors) {
-                m = getMotor(motor);
+                getMotor(motor);
                 if (m == null) continue;
                 m.setZeroPowerBehavior(behavior);
             }
@@ -270,7 +270,7 @@ public class RobotHardware extends OpMode {
      * Updates the mecanumNavigation heading from the imu heading.
      * This function forces the IMU to refresh immediately.
      */
-    public void updateMecanumHeadingFromGyroNow() {
+    public void updateMecanumHeadingFromGyroNow(IMUUtilities imuUtil, MecanumNavigation mecanumNavigation) {
         if(imuUtil == null || mecanumNavigation == null) return;
         imuUtil.updateNow();
         MecanumNavigation.Navigation2D currentPosition = mecanumNavigation.getCurrentPosition();
@@ -284,7 +284,7 @@ public class RobotHardware extends OpMode {
 
     @Override
     public void init() {
-        telemetry.setDisplayFormat(Telemetry.DisplayFormat.HTML);
+        telemetry.setDisplayFormat(Telemetry.DisplayFormat.CLASSIC);
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
         try {
@@ -294,16 +294,14 @@ public class RobotHardware extends OpMode {
             expansionHub1.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
             expansionHub2.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
         } catch (IllegalArgumentException | NullPointerException e) {
-            telemetry.addLine(e.getMessage());
+            telemetry.addLine("Error: " + e.getMessage());
         }
         clearHubCache();
 
         for (Motors m : Motors.values()) {
             try {
                 motors.put(m, hardwareMap.get(DcMotorEx.class, m.getConfigName()));
-            } catch (IllegalArgumentException ignore) {
-                telemetry.addData("Motor Missing", m.name());
-            }
+            } catch (IllegalArgumentException ignore) {}
         }
         new MotorUtility().initializeMotors();
 
@@ -312,9 +310,7 @@ public class RobotHardware extends OpMode {
                 Servo servo = hardwareMap.get(Servo.class, s.getConfigName());
                 servos.put(s, servo);
                 servo.setDirection(s.getDirection());
-            } catch (IllegalArgumentException ignore) {
-                telemetry.addData("Servo Missing", s.name());
-            }
+            } catch (IllegalArgumentException ignore) {}
         }
 
 //        initMenu = new InteractiveInitialization(this);
