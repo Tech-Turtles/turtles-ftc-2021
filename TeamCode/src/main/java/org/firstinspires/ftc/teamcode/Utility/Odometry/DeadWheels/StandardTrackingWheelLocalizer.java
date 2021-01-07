@@ -64,11 +64,12 @@ public class StandardTrackingWheelLocalizer extends ThreeTrackingWheelLocalizer 
 
     @NonNull
     @Override
+    //ToDo Fix when dead wheels have been installed
     public List<Double> getWheelPositions() {
         return Arrays.asList(
-                encoderTicksToInches(opmode.motorUtility.getEncoderValue(Motors.LEFT_WHEEL)),
-                encoderTicksToInches(opmode.motorUtility.getEncoderValue(Motors.RIGHT_WHEEL)),
-                encoderTicksToInches(opmode.motorUtility.getEncoderValue(Motors.CENTER_WHEEL))
+//                encoderTicksToInches(opmode.motorUtility.getEncoderValue(Motors.LEFT_WHEEL)),
+//                encoderTicksToInches(opmode.motorUtility.getEncoderValue(Motors.RIGHT_WHEEL)),
+//                encoderTicksToInches(opmode.motorUtility.getEncoderValue(Motors.CENTER_WHEEL))
         );
     }
 

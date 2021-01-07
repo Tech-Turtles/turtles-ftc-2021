@@ -26,11 +26,12 @@ public class OdometryLocalizer implements Localizer {
      *
      * @param opmode
      */
+    //ToDo Fix when dead wheels have been installed
     public void update(RobotHardware opmode){
-        update(new OdometryTicks(
-                opmode.motorUtility.getEncoderValue(Motors.LEFT_WHEEL),
-                opmode.motorUtility.getEncoderValue(Motors.CENTER_WHEEL),
-                opmode.motorUtility.getEncoderValue(Motors.RIGHT_WHEEL)));
+//        update(new OdometryTicks(
+//                opmode.motorUtility.getEncoderValue(Motors.LEFT_WHEEL),
+//                opmode.motorUtility.getEncoderValue(Motors.CENTER_WHEEL),
+//                opmode.motorUtility.getEncoderValue(Motors.RIGHT_WHEEL)));
     }
 
     public void update(OdometryTicks newTicks) {
@@ -97,12 +98,13 @@ public class OdometryLocalizer implements Localizer {
         this.encoderPosition = encoderPosition;
     }
 
+    //ToDo Fix when dead wheels have been installed
     public void setEncoderPosition(RobotHardware opmode) {
-        this.encoderPosition =
-                new OdometryTicks(
-                    opmode.motorUtility.getEncoderValue(Motors.LEFT_WHEEL),
-                    opmode.motorUtility.getEncoderValue(Motors.CENTER_WHEEL),
-                    opmode.motorUtility.getEncoderValue(Motors.RIGHT_WHEEL));
+//        this.encoderPosition =
+//                new OdometryTicks(
+//                    opmode.motorUtility.getEncoderValue(Motors.LEFT_WHEEL),
+//                    opmode.motorUtility.getEncoderValue(Motors.CENTER_WHEEL),
+//                    opmode.motorUtility.getEncoderValue(Motors.RIGHT_WHEEL));
     }
 
     public boolean isInitialized() {
