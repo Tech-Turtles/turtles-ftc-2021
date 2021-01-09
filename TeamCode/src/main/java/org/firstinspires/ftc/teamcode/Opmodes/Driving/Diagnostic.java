@@ -4,7 +4,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.*;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
-import org.firstinspires.ftc.teamcode.Utility.TelemetryTools;
 
 /**
  * @author Christian

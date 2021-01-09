@@ -2,10 +2,8 @@ package org.firstinspires.ftc.teamcode.Opmodes.Driving;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.IMU;
-import org.firstinspires.ftc.teamcode.HardwareTypes.MotorTypes;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
 import org.firstinspires.ftc.teamcode.Utility.*;
@@ -13,23 +11,19 @@ import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
 
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.*;
-import static org.firstinspires.ftc.teamcode.Opmodes.Driving.Manual.DashboardVariables.*;
-import static org.firstinspires.ftc.teamcode.Utility.Configuration.ConfigurationVariables.*;
 
+@Config
 @TeleOp(name="Manual", group="A")
 public class Manual extends RobotHardware {
 
-    @Config
-    static class DashboardVariables {
-        public static double drivespeed = 1.0;
-        public static double launchspeed = 0.6;
-        public static double precisionMode = 1.0;
-        public static double precisionPercentage = 0.35;
-        public static double rotationSpeed = 1.0;
-        public static boolean powershotMode = false;
-        public static double highGoalSpeed = 0.61;
-        public static double powerShotSpeed = 0.55;
-    }
+    public static double drivespeed = 1.0;
+    public static double launchspeed = 0.6;
+    public static double precisionMode = 1.0;
+    public static double precisionPercentage = 0.35;
+    public static double rotationSpeed = 1.0;
+    public static boolean powershotMode = false;
+    public static double highGoalSpeed = 0.61;
+    public static double powerShotSpeed = 0.55;
 
     @Override
     public void init() {

@@ -17,11 +17,11 @@ import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 import java.util.HashMap;
 
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.*;
-import static org.firstinspires.ftc.teamcode.Utility.Autonomous.BehaviorSandBox.MotorTesterVariables.*;
-import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.AutoDashboardVariables.launcherSpeed;
-import static org.firstinspires.ftc.teamcode.Utility.Configuration.ConfigurationVariables.HOPPER_OPEN_POS;
-import static org.firstinspires.ftc.teamcode.Utility.Configuration.ConfigurationVariables.HOPPER_PUSH_POS;
+import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.launcherSpeed;
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_OPEN_POS;
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_PUSH_POS;
 
+@Config
 public class BehaviorSandBox implements Executive.RobotStateMachineContextInterface {
 
     private final AutoOpmode opmode;
@@ -32,15 +32,13 @@ public class BehaviorSandBox implements Executive.RobotStateMachineContextInterf
     private double driveSpeed = 0.8;
     private Controller controller1;
 
-    @Config
-    static class MotorTesterVariables {
-        public static double forwardSpeed = 0;
-        public static double rotationalSpeed = 0;
-        public static double strafeSpeed = 0;
+    public static double forwardSpeed = 0;
+    public static double rotationalSpeed = 0;
+    public static double strafeSpeed = 0;
 
-        public static double launchDelay = 2.0;
-        public static double servoDelay = 1.0;
-    }
+    public static double launchDelay = 2.0;
+    public static double servoDelay = 1.0;
+
 
     public BehaviorSandBox(AutoOpmode opmode, AllianceColor teamColor, RobotHardware.StartPosition startPosition) {
         this.opmode = opmode;

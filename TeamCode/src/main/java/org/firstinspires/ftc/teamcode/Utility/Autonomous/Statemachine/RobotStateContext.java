@@ -13,9 +13,10 @@ import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount;
 
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.DRIVE;
-import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.AutoDashboardVariables.*;
-import static org.firstinspires.ftc.teamcode.Utility.Configuration.ConfigurationVariables.*;
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_OPEN_POS;
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_PUSH_POS;
 
+@Config
 public class RobotStateContext implements Executive.RobotStateMachineContextInterface {
 
     // Required class variables
@@ -25,16 +26,13 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     private final RobotHardware.StartPosition startPosition;
     private final Waypoints waypoints;
 
-    @Config
-    public static class AutoDashboardVariables {
-        public static double  launcherDelay = 3.0;
-        public static double  servoDelay = 0.4;
-        public static double  scanDelay = 0.5;
-        public static double launcherVelocity = 2010;
+    public static double  launcherDelay = 3.0;
+    public static double  servoDelay = 0.4;
+    public static double  scanDelay = 0.5;
+    public static double launcherVelocity = 2010;
 
-        public static double  driveSpeed = 0.7;
-        public static double  launcherSpeed = 0.6;
-    }
+    public static double  driveSpeed = 0.7;
+    public static double  launcherSpeed = 0.6;
 
     private RingDetectionAmount rings = RingDetectionAmount.ZERO;
 
