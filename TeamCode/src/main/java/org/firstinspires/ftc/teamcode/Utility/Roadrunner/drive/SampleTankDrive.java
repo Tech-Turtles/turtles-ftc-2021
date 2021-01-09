@@ -29,11 +29,15 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.teamcode.Utility.Roadrunner.util.AxesSigns;
+import org.firstinspires.ftc.teamcode.Utility.Roadrunner.util.BNO055IMUUtil;
 import org.firstinspires.ftc.teamcode.Utility.Roadrunner.util.DashboardUtil;
 import org.firstinspires.ftc.teamcode.Utility.Roadrunner.util.LynxModuleUtil;
 
@@ -123,20 +127,20 @@ public class SampleTankDrive extends TankDrive {
         }
 
         // TODO: adjust the names of the following hardware devices to match your configuration
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu = hardwareMap.get(BNO055IMU.class, "IMU_1");
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
         imu.initialize(parameters);
 
         // TODO: if your hub is mounted vertically, remap the IMU axes so that the z-axis points
         // upward (normal to the floor) using a command like the following:
-        // BNO055IMUUtil.remapAxes(imu, AxesOrder.XYZ, AxesSigns.NPN);
+        BNO055IMUUtil.remapAxes(imu, AxesOrder.XYZ, AxesSigns.NPN);
 
         // add/remove motors depending on your robot (e.g., 6WD)
-        DcMotorEx leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-        DcMotorEx leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
-        DcMotorEx rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
-        DcMotorEx rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
+        DcMotorEx leftFront = hardwareMap.get(DcMotorEx.class, "front left");
+        DcMotorEx leftRear = hardwareMap.get(DcMotorEx.class, "back left");
+        DcMotorEx rightRear = hardwareMap.get(DcMotorEx.class, "back right");
+        DcMotorEx rightFront = hardwareMap.get(DcMotorEx.class, "front right");
 
         motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
         leftMotors = Arrays.asList(leftFront, leftRear);
@@ -159,6 +163,8 @@ public class SampleTankDrive extends TankDrive {
         }
 
         // TODO: reverse any motors using DcMotor.setDirection()
+        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // TODO: if desired, use setLocalizer() to change the localization method
         // for instance, setLocalizer(new ThreeTrackingWheelLocalizer(...));
