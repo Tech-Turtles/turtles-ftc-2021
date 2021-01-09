@@ -22,8 +22,8 @@ public class Manual extends RobotHardware {
     public static double precisionPercentage = 0.35;
     public static double rotationSpeed = 1.0;
     public static boolean powershotMode = false;
-    public static double highGoalSpeed = 0.61;
-    public static double powerShotSpeed = 0.55;
+    public static double highGoalSpeed = 0.56;
+    public static double powerShotSpeed = 0.51;
 
     @Override
     public void init() {
@@ -98,10 +98,9 @@ public class Manual extends RobotHardware {
         }
 
         if(secondary.AOnce()) {
-            launchspeed = powershotMode ? powerShotSpeed : highGoalSpeed;
             powershotMode = !powershotMode;
+            launchspeed = powershotMode ? powerShotSpeed : highGoalSpeed;
         }
-
 
         telemetry.addLine("----Navigation----");
         mecanumNavigation.displayPosition();
