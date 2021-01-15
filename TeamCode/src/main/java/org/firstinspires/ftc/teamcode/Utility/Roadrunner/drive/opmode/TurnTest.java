@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.Utility.Roadrunner.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 
 /*
  * This is a simple routine to test turning capabilities.

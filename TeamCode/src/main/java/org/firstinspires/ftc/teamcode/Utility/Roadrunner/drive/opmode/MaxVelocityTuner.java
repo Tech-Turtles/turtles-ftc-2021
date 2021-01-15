@@ -8,8 +8,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.Utility.Roadrunner.drive.DriveConstants;
-import org.firstinspires.ftc.teamcode.Utility.Roadrunner.drive.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.Utility.Odometry.DriveConstants;
+import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 
 import java.util.Objects;
 
