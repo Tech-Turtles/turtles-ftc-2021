@@ -36,6 +36,8 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.teamcode.HardwareTypes.IMU;
+import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.Utility.Roadrunner.util.AxesSigns;
 import org.firstinspires.ftc.teamcode.Utility.Roadrunner.util.BNO055IMUUtil;
 import org.firstinspires.ftc.teamcode.Utility.Roadrunner.util.DashboardUtil;
@@ -134,20 +136,20 @@ public class SampleMecanumDrive extends MecanumDrive {
             module.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
         }
 
-        // TODO: adjust the names of the following hardware devices to match your configuration
-        imu = hardwareMap.get(BNO055IMU.class, "IMU_1");
+        // Adjust the names of the following hardware devices to match your configuration
+        imu = hardwareMap.get(BNO055IMU.class, IMU.IMU1.getName());
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
         imu.initialize(parameters);
 
-        // TODO: if your hub is mounted vertically, remap the IMU axes so that the z-axis points
+        // If your hub is mounted vertically, remap the IMU axes so that the z-axis points
         // upward (normal to the floor) using a command like the following:
         BNO055IMUUtil.remapAxes(imu, AxesOrder.XYZ, AxesSigns.NPN);
 
-        leftFront = hardwareMap.get(DcMotorEx.class, "front left");
-        leftRear = hardwareMap.get(DcMotorEx.class, "back left");
-        rightRear = hardwareMap.get(DcMotorEx.class, "back right");
-        rightFront = hardwareMap.get(DcMotorEx.class, "front right");
+        leftFront = hardwareMap.get(DcMotorEx.class, Motors.FRONT_LEFT.getConfigName());
+        leftRear = hardwareMap.get(DcMotorEx.class, Motors.BACK_LEFT.getConfigName());
+        rightRear = hardwareMap.get(DcMotorEx.class, Motors.BACK_RIGHT.getConfigName());
+        rightFront = hardwareMap.get(DcMotorEx.class, Motors.FRONT_RIGHT.getConfigName());
 
         motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
 
@@ -167,11 +169,11 @@ public class SampleMecanumDrive extends MecanumDrive {
             setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, MOTOR_VELO_PID);
         }
 
-        // TODO: reverse any motors using DcMotor.setDirection()
+        // Reverse any motors using DcMotor.setDirection()
         leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        // TODO: if desired, use setLocalizer() to change the localization method
+        // If desired, use setLocalizer() to change the localization method
         // for instance, setLocalizer(new ThreeTrackingWheelLocalizer(...));
     }
 
