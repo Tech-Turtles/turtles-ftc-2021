@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.Utility.Roadrunner.drive.opmode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.kinematics.Kinematics;
@@ -42,7 +41,6 @@ import static org.firstinspires.ftc.teamcode.Utility.Roadrunner.drive.DriveConst
  * Pressing A (on the Xbox and Logitech F310 gamepads, X on the PS4 Dualshock gamepad) will cede
  * control back to the tuning process.
  */
-@Config
 @Disabled
 @Autonomous(group = "drive")
 public class ManualFeedforwardTuner extends LinearOpMode {
