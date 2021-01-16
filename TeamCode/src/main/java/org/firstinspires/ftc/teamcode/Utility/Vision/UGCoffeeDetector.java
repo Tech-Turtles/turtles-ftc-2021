@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.Utility.Vision;
 
+import android.util.Log;
+
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -48,6 +50,11 @@ public class UGCoffeeDetector {
     }
 
     public RingDetectionAmount getHeight() {
-        return pipeline.getHeight();
+        try {
+            return pipeline.getHeight();
+        } catch (NullPointerException e) {
+            Log.wtf("Vision Error", "NullPointerException on the vision pipeline");
+            return  RingDetectionAmount.ZERO;
+        }
     }
 }
