@@ -19,6 +19,9 @@ public class DiagnosticVision extends Diagnostic {
             telemetry.addData("Vision: ", "LOADING...");
         else
             telemetry.addData("Vision: ", "INITIALIZED");
+
+        if (ringDetector != null)
+            telemetry.addData("Ring Amount: ", ringDetector.getHeight().name());
     }
 
     @Override
