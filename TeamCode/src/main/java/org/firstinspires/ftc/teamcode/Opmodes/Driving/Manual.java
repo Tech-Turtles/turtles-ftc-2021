@@ -17,7 +17,7 @@ import static org.firstinspires.ftc.teamcode.Utility.Configuration.*;
 public class Manual extends RobotHardware {
 
     public static double drivespeed = 1.0;
-    public static double launchspeed = 0.6;
+    public static double launchspeed = 0.56;
     public static double precisionMode = 1.0;
     public static double precisionPercentage = 0.35;
     public static double rotationSpeed = 1.0;
@@ -102,16 +102,17 @@ public class Manual extends RobotHardware {
             launchspeed = powershotMode ? powerShotSpeed : highGoalSpeed;
         }
 
-        telemetry.addLine("----Navigation----");
-        mecanumNavigation.displayPosition();
-        telemetry.addData("IMU heading:         ", imuUtil.getCompensatedHeading());
         telemetry.addData("Precision mode:      ", df.format(precisionMode));
-        telemetry.addData("Powershot mode:      ", powershotMode);
-        telemetry.addLine("----Launcher----");
         telemetry.addData("Launcher speed:      ", df.format(launchspeed));
+        telemetry.addData("Powershot mode:      ", powershotMode);
+        telemetry.addLine();
+        telemetry.addLine("----Launcher----");
         telemetry.addData("Launch velocity:     ", motorUtility.getVelocity(Motors.LAUNCHER));
         telemetry.addData("Hopper position:     ", servoUtility.getAngle(Servos.HOPPER));
         telemetry.addLine();
+        telemetry.addLine("----Navigation----");
+        mecanumNavigation.displayPosition();
+        telemetry.addData("IMU heading:         ", imuUtil.getCompensatedHeading());
         telemetry.addData("Drive speed:         ", df.format(drivespeed));
         telemetry.addData("Precision speed:     ", df.format(precisionPercentage));
         telemetry.addData("Loop time:           ", df_precise.format(period.getAveragePeriodSec()) + "s");
