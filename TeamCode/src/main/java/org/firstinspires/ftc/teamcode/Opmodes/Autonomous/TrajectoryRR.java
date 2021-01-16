@@ -18,7 +18,7 @@ public class TrajectoryRR {
     Pose2d START_WALL = new Pose2d(-62.0, -42.0,Math.toRadians(180.0));
     Pose2d START_CENTER = new Pose2d(-62.0, -24.0,Math.toRadians(180.0));
     Pose2d RINGS = new Pose2d(-24.0, -36.0,Math.toRadians(180.0)).plus(ringOffset);
-    Pose2d SHOOT = new Pose2d(-2.0, -42.0,Math.toRadians(180.0));
+    Pose2d SHOOT = new Pose2d(-2.0 - 2f, -42.0 + 2f,Math.toRadians(180.0));
     Pose2d ZONE_A = new Pose2d(12.0, -60.0,Math.toRadians(0.0)).plus(wobbleOffset);
     Pose2d ZONE_B = new Pose2d(36.0, -36.0,Math.toRadians(0.0)).plus(wobbleOffset);
     Pose2d ZONE_C = new Pose2d(60.0, -60.0,Math.toRadians(0.0)).plus(wobbleOffset);
