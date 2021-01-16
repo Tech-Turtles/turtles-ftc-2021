@@ -136,16 +136,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     }
 
     class ToShoot extends Executive.StateBase<AutoOpmode> {
-        int rings;
-
-        ToShoot() {
-            this(1);
-        }
-
-        ToShoot(int rings) {
-            this.rings = rings;
-        }
-
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
@@ -158,7 +148,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             opMode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
             if(opmode.mecanumDrive.isIdle()) {
                 nextState(DRIVE, new FireListener());
-                nextState(LAUNCHER, new Fire(rings));
+                nextState(LAUNCHER, new Fire());
             }
         }
     }
@@ -177,8 +167,25 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.update();
             opmode.motorUtility.setPower(Motors.INTAKE, 1f);
             if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new ToShoot(3));
+                nextState(DRIVE, new FromRingsShoot());
                 opmode.motorUtility.setPower(Motors.INTAKE, 0);
+            }
+        }
+    }
+
+    class FromRingsShoot extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.trajToShoot2);
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opmode.mecanumDrive.isIdle()) {
+                nextState(DRIVE, new FireListener());
+                nextState(LAUNCHER, new Fire(3));
             }
         }
     }
