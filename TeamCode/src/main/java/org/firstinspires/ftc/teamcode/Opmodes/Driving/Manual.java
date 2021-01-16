@@ -75,9 +75,9 @@ public class Manual extends RobotHardware {
         }
 
         if(secondary.dpadUpOnce()) {
-            launchspeed = Math.min(launchspeed + 0.05, 1.0);
+            launchspeed = Math.min(launchspeed + 0.01, 1.0);
         } else if(secondary.dpadDownOnce()) {
-            launchspeed = Math.max(launchspeed - 0.05, 0);
+            launchspeed = Math.max(launchspeed - 0.01, 0);
         }
 
         if(secondary.right_trigger > deadzone) {
