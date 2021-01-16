@@ -31,6 +31,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     private final Waypoints waypoints;
     private TrajectoryRR trajectoryRR;
 
+    public static boolean pickupRings = false;
+
     public static double servoDelay = 0.35;
     public static double scanDelay = 0.5;
     public static double launcherVelocity = 1930;
@@ -134,6 +136,16 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     }
 
     class ToShoot extends Executive.StateBase<AutoOpmode> {
+        int rings;
+
+        ToShoot() {
+            this(1);
+        }
+
+        ToShoot(int rings) {
+            this.rings = rings;
+        }
+
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
@@ -146,7 +158,27 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             opMode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
             if(opmode.mecanumDrive.isIdle()) {
                 nextState(DRIVE, new FireListener());
-                nextState(LAUNCHER, new Fire());
+                nextState(LAUNCHER, new Fire(rings));
+            }
+        }
+    }
+
+    class PickupRings extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.trajPickupRings);
+            // Set it to false so it won't attempt to pick up rings again
+            pickupRings = false;
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            opmode.motorUtility.setPower(Motors.INTAKE, 1f);
+            if(opmode.mecanumDrive.isIdle()) {
+                nextState(DRIVE, new ToShoot(3));
+                opmode.motorUtility.setPower(Motors.INTAKE, 0);
             }
         }
     }
@@ -156,7 +188,10 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             if(stateMachine.getStateReference(LAUNCHER).isDone) {
-                nextState(DRIVE, new Park());
+                if(pickupRings && rings.equals(RingDetectionAmount.ONE))
+                    nextState(DRIVE, new PickupRings());
+                else
+                    nextState(DRIVE, new Park());
                 stateMachine.removeStateType(LAUNCHER);
             }
         }
@@ -179,17 +214,27 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     }
 
     class Fire extends Executive.StateBase<AutoOpmode> {
-        int index = 0;
+        int index;
         boolean doneInitialOpen = false;
         boolean finished = false;
+
+        public Fire() {
+            this(1);
+        }
+
+        public Fire(int startIndex) {
+            this.index = startIndex;
+        }
 
         @Override
         public void update() {
             super.update();
             switch(index) {
-                case 0:
+                case 0: index++;
+                    break;
                 case 1:
                 case 2:
+                case 3:
                     opMode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
                     if(opMode.motorUtility.getVelocity(Motors.LAUNCHER) > launcherVelocity && !doneInitialOpen) {
                         opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
