@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.Opmodes.Autonomous;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 
@@ -22,12 +21,10 @@ public class TrajectoryRR {
     Pose2d TO_ZONE = new Pose2d(-24,-60,Math.toRadians(180));
     Pose2d ZONE_VARIABLE;
 
-    Trajectory Traj_shoot;
-    Trajectory Traj_pickup_rings;
-    Trajectory Traj_shoot2;
-    Trajectory Traj_park;
-
-
+    public Trajectory Traj_shoot;
+    public Trajectory Traj_pickup_rings;
+    public Trajectory Traj_shoot2;
+    public Trajectory Traj_park;
 
     public TrajectoryRR(SampleMecanumDrive drive) {
         this.drive = drive;
@@ -69,23 +66,22 @@ public class TrajectoryRR {
         D) drive, drop wobble, shoot, pickup rings, shoot 2, second wobble, park
          */
 
-        Traj_shoot= drive.trajectoryBuilder(START_WALL)
-                .splineTo(TO_ZONE)
+        Traj_shoot = drive.trajectoryBuilder(START_WALL)
+                .lineToLinearHeading(TO_ZONE)
                 //.splineTo(ZONE_VARIABLE)
-                .splineTo(SHOOT)
+                .lineToLinearHeading(SHOOT)
                 .build();
 
         Traj_pickup_rings = drive.trajectoryBuilder(SHOOT)
-                .splineTo(RINGS)
+                .lineToLinearHeading(RINGS)
                 .build();
 
         Traj_shoot2 = drive.trajectoryBuilder(RINGS)
-                .splineTo(SHOOT)
+                .lineToLinearHeading(SHOOT)
                 .build();
 
         Traj_park = drive.trajectoryBuilder(SHOOT)
-                .splineTo(PARK)
+                .lineToLinearHeading(PARK)
                 .build();
-
     }
 }
