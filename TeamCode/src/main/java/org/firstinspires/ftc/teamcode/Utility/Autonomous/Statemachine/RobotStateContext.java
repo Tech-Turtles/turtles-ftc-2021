@@ -1,18 +1,22 @@
 package org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.roadrunner.geometry.Pose2d;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
 import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.AutoOpmode;
+import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.TrajectoryRR;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Positions;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Waypoints;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation.*;
+import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount;
 
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.DRIVE;
+import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.LAUNCHER;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_OPEN_POS;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_PUSH_POS;
 
@@ -25,14 +29,13 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     private final AllianceColor allianceColor;
     private final RobotHardware.StartPosition startPosition;
     private final Waypoints waypoints;
+    private TrajectoryRR trajectoryRR;
 
-    public static double  launcherDelay = 3.0;
-    public static double  servoDelay = 0.4;
-    public static double  scanDelay = 0.5;
-    public static double launcherVelocity = 2010;
+    public static double servoDelay = 0.35;
+    public static double scanDelay = 0.5;
+    public static double launcherVelocity = 1930;
 
-    public static double  driveSpeed = 0.7;
-    public static double  launcherSpeed = 0.6;
+    public static double launcherSpeed = 0.58;
 
     private RingDetectionAmount rings = RingDetectionAmount.ZERO;
 
@@ -47,12 +50,15 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
 
     public void init() {
         new Thread(() -> opmode.loadVision(false)).start();
+        opmode.mecanumDrive = new SampleMecanumDrive(opmode.hardwareMap);
+        trajectoryRR = new TrajectoryRR(opmode.mecanumDrive);
         stateMachine.changeState(DRIVE, new Start());
         stateMachine.init();
     }
 
     public void update() {
         stateMachine.update();
+        opmode.mecanumDrive.update();
         opmode.updateMecanumHeadingFromGyroNow(opmode.imuUtil, opmode.mecanumNavigation);
         opmode.telemetry.addData("Rings: ", rings.name());
     }
@@ -87,6 +93,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             opMode.mecanumNavigation.setCurrentPosition(initialPosition);
             opMode.imuUtil.updateNow();
             opMode.imuUtil.setCompensatedHeading(Math.toDegrees(initialPosition.theta));
+            opmode.mecanumDrive.setPoseEstimate(new Pose2d(initialPosition.x, initialPosition.y, initialPosition.theta));
         }
     }
 
@@ -101,16 +108,77 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
 
+            nextState(DRIVE, new Scan());
+        }
+    }
+
+    class Scan extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+        }
+
+        @Override
+        public void update() {
+            super.update();
+
             if(opMode.ringDetector != null) {
                 rings = opMode.ringDetector.getHeight();
             }
 
+            trajectoryRR.setZone(rings);
+
             if(stateTimer.seconds() > scanDelay)
-                nextState(DRIVE, new Shoot());
+                nextState(DRIVE, new ToShoot());
         }
     }
 
-    class Shoot extends Executive.StateBase<AutoOpmode> {
+    class ToShoot extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.trajToShoot1);
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            opMode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
+            if(opmode.mecanumDrive.isIdle()) {
+                nextState(DRIVE, new FireListener());
+                nextState(LAUNCHER, new Fire());
+            }
+        }
+    }
+
+    class FireListener extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void update() {
+            super.update();
+            if(stateMachine.getStateReference(LAUNCHER).isDone) {
+                nextState(DRIVE, new Park());
+                stateMachine.removeStateType(LAUNCHER);
+            }
+        }
+    }
+
+    class Park extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.trajToPark);
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opmode.mecanumDrive.isIdle()) {
+                nextState(DRIVE, new Stop());
+            }
+        }
+    }
+
+    class Fire extends Executive.StateBase<AutoOpmode> {
         int index = 0;
         boolean doneInitialOpen = false;
         boolean finished = false;
@@ -137,23 +205,11 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                         finished = false;
                         stateTimer.reset();
                     }
-
                     break;
                 default:
-                    opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
                     opMode.motorUtility.setPower(Motors.LAUNCHER, 0);
-                    nextState(DRIVE, new Park());
-            }
-        }
-    }
-
-    class Park extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void update() {
-            super.update();
-            arrived = driveTo(Positions.PARK.getNewNavigation2D(), driveSpeed);
-            if(arrived) {
-                nextState(DRIVE, new Stop());
+                    opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
+                    isDone = true;
             }
         }
     }

@@ -21,6 +21,7 @@ import org.firstinspires.ftc.teamcode.HardwareTypes.*;
 import org.firstinspires.ftc.teamcode.Menu.InteractiveInitialization;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
+import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.Utility.Vision.UGCoffeeDetector;
 
 /**
@@ -53,6 +54,8 @@ public class RobotHardware extends OpMode {
     public AutoDrive autoDrive;
 
     public UGCoffeeDetector ringDetector;
+
+    public SampleMecanumDrive mecanumDrive;
 
     public class MotorUtility {
 

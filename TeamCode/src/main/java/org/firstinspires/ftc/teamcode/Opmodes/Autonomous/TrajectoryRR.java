@@ -5,6 +5,7 @@ import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount;
 
 public class TrajectoryRR {
 
@@ -42,25 +43,21 @@ public class TrajectoryRR {
 
     public TrajectoryRR(SampleMecanumDrive drive) {
         this.drive = drive;
-        setZone(Zones.A);
+        setZone(RingDetectionAmount.ZERO);
         init();
     }
 
-    enum Zones {
-        A,B,C,
-    }
-
-    public void setZone(Zones zone) {
-        switch(zone) {
-            case A:
+    public void setZone(RingDetectionAmount amount) {
+        switch(amount) {
+            case ZERO:
                 ZONE_VARIABLE = ZONE_A;
                 wobbleTangent = -45.0;
                 break;
-            case B:
+            case ONE:
                 ZONE_VARIABLE = ZONE_B;
                 wobbleTangent = 0.0;
                 break;
-            case C:
+            case FOUR:
                 ZONE_VARIABLE = ZONE_C;
                 wobbleTangent = -45.0;
                 break;
@@ -130,7 +127,5 @@ public class TrajectoryRR {
         trajZoneToShoot1 = drive.trajectoryBuilder(trajStartToZone.end())
                         .lineToLinearHeading(SHOOT)
                         .build();
-
-
     }
 }

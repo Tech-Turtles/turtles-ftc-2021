@@ -329,6 +329,10 @@ public class SampleMecanumDrive extends MecanumDrive {
         return mode != Mode.IDLE;
     }
 
+    public boolean isIdle() {
+        return mode == Mode.IDLE;
+    }
+
     public void setMode(DcMotor.RunMode runMode) {
         for (DcMotorEx motor : motors) {
             motor.setMode(runMode);
