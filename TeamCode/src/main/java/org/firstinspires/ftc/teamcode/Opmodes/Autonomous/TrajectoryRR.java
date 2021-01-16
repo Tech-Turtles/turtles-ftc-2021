@@ -18,11 +18,11 @@ public class TrajectoryRR {
     Pose2d START_WALL = new Pose2d(-62.0, -42.0,Math.toRadians(180.0));
     Pose2d START_CENTER = new Pose2d(-62.0, -24.0,Math.toRadians(180.0));
     Pose2d RINGS = new Pose2d(-24.0, -36.0,Math.toRadians(180.0)).plus(ringOffset);
-    Pose2d SHOOT = new Pose2d(-2.0, -36.0,Math.toRadians(180.0)).plus(ringOffset);
+    Pose2d SHOOT = new Pose2d(-2.0, -42.0,Math.toRadians(180.0));
     Pose2d ZONE_A = new Pose2d(12.0, -60.0,Math.toRadians(0.0)).plus(wobbleOffset);
     Pose2d ZONE_B = new Pose2d(36.0, -36.0,Math.toRadians(0.0)).plus(wobbleOffset);
     Pose2d ZONE_C = new Pose2d(60.0, -60.0,Math.toRadians(0.0)).plus(wobbleOffset);
-    Pose2d PARK = new Pose2d(12.0, -36.0,Math.toRadians(180.0)).plus(ringOffset);
+    Pose2d PARK = new Pose2d(12.0, -42.0,Math.toRadians(180.0));
 
     // TO_ZONE renamed to WALL_WAY
     Pose2d WALL_WAY = new Pose2d(-24.0, -56.0,Math.toRadians(180.0));
@@ -98,20 +98,23 @@ public class TrajectoryRR {
                         .build();
 
         // Park immediately after shooting
-        trajToPark = drive.trajectoryBuilder(trajToShoot1.end())
+        trajToPark = drive.trajectoryBuilder(trajToShoot1.end(),Math.toRadians(0.0))
                         .splineToSplineHeading(PARK,Math.toRadians(0.0))
                         .build();
         //list.add(trajToPark)
 
         // From shooting position to rings pickup
         trajPickupRings = drive.trajectoryBuilder(trajToShoot1.end())
-                        .splineToSplineHeading(RINGS,Math.toRadians(0.0))
-                        .build();
+                    //.splineToSplineHeading(RINGS,Math.toRadians(0.0))
+                    .splineTo(toVector2d(RINGS),Math.toRadians(180.0 - 45.0))
+                .build();
 
         // Second batch of shooting after picking up rings
-        trajToShoot2 = drive.trajectoryBuilder(trajPickupRings.end())
-                        .splineToSplineHeading(SHOOT,Math.toRadians(0.0))
-                        .build();
+        // Fix heading term? Set to 0.0 or 180.0 ?
+        trajToShoot2 = drive.trajectoryBuilder(trajPickupRings.end(), trajPickupRings.end().getHeading() + Math.toRadians(180.0))
+                    //.splineToSplineHeading(SHOOT,Math.toRadians(0.0))
+                .splineToLinearHeading(SHOOT,Math.toRadians(0.0))
+                .build();
 
         // Drive from start to Zone
         trajStartToZone = drive.trajectoryBuilder(START_WALL)
