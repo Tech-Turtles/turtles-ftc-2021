@@ -179,7 +179,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.update();
             if(opmode.mecanumDrive.isIdle()) {
                 nextState(DRIVE, new FireListener());
-                nextState(LAUNCHER, new Fire(3));
+                // Start at case 3 if 1 ring is picked up, start at case 1 if 3 rings are picked up.
+                nextState(LAUNCHER, new Fire(rings.equals(RingDetectionAmount.ONE) ? 3 : 1));
             }
         }
     }
@@ -189,7 +190,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             if(stateMachine.getStateReference(LAUNCHER).isDone) {
-                if(pickupRings && rings.equals(RingDetectionAmount.ONE))
+                if(pickupRings && !rings.equals(RingDetectionAmount.ZERO))
                     nextState(DRIVE, new PickupRings());
                 else
                     nextState(DRIVE, new Park());
