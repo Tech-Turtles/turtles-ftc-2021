@@ -53,7 +53,9 @@ public class UGCoffeeDetector {
         try {
             return pipeline.getHeight();
         } catch (NullPointerException e) {
-            Log.wtf("Vision Error", "NullPointerException on the vision pipeline");
+            Log.w("Vision Error", "NullPointerException on the vision pipeline");
+            if(telemetry != null)
+                telemetry.addData("Vision Error: ", e.getMessage());
             return  RingDetectionAmount.ZERO;
         }
     }
