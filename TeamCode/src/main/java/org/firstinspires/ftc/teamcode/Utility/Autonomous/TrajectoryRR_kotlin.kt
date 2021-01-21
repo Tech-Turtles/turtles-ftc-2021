@@ -10,11 +10,6 @@ import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount.*
 
 class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     val drive: SampleMecanumDrive = sampleMecanumDrive
-    init {
-        buildTrajectories()
-        setZone(ZERO)
-    }
-
     val ringOffset: Pose2d = Pose2d(2.0, 5.0, 0.0)
     val wobbleOffset: Pose2d = Pose2d(-12.0, 0.0, 0.0)
 
@@ -44,6 +39,11 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     var trajToPOWERSHOT: Trajectory? = null
 
     val list = ArrayList<Trajectory>()
+    
+    init {
+        buildTrajectories()
+        setZone(ZERO)
+    }
 
 
     fun setZone(ringAmount: RingDetectionAmount) {
