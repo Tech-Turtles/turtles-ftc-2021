@@ -9,10 +9,10 @@ import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.AutoOpmode;
 import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.TrajectoryRR;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Positions;
+import org.firstinspires.ftc.teamcode.Utility.Autonomous.StartPosition;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Waypoints;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation.*;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
-import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount;
 
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.DRIVE;
@@ -27,7 +27,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     private final AutoOpmode opmode;
     private final Executive.StateMachine<AutoOpmode> stateMachine;
     private final AllianceColor allianceColor;
-    private final RobotHardware.StartPosition startPosition;
+    private final StartPosition startPosition;
     private final Waypoints waypoints;
     private TrajectoryRR trajectoryRR;
 
@@ -41,7 +41,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
 
     private RingDetectionAmount rings = RingDetectionAmount.ZERO;
 
-    public RobotStateContext(AutoOpmode opmode, AllianceColor allianceColor, AutoOpmode.StartPosition startPosition) {
+    public RobotStateContext(AutoOpmode opmode, AllianceColor allianceColor, StartPosition startPosition) {
         this.opmode = opmode;
         this.allianceColor = allianceColor;
         this.startPosition = startPosition;

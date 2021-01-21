@@ -246,11 +246,6 @@ public class RobotHardware extends OpMode {
         }
     }
 
-    public enum StartPosition {
-        WALL,
-        CENTER
-    }
-
     public void loadVision(boolean debug) {
         ringDetector = new UGCoffeeDetector(hardwareMap, Webcam.WEBCAM_1.getName(), telemetry, debug);
         ringDetector.init();

@@ -12,7 +12,6 @@ import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotState
 import org.firstinspires.ftc.teamcode.Utility.Controller;
 import org.firstinspires.ftc.teamcode.Utility.Math.ElapsedTimer;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
-import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 
 import java.util.HashMap;
 
@@ -27,7 +26,7 @@ public class BehaviorSandBox implements Executive.RobotStateMachineContextInterf
     private final AutoOpmode opmode;
     private final Executive.StateMachine<AutoOpmode> stateMachine;
     private final AllianceColor teamColor;
-    private final RobotHardware.StartPosition startPosition;
+    private final StartPosition startPosition;
     private Waypoints waypoints;
     private double driveSpeed = 0.8;
     private Controller controller1;
@@ -40,7 +39,7 @@ public class BehaviorSandBox implements Executive.RobotStateMachineContextInterf
     public static double servoDelay = 1.0;
 
 
-    public BehaviorSandBox(AutoOpmode opmode, AllianceColor teamColor, RobotHardware.StartPosition startPosition) {
+    public BehaviorSandBox(AutoOpmode opmode, AllianceColor teamColor, StartPosition startPosition) {
         this.opmode = opmode;
         this.teamColor = teamColor;
         this.startPosition = startPosition;
