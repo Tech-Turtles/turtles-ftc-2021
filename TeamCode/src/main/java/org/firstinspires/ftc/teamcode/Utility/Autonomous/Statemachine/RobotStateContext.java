@@ -241,7 +241,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                         opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
                         doneInitialOpen = true;
                         stateTimer.reset();
-                    } else if(opMode.motorUtility.getVelocity(Motors.LAUNCHER) > launcherVelocity && stateTimer.seconds() > servoDelay) {
+                    } else if(opMode.motorUtility.getVelocity(Motors.LAUNCHER) > launcherVelocity && stateTimer.seconds() > servoDelay && !finished) {
                         opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_PUSH_POS);
                         finished = true;
                         stateTimer.reset();
