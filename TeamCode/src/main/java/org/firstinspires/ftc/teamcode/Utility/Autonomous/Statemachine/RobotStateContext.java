@@ -275,7 +275,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         }
     }
 
-    class ReturnHome extends Executive.StateBase<AutoOpmode> {
+    class ReturnToStart extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
@@ -284,12 +284,12 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             Pose2d testEnd = opmode.mecanumDrive.getPoseEstimate();
             Pose2d park = new Pose2d(trajectoryRR.PARK.getX(),trajectoryRR.PARK.getY(),trajectoryRR.PARK.getHeading());
             Pose2d wallGoal = new Pose2d(testEnd.getX(),wallY,resetHeading);
-            Pose2d wallStart = new Pose2d(park.getX(),wallY,resetHeading);
+            Pose2d wallStart = new Pose2d(park.getX() + 20.0,wallY,resetHeading);
 
             Trajectory traj_home = opmode.mecanumDrive.trajectoryBuilder(testEnd,Math.toRadians(180.0))
                     .splineToSplineHeading(wallGoal,Math.toRadians(180.0))
                     .splineToSplineHeading(wallStart,Math.toRadians(180.0))
-                    .splineToSplineHeading(park,Math.toRadians(180.0))
+                    .splineToLinearHeading(park,Math.toRadians(180.0))
                     .build();
 
             opmode.mecanumDrive.followTrajectoryAsync(traj_home);
