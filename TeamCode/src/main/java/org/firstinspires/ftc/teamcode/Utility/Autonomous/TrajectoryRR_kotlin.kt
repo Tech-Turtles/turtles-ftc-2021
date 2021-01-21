@@ -39,7 +39,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     var trajToPOWERSHOT: Trajectory? = null
 
     val list = ArrayList<Trajectory>()
-    
+
     init {
         buildTrajectories()
         setZone(ZERO)

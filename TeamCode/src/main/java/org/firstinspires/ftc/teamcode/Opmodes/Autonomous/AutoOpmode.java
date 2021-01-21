@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.Opmodes.Autonomous;
 
+import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.IMU;
@@ -9,9 +10,8 @@ import org.firstinspires.ftc.teamcode.Utility.Autonomous.BehaviorSandBox;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.StartPosition;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext;
-import org.firstinspires.ftc.teamcode.Utility.Mecanum.AutoDrive;
-import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
+import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 
 
 public class AutoOpmode extends RobotHardware {
@@ -79,30 +79,22 @@ public class AutoOpmode extends RobotHardware {
     @Override
     public void start() {
         super.start();
-        // Navigation and control
-        mecanumNavigation = new MecanumNavigation(this, Configuration.getDriveTrainMecanum());
-        mecanumNavigation.initialize(new MecanumNavigation.Navigation2D(0, 0, 0));
 
-        autoDrive = new AutoDrive(this, mecanumNavigation, mecanumNavigation);
+        mecanumDrive = new SampleMecanumDrive(hardwareMap);
+        mecanumDrive.setPoseEstimate(new Pose2d(0, 0, 0));
 
-        // Ensure starting position at origin, even if wheels turned since initialize.
-        mecanumNavigation.update();
-        mecanumNavigation.setCurrentPosition(new MecanumNavigation.Navigation2D(0,0,0));
-
-        robotStateContext.init(); //After mecanum init, because state init could reference mecanumNavigation.
+        robotStateContext.init();
     }
 
     @Override
     public void loop() {
         super.loop();
 
-        mecanumNavigation.update();
+        mecanumDrive.update();
         robotStateContext.update();
 
         if (imuUtil != null)
             imuUtil.update();
-
-        mecanumNavigation.displayPosition();
 
         telemetry.addData("Period Average: ", df_precise.format(period.getAveragePeriodSec()) + "s");
         telemetry.addData("Period Max:     ", df_precise.format(period.getMaxPeriodSec()) + "s");

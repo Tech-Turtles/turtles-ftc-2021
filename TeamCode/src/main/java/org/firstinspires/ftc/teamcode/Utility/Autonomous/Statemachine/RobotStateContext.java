@@ -10,6 +10,7 @@ import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.TrajectoryRR;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Positions;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.StartPosition;
+import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR_kotlin;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Waypoints;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation.*;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
@@ -29,14 +30,15 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     private final AllianceColor allianceColor;
     private final StartPosition startPosition;
     private final Waypoints waypoints;
-    private TrajectoryRR trajectoryRR;
+    private TrajectoryRR_kotlin trajectoryRR;
 
-    public static boolean pickupRings = false;
+    public static boolean pickupRings = true;
 
     public static double servoDelay = 0.35;
-    public static double scanDelay = 0.5;
-    public static double launcherVelocity = 1930;
+    public static double scanDelay = 2.0;
+    public static double intakeDelay = 2.3;
 
+    public static double launcherVelocity = 1930;
     public static double launcherSpeed = 0.58;
 
     private RingDetectionAmount rings = RingDetectionAmount.ZERO;
@@ -52,16 +54,13 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
 
     public void init() {
         new Thread(() -> opmode.loadVision(false)).start();
-        opmode.mecanumDrive = new SampleMecanumDrive(opmode.hardwareMap);
-        trajectoryRR = new TrajectoryRR(opmode.mecanumDrive);
+        trajectoryRR = new TrajectoryRR_kotlin(opmode.mecanumDrive);
         stateMachine.changeState(DRIVE, new Start());
         stateMachine.init();
     }
 
     public void update() {
         stateMachine.update();
-        opmode.mecanumDrive.update();
-        opmode.updateMecanumHeadingFromGyroNow(opmode.imuUtil, opmode.mecanumNavigation);
         opmode.telemetry.addData("Rings: ", rings.name());
     }
 
@@ -79,11 +78,11 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.init(stateMachine);
             switch (startPosition) {
                 case WALL:
-                    setupInitialPosition(Positions.START_WALL.getNav2D());
+                    setupInitialPosition(trajectoryRR.getSTART_WALL());
                     nextState(DRIVE, new Initial());
                     break;
                 case CENTER:
-                    setupInitialPosition(Positions.START_CENTER.getNav2D());
+                    setupInitialPosition(trajectoryRR.getSTART_CENTER());
                     nextState(DRIVE, new Initial());
                     break;
                 default:
@@ -91,11 +90,10 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             }
         }
 
-        private void setupInitialPosition(Navigation2D initialPosition) {
-            opMode.mecanumNavigation.setCurrentPosition(initialPosition);
+        private void setupInitialPosition(Pose2d initialPosition) {
             opMode.imuUtil.updateNow();
-            opMode.imuUtil.setCompensatedHeading(Math.toDegrees(initialPosition.theta));
-            opmode.mecanumDrive.setPoseEstimate(new Pose2d(initialPosition.x, initialPosition.y, initialPosition.theta));
+            opMode.imuUtil.setCompensatedHeading(Math.toDegrees(initialPosition.getHeading()));
+            opmode.mecanumDrive.setPoseEstimate(initialPosition);
         }
     }
 
@@ -115,23 +113,18 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     }
 
     class Scan extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-        }
 
         @Override
         public void update() {
             super.update();
 
-            if(opMode.ringDetector != null) {
+            if(opMode.ringDetector != null)
                 rings = opMode.ringDetector.getHeight();
-            }
 
-            trajectoryRR.setZone(rings);
-
-            if(stateTimer.seconds() > scanDelay)
+            if(stateTimer.seconds() > scanDelay || !(rings.equals(RingDetectionAmount.ZERO))) {
+                trajectoryRR.setZone(rings);
                 nextState(DRIVE, new ToShoot());
+            }
         }
     }
 
@@ -139,7 +132,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.trajToShoot1);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajToShoot1());
         }
 
         @Override
@@ -157,7 +150,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.trajPickupRings);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajPickupRings());
             // Set it to false so it won't attempt to pick up rings again
             pickupRings = false;
         }
@@ -166,7 +159,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             opmode.motorUtility.setPower(Motors.INTAKE, 1f);
-            if(opmode.mecanumDrive.isIdle()) {
+            opmode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
+            if(opmode.mecanumDrive.isIdle() && stateTimer.seconds() > intakeDelay) {
                 nextState(DRIVE, new FromRingsShoot());
                 opmode.motorUtility.setPower(Motors.INTAKE, 0);
             }
@@ -177,7 +171,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.trajToShoot2);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajToShoot2());
         }
 
         @Override
@@ -208,7 +202,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.trajToPark);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajToPark());
         }
 
         @Override
