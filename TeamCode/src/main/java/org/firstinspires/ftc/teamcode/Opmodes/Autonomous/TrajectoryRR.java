@@ -22,7 +22,7 @@ public class TrajectoryRR {
     Pose2d ZONE_A = new Pose2d(12.0, -60.0,Math.toRadians(0.0)).plus(wobbleOffset);
     Pose2d ZONE_B = new Pose2d(36.0, -36.0,Math.toRadians(0.0)).plus(wobbleOffset);
     Pose2d ZONE_C = new Pose2d(60.0, -60.0,Math.toRadians(0.0)).plus(wobbleOffset);
-    Pose2d PARK = new Pose2d(12.0, -42.0,Math.toRadians(180.0));
+    public Pose2d PARK = new Pose2d(12.0, -42.0,Math.toRadians(180.0));
 
     // TO_ZONE renamed to WALL_WAY
     Pose2d WALL_WAY = new Pose2d(-24.0, -56.0,Math.toRadians(180.0));
