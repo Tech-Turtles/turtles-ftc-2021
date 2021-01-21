@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
@@ -266,6 +267,35 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             opMode.stop();
+        }
+    }
+
+    class ReturnToStart extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            Double wallY = -56.0;
+            Double resetHeading = Math.toRadians(180.0);
+            Pose2d testEnd = opmode.mecanumDrive.getPoseEstimate();
+            Pose2d park = new Pose2d(trajectoryRR.PARK.getX(),trajectoryRR.PARK.getY(),trajectoryRR.PARK.getHeading());
+            Pose2d wallGoal = new Pose2d(testEnd.getX(),wallY,resetHeading);
+            Pose2d wallStart = new Pose2d(park.getX() + 20.0,wallY,resetHeading);
+
+            Trajectory traj_home = opmode.mecanumDrive.trajectoryBuilder(testEnd,Math.toRadians(180.0))
+                    .splineToSplineHeading(wallGoal,Math.toRadians(180.0))
+                    .splineToSplineHeading(wallStart,Math.toRadians(180.0))
+                    .splineToLinearHeading(park,Math.toRadians(180.0))
+                    .build();
+
+            opmode.mecanumDrive.followTrajectoryAsync(traj_home);
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opmode.mecanumDrive.isIdle()) {
+                nextState(DRIVE, new Stop());
+            }
         }
     }
 
