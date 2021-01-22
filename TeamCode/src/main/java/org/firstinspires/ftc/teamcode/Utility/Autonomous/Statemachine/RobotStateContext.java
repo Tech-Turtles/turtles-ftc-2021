@@ -282,14 +282,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             Double wallY = -56.0;
             Double resetHeading = Math.toRadians(180.0);
             Pose2d testEnd = opmode.mecanumDrive.getPoseEstimate();
-            Pose2d park = new Pose2d(trajectoryRR.PARK.getX(),trajectoryRR.PARK.getY(),trajectoryRR.PARK.getHeading());
-            Pose2d wallGoal = new Pose2d(testEnd.getX(),wallY,resetHeading);
-            Pose2d wallStart = new Pose2d(park.getX() + 20.0,wallY,resetHeading);
+            Pose2d startWall = new Pose2d(trajectoryRR.START_WALL.vec(),trajectoryRR.START_WALL.getHeading());
+            Pose2d goalTaper = new Pose2d(testEnd.getX(),wallY,resetHeading);
+            Pose2d startTaper = new Pose2d(startWall.getX() + 20.0,wallY,resetHeading);
 
             Trajectory traj_home = opmode.mecanumDrive.trajectoryBuilder(testEnd,Math.toRadians(180.0))
-                    .splineToSplineHeading(wallGoal,Math.toRadians(180.0))
-                    .splineToSplineHeading(wallStart,Math.toRadians(180.0))
-                    .splineToLinearHeading(park,Math.toRadians(180.0))
+                    .splineToSplineHeading(goalTaper,Math.toRadians(180.0))
+                    .splineToSplineHeading(startTaper,Math.toRadians(180.0))
+                    .splineToLinearHeading(startWall,Math.toRadians(180.0))
                     .build();
 
             opmode.mecanumDrive.followTrajectoryAsync(traj_home);
