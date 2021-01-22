@@ -15,7 +15,7 @@ public class TrajectoryRR {
     Pose2d ringOffset = new Pose2d(2.0,5.0,0.0);
     Pose2d wobbleOffset = new Pose2d(-12.0,0.0,0.0);
 
-    Pose2d START_WALL = new Pose2d(-62.0, -42.0,Math.toRadians(180.0));
+    public Pose2d START_WALL = new Pose2d(-62.0, -42.0,Math.toRadians(180.0));
     Pose2d START_CENTER = new Pose2d(-62.0, -24.0,Math.toRadians(180.0));
     Pose2d RINGS = new Pose2d(-24.0, -36.0,Math.toRadians(180.0)).plus(ringOffset);
     Pose2d SHOOT = new Pose2d(-2.0 - 2f, -42.0 + 2f,Math.toRadians(180.0));
