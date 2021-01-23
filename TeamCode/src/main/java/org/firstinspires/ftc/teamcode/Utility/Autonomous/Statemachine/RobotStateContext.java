@@ -7,14 +7,10 @@ import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
 import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.AutoOpmode;
-import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.TrajectoryRR;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
-import org.firstinspires.ftc.teamcode.Utility.Autonomous.Positions;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.StartPosition;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR_kotlin;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Waypoints;
-import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation.*;
-import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount;
 
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.DRIVE;
@@ -33,7 +29,10 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     private final Waypoints waypoints;
     private TrajectoryRR_kotlin trajectoryRR;
 
+    public static boolean autoReturnToStart = false;
     public static boolean pickupRings = true;
+    public boolean ringsNotPickedUpYet; // Set in Start state
+
 
     public static double servoDelay = 0.35;
     public static double scanDelay = 2.0;
@@ -89,6 +88,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 default:
                    throw new IndexOutOfBoundsException("Invalid start position.");
             }
+            // resets ring state boolean IF static pickupRings option is set.
+            ringsNotPickedUpYet = pickupRings;
         }
 
         private void setupInitialPosition(Pose2d initialPosition) {
@@ -153,7 +154,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.init(stateMachine);
             opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajPickupRings());
             // Set it to false so it won't attempt to pick up rings again
-            pickupRings = false;
+            ringsNotPickedUpYet = false;
         }
 
         @Override
@@ -191,7 +192,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             if(stateMachine.getStateReference(LAUNCHER).isDone) {
-                if(pickupRings && !rings.equals(RingDetectionAmount.ZERO))
+                if(ringsNotPickedUpYet && !rings.equals(RingDetectionAmount.ZERO))
                     nextState(DRIVE, new PickupRings());
                 else
                     nextState(DRIVE, new Park());
@@ -211,7 +212,11 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new Stop());
+                if (autoReturnToStart) {
+                    nextState(DRIVE, new ReturnToStart());
+                } else {
+                    nextState(DRIVE, new Stop());
+                }
             }
         }
     }
@@ -277,14 +282,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             Double wallY = -56.0;
             Double resetHeading = Math.toRadians(180.0);
             Pose2d testEnd = opmode.mecanumDrive.getPoseEstimate();
-            Pose2d park = new Pose2d(trajectoryRR.PARK.getX(),trajectoryRR.PARK.getY(),trajectoryRR.PARK.getHeading());
-            Pose2d wallGoal = new Pose2d(testEnd.getX(),wallY,resetHeading);
-            Pose2d wallStart = new Pose2d(park.getX() + 20.0,wallY,resetHeading);
+            Pose2d startWall = new Pose2d(trajectoryRR.getSTART_WALL().vec(),trajectoryRR.getSTART_WALL().getHeading());
+            Pose2d goalTaper = new Pose2d(testEnd.getX(),wallY,resetHeading);
+            Pose2d startTaper = new Pose2d(startWall.getX() + 20.0,wallY,resetHeading);
 
             Trajectory traj_home = opmode.mecanumDrive.trajectoryBuilder(testEnd,Math.toRadians(180.0))
-                    .splineToSplineHeading(wallGoal,Math.toRadians(180.0))
-                    .splineToSplineHeading(wallStart,Math.toRadians(180.0))
-                    .splineToLinearHeading(park,Math.toRadians(180.0))
+                    .splineToSplineHeading(goalTaper,Math.toRadians(180.0))
+                    .splineToSplineHeading(startTaper,Math.toRadians(180.0))
+                    .splineToLinearHeading(startWall,Math.toRadians(180.0))
                     .build();
 
             opmode.mecanumDrive.followTrajectoryAsync(traj_home);
