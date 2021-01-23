@@ -26,7 +26,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     var WALL_WAY = Pose2d(-24.0, -56.0, Math.toRadians(180.0))
     var WALL_WAY_START = WALL_WAY.plus(Pose2d(-15.0, 4.0, 0.0))
     // Configurables.  wobbleTangent should be 0.0 for ZONE_B, -45.0 otherwise
-    var ZONE_VARIABLE: Pose2d = ZONE_C;
+    var ZONE_VARIABLE: Pose2d = ZONE_C
     var wobbleTangent: Double = -45.0
 
     var trajToShoot1: Trajectory? = null
@@ -63,81 +63,81 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
 
 
         // Start with diagonal 2.5
-        var trajToShoot1: Trajectory =
+        val trajToShoot1: Trajectory =
                 trajectoryBuilder(START_WALL, START_WALL.heading)
                         //.lineTo(toVector2d(START_WALL.plus(Pose2d(10.0,-10.0,0.0))))
                         .lineTo(toVector2d(WALL_WAY_START))
                         .splineToLinearHeading(WALL_WAY, Math.toRadians(0.0))
                         .splineToLinearHeading(SHOOT, Math.toRadians(90.0))
                         //.lineTo(toVector2d(SHOOT))
-                        .build();
+                        .build()
         list.add(trajToShoot1)
         this.trajToShoot1 = trajToShoot1
 
         // Powershot!!!
-        var trajToPOWERSHOT: Trajectory =
+        val trajToPOWERSHOT: Trajectory =
                 trajectoryBuilder(START_WALL, START_WALL.heading)
                         //.lineTo(toVector2d(START_WALL.plus(Pose2d(10.0,-10.0,0.0))))
                         .lineTo(toVector2d(WALL_WAY_START))
                         .splineToLinearHeading(WALL_WAY, Math.toRadians(0.0))
                         .splineToLinearHeading(POWER_SHOT.plus(Pose2d(0.0, 24.0, 0.0)), Math.toRadians(90.0))
                         //.lineTo(toVector2d(SHOOT))
-                        .build();
+                        .build()
         list.add(trajToPOWERSHOT)
         this.trajToPOWERSHOT = trajToPOWERSHOT
 
         // Park immediately after shooting
-        var trajToPark: Trajectory =
+        val trajToPark: Trajectory =
                 trajectoryBuilder(trajToShoot1.end(), trajToShoot1.end().heading * 0.0)
                         .splineToSplineHeading(PARK, Math.toRadians(0.0))
-                        .build();
+                        .build()
         list.add(trajToPark)
         this.trajToPark = trajToPark
 
         // From shooting position to rings pickup
-        var trajPickupRings: Trajectory =
+        val trajPickupRings: Trajectory =
                 trajectoryBuilder(trajToShoot1.end(), trajToShoot1.end().heading)
                         //.splineToSplineHeading(RINGS,Math.toRadians(180.0))
                         //.splineToLinearHeading(RINGS,Math.toRadians(180.0))
                         .splineTo(toVector2d(RINGS), Math.toRadians(180.0 - 45.0))
-                        .build();
+                        .build()
         list.add(trajPickupRings)
         this.trajPickupRings = trajPickupRings
 
         // Second batch of shooting after picking up rings
-        var trajToShoot2: Trajectory =
+        val trajToShoot2: Trajectory =
                 trajectoryBuilder(trajPickupRings.end(), trajPickupRings.end().heading + Math.toRadians(180.0))
                         //.splineToSplineHeading(SHOOT,Math.toRadians(0.0))
                         .splineToLinearHeading(SHOOT, Math.toRadians(0.0))
-                        .build();
+                        .build()
         list.add(trajToShoot2)
         this.trajToShoot2 = trajToShoot2
 
         // Drive from start to Zone
-        var trajStartToZone: Trajectory =
+        val trajStartToZone: Trajectory =
                 trajectoryBuilder(START_WALL, START_WALL.heading)
                         //.lineTo(toVector2d(START_WALL.plus(Pose2d(10.0,-10.0,0.0))))
                         .lineTo(toVector2d(WALL_WAY_START))
                         .splineToLinearHeading(WALL_WAY, Math.toRadians(0.0))
                         .splineToSplineHeading(ZONE_VARIABLE, Math.toRadians(wobbleTangent))
-                        .build();
+                        .build()
         //list.add(trajStartToZone)
         this.trajStartToZone = trajStartToZone
 
         // Drive from shoot to Zone
-        var trajFromShootToZone: Trajectory =
+        val trajFromShootToZone: Trajectory =
                 trajectoryBuilder(SHOOT, SHOOT.heading)
                         //.splineTo(toVector2d(ZONE_VARIABLE),Math.toRadians(wobbleTangent))
                         .lineToLinearHeading(ZONE_VARIABLE)
-                        .build();
+                        .build()
         list.add(trajFromShootToZone)
         this.trajFromShootToZone = trajFromShootToZone
 
         // Drive from Zone to Shoot1
-        var trajZoneToShoot1: Trajectory =
+        val trajZoneToShoot1: Trajectory =
                 trajectoryBuilder(trajStartToZone.end(), trajStartToZone.end().heading)
                         .lineToLinearHeading(SHOOT)
-                        .build();
+                        .build()
         list.add(trajZoneToShoot1)
         this.trajZoneToShoot1 = trajZoneToShoot1
     }
