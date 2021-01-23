@@ -4,27 +4,40 @@ import com.acmerobotics.roadrunner.geometry.Pose2d
 import com.acmerobotics.roadrunner.geometry.Vector2d
 import com.acmerobotics.roadrunner.trajectory.Trajectory
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder
+import com.acmerobotics.roadrunner.trajectory.constraints.AngularVelocityConstraint
+import com.acmerobotics.roadrunner.trajectory.constraints.MecanumVelocityConstraint
+import com.acmerobotics.roadrunner.trajectory.constraints.MinVelocityConstraint
+import com.acmerobotics.roadrunner.trajectory.constraints.ProfileAccelerationConstraint
+import org.firstinspires.ftc.teamcode.Utility.Odometry.DriveConstants
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount.*
+import java.util.*
+import kotlin.collections.ArrayList
 
 class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     val drive: SampleMecanumDrive = sampleMecanumDrive
-    val ringOffset: Pose2d = Pose2d(2.0, 5.0, 0.0)
-    val wobbleOffset: Pose2d = Pose2d(-12.0, 0.0, 0.0)
+    val ringOffset: Pose2d = Pose2d(2.0,5.0,0.0)
+    val wobbleOffset: Pose2d = Pose2d(-12.0,0.0,0.0)
+    val wobblePickup: Pose2d = Pose2d(12.0,0.0,0.0)
 
-    val START_WALL = Pose2d(-62.0, -42.0, Math.toRadians(180.0))
-    var START_CENTER = Pose2d(-62.0, -24.0, Math.toRadians(180.0))
-    var RINGS = Pose2d(-24.0, -36.0, Math.toRadians(180.0)).plus(ringOffset)
-    var SHOOT = Pose2d(-2.0, -42.0, Math.toRadians(180.0 - 0.0))
-    var POWER_SHOT = Pose2d(-2.0, -28.0, Math.toRadians(180.0 - 0.0))
-    var ZONE_A = Pose2d(12.0, -60.0, Math.toRadians(0.0)).plus(wobbleOffset)
-    var ZONE_B = Pose2d(36.0, -36.0, Math.toRadians(0.0)).plus(wobbleOffset)
-    var ZONE_C = Pose2d(60.0, -60.0, Math.toRadians(0.0)).plus(wobbleOffset)
-    var PARK = Pose2d(12.0, -42.0, Math.toRadians(180.0))
+    val START_WALL = Pose2d(-62.0, -42.0,Math.toRadians(180.0))
+    var START_CENTER = Pose2d(-62.0, -18.0,Math.toRadians(180.0))
+    var RINGS = Pose2d(-24.0, -36.0,Math.toRadians(180.0)).plus(ringOffset)
+    var SHOOT = Pose2d(-2.0,  -42.0,Math.toRadians(180.0 - 0.0))
+    var CENTER_TO_SHOOT = Pose2d(-2.0, -6.0, 0.0.toRadians)
+    var RIGHT_TO_SHOOT = Pose2d(-2.0, -20.0, 0.0.toRadians)
+    var POWER_SHOT = Pose2d(-2.0,  -28.0,Math.toRadians(180.0 - 0.0))
+    var ZONE_A = Pose2d(12.0, -60.0,Math.toRadians(0.0)).plus(wobbleOffset)
+    var ZONE_B = Pose2d(36.0, -36.0,Math.toRadians(0.0)).plus(wobbleOffset)
+    var ZONE_C = Pose2d(60.0, -60.0,Math.toRadians(0.0)).plus(wobbleOffset)
+    var PARK = Pose2d(12.0, -42.0,Math.toRadians(180.0))
+    var WOBBLE_WALL = Pose2d(-48.0, -50.0,Math.toRadians(180.0)).plus(wobblePickup)
 
-    var WALL_WAY = Pose2d(-24.0, -56.0, Math.toRadians(180.0))
-    var WALL_WAY_START = WALL_WAY.plus(Pose2d(-15.0, 4.0, 0.0))
+
+    var WALL_WAY = Pose2d(-24.0, -56.0,Math.toRadians(180.0))
+    var WALL_WAY_START = WALL_WAY.plus(Pose2d(-15.0,4.0,0.0))
+    var CENTER_WAY_START = Pose2d(-36.0,0.0,180.0.toRadians)
     // Configurables.  wobbleTangent should be 0.0 for ZONE_B, -45.0 otherwise
     var ZONE_VARIABLE: Pose2d = ZONE_C
     var wobbleTangent: Double = -45.0
@@ -37,6 +50,13 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     var trajFromShootToZone: Trajectory? = null
     var trajZoneToShoot1: Trajectory? = null
     var trajToPOWERSHOT: Trajectory? = null
+    var traj_powershot_clockwise: Trajectory? = null
+    var trajShootToWallWobblePickup: Trajectory? = null
+    var traj_startWallToStartCenter: Trajectory? = null
+    var trajClaimWobbleToZone: Trajectory? = null
+    var trajParkAfterWobbleDropoff: Trajectory? = null
+    var trajPickupRingsFromZone: Trajectory? = null
+
 
     val list = ArrayList<Trajectory>()
 
@@ -140,6 +160,67 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
                         .build()
         list.add(trajZoneToShoot1)
         this.trajZoneToShoot1 = trajZoneToShoot1
+
+
+        // Clockwise powershot tour
+        // Demo relative start position placement
+        val traj_startWallToStartCenter: Trajectory =
+                trajectoryBuilder(START_WALL, (90.0 - 20.0).toRadians)
+                        .splineToConstantHeading(START_CENTER.vec(),(20.0 + 90.0).toRadians)
+                        .build();
+        this.traj_startWallToStartCenter = traj_startWallToStartCenter
+
+        //setZone(ONE)
+        val traj_powershot_clockwise: Trajectory =
+                trajectoryBuilder(START_CENTER, 90.0.toRadians)
+                .splineToConstantHeading(CENTER_TO_SHOOT.vec(), (-90.0).toRadians, MinVelocityConstraint(
+                            Arrays.asList(
+                                    AngularVelocityConstraint(DriveConstants.MAX_ANG_VEL),
+                                    MecanumVelocityConstraint(10.0, DriveConstants.TRACK_WIDTH)
+                            )
+                    ),
+                    ProfileAccelerationConstraint(DriveConstants.MAX_ACCEL))
+                .lineTo(RIGHT_TO_SHOOT.vec(), MinVelocityConstraint(
+                        Arrays.asList(
+                                AngularVelocityConstraint(DriveConstants.MAX_ANG_VEL),
+                                MecanumVelocityConstraint(10.0, DriveConstants.TRACK_WIDTH)
+                        )
+                    ),
+                    ProfileAccelerationConstraint(DriveConstants.MAX_ACCEL))
+                .splineToSplineHeading(ZONE_VARIABLE,Math.toRadians(wobbleTangent), MinVelocityConstraint(
+                        Arrays.asList(
+                            AngularVelocityConstraint(DriveConstants.MAX_ANG_VEL),
+                            MecanumVelocityConstraint(10.0, DriveConstants.TRACK_WIDTH)
+                        )
+                ),
+                ProfileAccelerationConstraint(DriveConstants.MAX_ACCEL))
+                .build();
+        this.traj_powershot_clockwise = traj_powershot_clockwise
+
+        // From zone wobble dropoff position to rings pickup
+        val trajPickupRingsFromZone: Trajectory =
+                trajectoryBuilder(traj_powershot_clockwise.end(), (wobbleTangent + 180.0).toRadians)
+                        .splineToSplineHeading(SHOOT,180.0.toRadians)
+                        .splineTo(toVector2d(RINGS),Math.toRadians(180.0 - 45.0))
+                        .build()
+        this.trajPickupRingsFromZone = trajPickupRingsFromZone
+
+        // Claim wall wobble goal
+        val trajShootToWallWobblePickup: Trajectory =
+                trajectoryBuilder(trajZoneToShoot1.end(),trajZoneToShoot1.end().heading)
+                        .splineToLinearHeading(WALL_WAY,-180.0.toRadians)
+                        //.splineTo(WALL_WAY_START.vec(),-180.0.toRadians)
+                        .splineToLinearHeading(WOBBLE_WALL,(-180.0 - 0.0*45.0).toRadians)
+                        .build()
+        this.trajShootToWallWobblePickup = trajShootToWallWobblePickup
+
+        // From Claim Wobble to Zone
+        val trajClaimWobbleToZone: Trajectory =
+                trajectoryBuilder(trajShootToWallWobblePickup.end(), (-20.0).toRadians)
+                        //.splineToLinearHeading(SHOOT, 0.0)
+                        .splineToSplineHeading(ZONE_VARIABLE, wobbleTangent.toRadians)
+                        .build()
+        this.trajClaimWobbleToZone = trajClaimWobbleToZone
     }
 
     fun toVector2d(pose: Pose2d): Vector2d {
