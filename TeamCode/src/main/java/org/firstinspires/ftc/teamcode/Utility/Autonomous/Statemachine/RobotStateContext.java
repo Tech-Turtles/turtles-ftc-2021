@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
@@ -13,10 +14,16 @@ import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR_kotlin;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Waypoints;
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount;
 
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.HashMap;
+
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.DRIVE;
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.LAUNCHER;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_OPEN_POS;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_PUSH_POS;
+import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.PowershotState.*;
+
 
 @Config
 public class RobotStateContext implements Executive.RobotStateMachineContextInterface {
@@ -337,16 +344,62 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     }
 
 
+
+    enum PowershotState { WIND_UP, SHOOT1, SHOOT2, SHOOT3, DROP_GOAL}
+
     class B_trajPowershot_clockwise extends Executive.StateBase<AutoOpmode> {
+        PowershotState powershotState;
+        EnumMap<PowershotState,Double> powershotYPosition = new EnumMap<>(PowershotState.class);
+
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
+            PowershotState powershotState = PowershotState.WIND_UP;
+            powershotYPosition.put(SHOOT1,-4.0);
+            powershotYPosition.put(SHOOT2,-12.0);
+            powershotYPosition.put(SHOOT3,-18.0);
             opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajPowershot_clockwise());
         }
 
         @Override
         public void update() {
+            Pose2d pose = opmode.mecanumDrive.getPoseEstimate();
             super.update();
+            switch (powershotState) {
+                case WIND_UP:
+                    if (pose.getX() > -36.0) {
+                        nextState(LAUNCHER, new Launch_windUp(launcherSpeed, launcherVelocity));
+                        powershotState = SHOOT1;
+                    }
+                    break;
+                case SHOOT1:
+                    if (pose.getY() < powershotYPosition.get(SHOOT1)) {
+                        opmode.telemetry.addData("Launcher Ready:",
+                                stateMachine.getStateReference(LAUNCHER).isDone);
+                        nextState(LAUNCHER, new Launch_fire(launcherSpeed, launcherVelocity));
+                        powershotState = SHOOT2;
+                    }
+                    break;
+                case SHOOT2:
+                    if (pose.getY() < powershotYPosition.get(SHOOT2)) {
+                        opmode.telemetry.addData("Launcher Ready:",
+                                stateMachine.getStateReference(LAUNCHER).isDone);
+                        nextState(LAUNCHER, new Launch_fire(launcherSpeed, launcherVelocity));
+                        powershotState = SHOOT3;
+                    }
+                    break;
+                case SHOOT3:
+                    if (pose.getY() < powershotYPosition.get(SHOOT3)) {
+                        opmode.telemetry.addData("Launcher Ready:",
+                                stateMachine.getStateReference(LAUNCHER).isDone);
+                        nextState(LAUNCHER, new Launch_fire(launcherSpeed, launcherVelocity));
+                        powershotState = DROP_GOAL;
+                    }
+                    break;
+                case DROP_GOAL:
+                    break;
+                default:
+            }
             if(opmode.mecanumDrive.isIdle()) {
                 nextState(DRIVE, new B_trajPickupRingsFromZone());
             }
@@ -364,7 +417,10 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void update() {
             super.update();
-            if(opmode.mecanumDrive.isIdle()) {
+            opmode.motorUtility.setPower(Motors.INTAKE, 1f);
+            opmode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
+            if(opmode.mecanumDrive.isIdle() && stateTimer.seconds() > intakeDelay) {
+                opmode.motorUtility.setPower(Motors.INTAKE, 0);
                 nextState(DRIVE, new B_trajToShoot2());
             }
         }
@@ -441,6 +497,66 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         }
     }
 
+   /*
+   *    launchSpeed (percent) and launchVelocity_tps (ticks per second) are arguments of the
+   *    constructor, so this mode works with powershots and high goal shots.
+   *    However, the feedback that shows we're ready to shoot is to support moving powershots.
+    */
+    class Launch_windUp extends Executive.StateBase<AutoOpmode> {
+        double launchSpeed;
+        double launchVelocity_tps; // encoder ticks per second
+
+        Launch_windUp(double launchSpeed, double launchVelocity_tps) {
+            this.launchSpeed = launchSpeed;
+            this.launchVelocity_tps = launchVelocity_tps;
+        }
+@Override public void update() {
+            super.update();
+            // Set launch speed and servo position.
+            // If velocity is high enough, and servoDelay elapsed, then isDone = true
+            opMode.motorUtility.setPower(Motors.LAUNCHER, this.launchSpeed);
+            opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
+            if(opMode.motorUtility.getVelocity(Motors.LAUNCHER) > this.launchVelocity_tps && stateTimer.seconds() > servoDelay) {
+                isDone = true;
+            } else {
+                isDone = false;
+            }
+        }
+    }
+
+
+    /*
+     * Launch_fire
+     */
+    class Launch_fire extends Executive.StateBase<AutoOpmode> {
+        double launchSpeed;
+        double launchVelocity_tps; // encoder ticks per second
+        boolean servoPushed = false;
+        ElapsedTime servoTimer = new ElapsedTime();
+
+        Launch_fire(double launchSpeed, double launchVelocity_tps) {
+            this.launchSpeed = launchSpeed;
+            this.launchVelocity_tps = launchVelocity_tps;
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            opMode.motorUtility.setPower(Motors.LAUNCHER, this.launchSpeed);
+            if (!(servoPushed)) {
+                if (opMode.motorUtility.getVelocity(Motors.LAUNCHER) > this.launchVelocity_tps) {
+                    opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_PUSH_POS);
+                    servoPushed = true;
+                    servoTimer.reset();
+                }
+            } else if (servoPushed) {
+                if (servoTimer.seconds() > servoDelay) {
+                    //isDone = true; // This indicates we've shot, but not that we're ready to shoot.
+                    nextState(LAUNCHER, new Launch_windUp(this.launchSpeed,this.launchVelocity_tps));
+                }
+            }
+        }
+    }
 
 
 
