@@ -13,6 +13,8 @@ import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR_kotlin;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Waypoints;
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount;
 
+import java.util.ArrayList;
+
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.DRIVE;
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.LAUNCHER;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_OPEN_POS;
@@ -29,9 +31,11 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     private final Waypoints waypoints;
     private TrajectoryRR_kotlin trajectoryRR;
 
+
     public static boolean autoReturnToStart = false;
     public static boolean pickupRings = true;
     public boolean ringsNotPickedUpYet; // Set in Start state
+    public static boolean fullAutoTest = true;
 
 
     public static double servoDelay = 0.35;
@@ -109,8 +113,10 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void update() {
             super.update();
-
-            nextState(DRIVE, new Scan());
+            if(fullAutoTest)
+                nextState(DRIVE, new DriveTest());
+            else
+                nextState(DRIVE, new Scan());
         }
     }
 
@@ -267,6 +273,43 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         }
     }
 
+    class DriveTest extends Executive.StateBase<AutoOpmode> {
+        ArrayList<Trajectory> list = new ArrayList<>();
+        int index = 0;
+
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            trajectoryRR.setZone(RingDetectionAmount.FOUR);
+            list.add(0, trajectoryRR.getTraj_startWallToStartCenter());
+            list.add(1, trajectoryRR.getTraj_powershot_clockwise());
+            list.add(2, trajectoryRR.getTrajPickupRingsFromZone());
+            list.add(3, trajectoryRR.getTrajToShoot2());
+            list.add(4, trajectoryRR.getTrajShootToWallWobblePickup());
+            list.add(5, trajectoryRR.getTrajClaimWobbleToZone());
+            list.add(6, trajectoryRR.getTrajParkAfterWobbleDropoff());
+            opmode.mecanumDrive.followTrajectoryAsync(list.get(index));
+            index++;
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opmode.mecanumDrive.isIdle() && opmode.primary.A()) {
+                if(index < list.size()) {
+                    opmode.mecanumDrive.followTrajectoryAsync(list.get(index));
+                    index++;
+                } else {
+                    if (autoReturnToStart) {
+                        nextState(DRIVE, new ReturnToStart());
+                    } else {
+                        nextState(DRIVE, new Stop());
+                    }
+                }
+            }
+        }
+    }
+
     class Stop extends Executive.StateBase<AutoOpmode> {
         @Override
         public void update() {
@@ -279,8 +322,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            Double wallY = -56.0;
-            Double resetHeading = Math.toRadians(180.0);
+            double wallY = -56.0;
+            double resetHeading = Math.toRadians(180.0);
             Pose2d testEnd = opmode.mecanumDrive.getPoseEstimate();
             Pose2d startWall = new Pose2d(trajectoryRR.getSTART_WALL().vec(),trajectoryRR.getSTART_WALL().getHeading());
             Pose2d goalTaper = new Pose2d(testEnd.getX(),wallY,resetHeading);
