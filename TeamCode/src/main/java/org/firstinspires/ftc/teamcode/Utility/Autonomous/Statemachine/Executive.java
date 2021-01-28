@@ -209,7 +209,6 @@ public class Executive {
 
         protected void nextState(StateMachine.StateType stateType, StateBase state, boolean isActive) {
             stateMachine.changeState(isActive, stateType, state);
-            stateMachine.stateMap.get(stateType).init(stateMachine);
         }
 
         protected void nextState(StateMachine.StateType stateType, StateBase state) {
