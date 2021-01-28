@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.Utility.Autonomous
 
+import com.acmerobotics.dashboard.config.Config
 import com.acmerobotics.roadrunner.geometry.Pose2d
 import com.acmerobotics.roadrunner.geometry.Vector2d
 import com.acmerobotics.roadrunner.trajectory.Trajectory
@@ -15,6 +16,7 @@ import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount.*
 import java.util.*
 import kotlin.collections.ArrayList
 
+@Config
 class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     val drive: SampleMecanumDrive = sampleMecanumDrive
     val ringOffset: Pose2d = Pose2d(2.0,5.0,0.0)
@@ -24,7 +26,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     val START_WALL = Pose2d(-62.0, -42.0,Math.toRadians(180.0))
     var START_CENTER = Pose2d(-62.0, -18.0,Math.toRadians(180.0))
     var RINGS = Pose2d(-24.0, -36.0,Math.toRadians(180.0)).plus(ringOffset)
-    var SHOOT = Pose2d(-2.0,  -42.0,Math.toRadians(180.0 - 0.0))
+    var SHOOT = Pose2d(-2.0,  -42.0 + 2.0,Math.toRadians(180.0 - 0.0))
     var CENTER_TO_SHOOT = Pose2d(-2.0, -6.0, 0.0.toRadians)
     var RIGHT_TO_SHOOT = Pose2d(-2.0, -20.0, 0.0.toRadians)
     var POWER_SHOT = Pose2d(-2.0,  -28.0,Math.toRadians(180.0 - 0.0))
@@ -73,10 +75,11 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
             FOUR -> ZONE_C
         }
         wobbleTangent = when (ringAmount) {
-            ZERO -> -45.0
+            ZERO -> -40.0
             ONE -> 0.0
-            FOUR -> -45.0
+            FOUR -> -15.0
         }
+        buildTrajectories()
     }
 
     fun buildTrajectories() {
@@ -173,27 +176,36 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
         //setZone(ONE)
         val traj_powershot_clockwise: Trajectory =
                 trajectoryBuilder(START_CENTER, 90.0.toRadians)
-                .splineToConstantHeading(CENTER_TO_SHOOT.vec(), (-90.0).toRadians, MinVelocityConstraint(
-                            Arrays.asList(
-                                    AngularVelocityConstraint(DriveConstants.MAX_ANG_VEL),
-                                    MecanumVelocityConstraint(10.0, DriveConstants.TRACK_WIDTH)
-                            )
-                    ),
-                    ProfileAccelerationConstraint(DriveConstants.MAX_ACCEL))
-                .lineTo(RIGHT_TO_SHOOT.vec(), MinVelocityConstraint(
-                        Arrays.asList(
-                                AngularVelocityConstraint(DriveConstants.MAX_ANG_VEL),
-                                MecanumVelocityConstraint(10.0, DriveConstants.TRACK_WIDTH)
-                        )
-                    ),
-                    ProfileAccelerationConstraint(DriveConstants.MAX_ACCEL))
-                .splineToSplineHeading(ZONE_VARIABLE,Math.toRadians(wobbleTangent), MinVelocityConstraint(
-                        Arrays.asList(
-                            AngularVelocityConstraint(DriveConstants.MAX_ANG_VEL),
-                            MecanumVelocityConstraint(10.0, DriveConstants.TRACK_WIDTH)
-                        )
-                ),
-                ProfileAccelerationConstraint(DriveConstants.MAX_ACCEL))
+                .splineToConstantHeading(CENTER_TO_SHOOT.vec(), (-90.0).toRadians
+//                        ,
+//                        MinVelocityConstraint(
+//                            Arrays.asList(
+//                                    AngularVelocityConstraint(DriveConstants.MAX_ANG_VEL),
+//                                    MecanumVelocityConstraint(10.0, DriveConstants.TRACK_WIDTH)
+//                            )
+//                    ),
+//                    ProfileAccelerationConstraint(DriveConstants.MAX_ACCEL)
+                )
+                .lineTo(RIGHT_TO_SHOOT.vec()
+//                        ,
+//                        MinVelocityConstraint(
+//                            Arrays.asList(
+//                                    AngularVelocityConstraint(DriveConstants.MAX_ANG_VEL),
+//                                    MecanumVelocityConstraint(10.0, DriveConstants.TRACK_WIDTH)
+//                            )
+//                    ),
+//                    ProfileAccelerationConstraint(DriveConstants.MAX_ACCEL)
+                )
+                .splineToSplineHeading(ZONE_VARIABLE,Math.toRadians(wobbleTangent)
+//                        ,
+//                        MinVelocityConstraint(
+//                            Arrays.asList(
+//                                    AngularVelocityConstraint(DriveConstants.MAX_ANG_VEL),
+//                                    MecanumVelocityConstraint(10.0, DriveConstants.TRACK_WIDTH)
+//                            )
+//                    ),
+//                    ProfileAccelerationConstraint(DriveConstants.MAX_ACCEL)
+                )
                 .build();
         this.traj_powershot_clockwise = traj_powershot_clockwise
 
@@ -221,6 +233,22 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
                         .splineToSplineHeading(ZONE_VARIABLE, wobbleTangent.toRadians)
                         .build()
         this.trajClaimWobbleToZone = trajClaimWobbleToZone
+
+        // Park after wobble zone dropoff
+        // Note variable trajectory construction using when to prevent knocking wobble goal from ZONE A.
+        var trajParkAfterWobbleDropoff: Trajectory =
+                when (ZONE_VARIABLE) {
+                    ZONE_A ->
+                        trajectoryBuilder(trajClaimWobbleToZone.end(),trajClaimWobbleToZone.end().heading + 180.0.toRadians)
+                                .splineToConstantHeading(SHOOT.vec(),0.0.toRadians)
+                                .splineTo(PARK.vec(), 0.0)
+                                .build()
+                    else ->
+                        trajectoryBuilder(trajClaimWobbleToZone.end(),trajClaimWobbleToZone.end().heading + 180.0.toRadians)
+                                .lineTo(PARK.vec())
+                                .build()
+                }
+        this.trajParkAfterWobbleDropoff = trajParkAfterWobbleDropoff
     }
 
     fun toVector2d(pose: Pose2d): Vector2d {
