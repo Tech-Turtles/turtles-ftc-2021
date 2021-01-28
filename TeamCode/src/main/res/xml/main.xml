@@ -7,6 +7,8 @@
             <goBILDA5202SeriesMotor name="back left" port="2" />
             <goBILDA5202SeriesMotor name="back right" port="3" />
             <Servo name="hopper" port="0" />
+            <ContinuousRotationServo name="wobble_left" port="1" />
+            <ContinuousRotationServo name="wobble_right" port="2" />
             <LynxEmbeddedIMU name="IMU_1" port="0" bus="0" />
         </LynxModule>
         <LynxModule name="Expansion Hub 2" port="2">

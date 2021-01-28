@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -32,6 +33,7 @@ public class RobotHardware extends OpMode {
 
     private static final HashMap<Motors, DcMotorEx> motors = new HashMap<>();
     private static final HashMap<Servos, Servo> servos = new HashMap<>();
+    private static final HashMap<ContinuousServos, CRServo> crServos = new HashMap<>();
 
     public final MotorUtility motorUtility = new MotorUtility();
     public final ServoUtility servoUtility = new ServoUtility();
@@ -308,6 +310,14 @@ public class RobotHardware extends OpMode {
                 Servo servo = hardwareMap.get(Servo.class, s.getConfigName());
                 servos.put(s, servo);
                 servo.setDirection(s.getDirection());
+            } catch (IllegalArgumentException ignore) {}
+        }
+
+        for (ContinuousServos c : ContinuousServos.values()) {
+            try {
+                CRServo crServo = hardwareMap.get(CRServo.class, c.getConfigName());
+                crServos.put(c, crServo);
+                crServo.setDirection(c.getDirection());
             } catch (IllegalArgumentException ignore) {}
         }
 
