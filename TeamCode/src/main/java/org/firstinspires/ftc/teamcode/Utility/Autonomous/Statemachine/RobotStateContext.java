@@ -48,6 +48,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
 
     public static double launcherVelocity = 1930;
     public static double launcherSpeed = 0.58;
+    public static double powershotVelocity = 1680;
+    public static double powershotSpeed = 0.51;
 
     private RingDetectionAmount rings = RingDetectionAmount.ZERO;
 
@@ -354,10 +356,10 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            PowershotState powershotState = PowershotState.WIND_UP;
-            powershotYPosition.put(SHOOT1,-4.0);
-            powershotYPosition.put(SHOOT2,-12.0);
-            powershotYPosition.put(SHOOT3,-18.0);
+            powershotState = PowershotState.WIND_UP;
+            powershotYPosition.put(SHOOT1,-2.0);
+            powershotYPosition.put(SHOOT2,-10.0);
+            powershotYPosition.put(SHOOT3,-16.0);
             opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajPowershot_clockwise());
         }
 
@@ -367,8 +369,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.update();
             switch (powershotState) {
                 case WIND_UP:
-                    if (pose.getX() > -36.0) {
-                        nextState(LAUNCHER, new Launch_windUp(launcherSpeed, launcherVelocity));
+                    nextState(LAUNCHER, new Launch_windUp(powershotSpeed, powershotVelocity));
+                    if (pose.getX() > -12.0) {
                         powershotState = SHOOT1;
                     }
                     break;
@@ -376,7 +378,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                     if (pose.getY() < powershotYPosition.get(SHOOT1)) {
                         opmode.telemetry.addData("Launcher Ready:",
                                 stateMachine.getStateReference(LAUNCHER).isDone);
-                        nextState(LAUNCHER, new Launch_fire(launcherSpeed, launcherVelocity));
+                        nextState(LAUNCHER, new Launch_fire(powershotSpeed, powershotVelocity));
                         powershotState = SHOOT2;
                     }
                     break;
@@ -384,7 +386,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                     if (pose.getY() < powershotYPosition.get(SHOOT2)) {
                         opmode.telemetry.addData("Launcher Ready:",
                                 stateMachine.getStateReference(LAUNCHER).isDone);
-                        nextState(LAUNCHER, new Launch_fire(launcherSpeed, launcherVelocity));
+                        nextState(LAUNCHER, new Launch_fire(powershotSpeed, powershotVelocity));
                         powershotState = SHOOT3;
                     }
                     break;
@@ -392,7 +394,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                     if (pose.getY() < powershotYPosition.get(SHOOT3)) {
                         opmode.telemetry.addData("Launcher Ready:",
                                 stateMachine.getStateReference(LAUNCHER).isDone);
-                        nextState(LAUNCHER, new Launch_fire(launcherSpeed, launcherVelocity));
+                        nextState(LAUNCHER, new Launch_fire(powershotSpeed, powershotVelocity));
                         powershotState = DROP_GOAL;
                     }
                     break;
@@ -405,7 +407,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             }
         }
     }
-
 
     class B_trajPickupRingsFromZone extends Executive.StateBase<AutoOpmode> {
         @Override
@@ -510,7 +511,9 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             this.launchSpeed = launchSpeed;
             this.launchVelocity_tps = launchVelocity_tps;
         }
-@Override public void update() {
+
+        @Override
+        public void update() {
             super.update();
             // Set launch speed and servo position.
             // If velocity is high enough, and servoDelay elapsed, then isDone = true
@@ -523,7 +526,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             }
         }
     }
-
 
     /*
      * Launch_fire
@@ -557,13 +559,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             }
         }
     }
-
-
-
-
-
-
-
 
 
     public double getDriveScale(double seconds) {
