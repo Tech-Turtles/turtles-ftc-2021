@@ -292,8 +292,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
             trajectoryRR.setZone(RingDetectionAmount.FOUR);
-            list.add(0, trajectoryRR.getTraj_startWallToStartCenter());
-            list.add(1, trajectoryRR.getTraj_powershot_clockwise());
+            list.add(0, trajectoryRR.getTrajStartWallToStartCenter());
+            list.add(1, trajectoryRR.getTrajPowershot_clockwise());
             list.add(2, trajectoryRR.getTrajPickupRingsFromZone());
             list.add(3, trajectoryRR.getTrajToShoot2());
             list.add(4, trajectoryRR.getTrajShootToWallWobblePickup());
