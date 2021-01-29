@@ -52,21 +52,15 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     var trajFromShootToZone: Trajectory? = null
     var trajZoneToShoot1: Trajectory? = null
     var trajToPOWERSHOT: Trajectory? = null
-    var traj_powershot_clockwise: Trajectory? = null
+    var trajPowershot_clockwise: Trajectory? = null
     var trajShootToWallWobblePickup: Trajectory? = null
-    var traj_startWallToStartCenter: Trajectory? = null
+    var trajStartWallToStartCenter: Trajectory? = null
     var trajClaimWobbleToZone: Trajectory? = null
     var trajParkAfterWobbleDropoff: Trajectory? = null
     var trajPickupRingsFromZone: Trajectory? = null
 
 
     val list = ArrayList<Trajectory>()
-
-    init {
-        buildTrajectories()
-        setZone(ZERO)
-    }
-
 
     fun setZone(ringAmount: RingDetectionAmount) {
         ZONE_VARIABLE = when (ringAmount) {
@@ -80,6 +74,12 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
             FOUR -> -15.0
         }
         buildTrajectories()
+    }
+
+
+    init {
+        buildTrajectories()
+        setZone(ZERO)
     }
 
     fun buildTrajectories() {
@@ -167,14 +167,14 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
 
         // Clockwise powershot tour
         // Demo relative start position placement
-        val traj_startWallToStartCenter: Trajectory =
+        val trajStartwalltostartcenter: Trajectory =
                 trajectoryBuilder(START_WALL, (90.0 - 20.0).toRadians)
                         .splineToConstantHeading(START_CENTER.vec(),(20.0 + 90.0).toRadians)
                         .build();
-        this.traj_startWallToStartCenter = traj_startWallToStartCenter
+        this.trajStartWallToStartCenter = trajStartwalltostartcenter
 
         //setZone(ONE)
-        val traj_powershot_clockwise: Trajectory =
+        val trajPowershot_clockwise: Trajectory =
                 trajectoryBuilder(START_CENTER, 90.0.toRadians)
                 .splineToConstantHeading(CENTER_TO_SHOOT.vec(), (-90.0).toRadians
 //                        ,
@@ -207,11 +207,11 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
 //                    ProfileAccelerationConstraint(DriveConstants.MAX_ACCEL)
                 )
                 .build();
-        this.traj_powershot_clockwise = traj_powershot_clockwise
+        this.trajPowershot_clockwise = trajPowershot_clockwise
 
         // From zone wobble dropoff position to rings pickup
         val trajPickupRingsFromZone: Trajectory =
-                trajectoryBuilder(traj_powershot_clockwise.end(), (wobbleTangent + 180.0).toRadians)
+                trajectoryBuilder(trajPowershot_clockwise.end(), (wobbleTangent + 180.0).toRadians)
                         .splineToSplineHeading(SHOOT,180.0.toRadians)
                         .splineTo(toVector2d(RINGS),Math.toRadians(180.0 - 45.0))
                         .build()
