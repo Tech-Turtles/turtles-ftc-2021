@@ -5,41 +5,38 @@ import com.acmerobotics.roadrunner.geometry.Pose2d
 import com.acmerobotics.roadrunner.geometry.Vector2d
 import com.acmerobotics.roadrunner.trajectory.Trajectory
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder
-import com.acmerobotics.roadrunner.trajectory.constraints.AngularVelocityConstraint
-import com.acmerobotics.roadrunner.trajectory.constraints.MecanumVelocityConstraint
-import com.acmerobotics.roadrunner.trajectory.constraints.MinVelocityConstraint
-import com.acmerobotics.roadrunner.trajectory.constraints.ProfileAccelerationConstraint
+import com.acmerobotics.roadrunner.trajectory.constraints.*
 import org.firstinspires.ftc.teamcode.Utility.Odometry.DriveConstants
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount.*
-import java.util.*
 import kotlin.collections.ArrayList
+
 
 @Config
 class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     val drive: SampleMecanumDrive = sampleMecanumDrive
-    val ringOffset: Pose2d = Pose2d(2.0,5.0,0.0)
-    val wobbleOffset: Pose2d = Pose2d(-12.0,0.0,0.0)
-    val wobblePickup: Pose2d = Pose2d(12.0,0.0,0.0)
+    val ringOffset: Pose2d = Pose2d(2.0, 5.0, 0.0)
+    val wobbleOffset: Pose2d = Pose2d(-12.0, 0.0, 0.0)
+    val wobblePickup: Pose2d = Pose2d(12.0, 0.0, 0.0)
 
-    val START_WALL = Pose2d(-62.0, -42.0,Math.toRadians(180.0))
-    var START_CENTER = Pose2d(-62.0, -18.0,Math.toRadians(180.0))
-    var RINGS = Pose2d(-24.0, -36.0,Math.toRadians(180.0)).plus(ringOffset)
-    var SHOOT = Pose2d(-2.0,  -42.0 + 2.0,Math.toRadians(180.0 - 0.0))
+    val START_WALL = Pose2d(-62.0, -42.0, Math.toRadians(180.0))
+    var START_CENTER = Pose2d(-62.0, -18.0, Math.toRadians(180.0))
+    var RINGS = Pose2d(-24.0, -36.0, Math.toRadians(180.0)).plus(ringOffset)
+    var SHOOT = Pose2d(-2.0, -42.0 + 2.0, Math.toRadians(180.0 - 0.0))
     var CENTER_TO_SHOOT = Pose2d(-2.0, -6.0, 0.0.toRadians)
     var RIGHT_TO_SHOOT = Pose2d(-2.0, -20.0, 0.0.toRadians)
-    var POWER_SHOT = Pose2d(-2.0,  -28.0,Math.toRadians(180.0 - 0.0))
-    var ZONE_A = Pose2d(12.0, -60.0,Math.toRadians(0.0)).plus(wobbleOffset)
-    var ZONE_B = Pose2d(36.0, -36.0,Math.toRadians(0.0)).plus(wobbleOffset)
-    var ZONE_C = Pose2d(60.0, -60.0,Math.toRadians(0.0)).plus(wobbleOffset)
-    var PARK = Pose2d(12.0, -42.0,Math.toRadians(180.0))
-    var WOBBLE_WALL = Pose2d(-48.0, -50.0,Math.toRadians(180.0)).plus(wobblePickup)
+    var POWER_SHOT = Pose2d(-2.0, -28.0, Math.toRadians(180.0 - 0.0))
+    var ZONE_A = Pose2d(12.0, -60.0, Math.toRadians(0.0)).plus(wobbleOffset)
+    var ZONE_B = Pose2d(36.0, -36.0, Math.toRadians(0.0)).plus(wobbleOffset)
+    var ZONE_C = Pose2d(60.0, -60.0, Math.toRadians(0.0)).plus(wobbleOffset)
+    var PARK = Pose2d(12.0, -42.0, Math.toRadians(180.0))
+    var WOBBLE_WALL = Pose2d(-48.0, -50.0, Math.toRadians(180.0)).plus(wobblePickup)
 
 
-    var WALL_WAY = Pose2d(-24.0, -56.0,Math.toRadians(180.0))
-    var WALL_WAY_START = WALL_WAY.plus(Pose2d(-15.0,4.0,0.0))
-    var CENTER_WAY_START = Pose2d(-36.0,0.0,180.0.toRadians)
+    var WALL_WAY = Pose2d(-24.0, -56.0, Math.toRadians(180.0))
+    var WALL_WAY_START = WALL_WAY.plus(Pose2d(-15.0, 4.0, 0.0))
+    var CENTER_WAY_START = Pose2d(-36.0, 0.0, 180.0.toRadians)
     // Configurables.  wobbleTangent should be 0.0 for ZONE_B, -45.0 otherwise
     var ZONE_VARIABLE: Pose2d = ZONE_C
     var wobbleTangent: Double = -45.0
@@ -59,6 +56,13 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     var trajParkAfterWobbleDropoff: Trajectory? = null
     var trajPickupRingsFromZone: Trajectory? = null
 
+    private var velocityConstraint: TrajectoryVelocityConstraint? = null
+    private var accelerationConstraint: TrajectoryAccelerationConstraint? = null
+    private var slowVelocityConstraint: TrajectoryVelocityConstraint? = null
+    private var slowAccelerationConstraint: TrajectoryAccelerationConstraint? = null
+
+    private val slowVelocity: Double = 10.0
+    private val slowAcceleration: Double = 10.0
 
     val list = ArrayList<Trajectory>()
 
@@ -73,16 +77,22 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
             ONE -> 0.0
             FOUR -> -15.0
         }
+
         buildTrajectories()
     }
 
 
     init {
+        velocityConstraint = getMinVelocityConstraint(DriveConstants.MAX_ANG_VEL, DriveConstants.MAX_VEL, DriveConstants.TRACK_WIDTH)
+        accelerationConstraint = getMinAccelerationConstraint(DriveConstants.MAX_ACCEL)
+
+        slowVelocityConstraint = getMinVelocityConstraint(DriveConstants.MAX_ANG_VEL, slowVelocity, DriveConstants.TRACK_WIDTH)
+        slowAccelerationConstraint = getMinAccelerationConstraint(slowAcceleration)
         buildTrajectories()
         setZone(ZERO)
     }
 
-    fun buildTrajectories() {
+    private fun buildTrajectories() {
 
 
         // Start with diagonal 2.5
@@ -169,60 +179,33 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
         // Demo relative start position placement
         val trajStartwalltostartcenter: Trajectory =
                 trajectoryBuilder(START_WALL, (90.0 - 20.0).toRadians)
-                        .splineToConstantHeading(START_CENTER.vec(),(20.0 + 90.0).toRadians)
+                        .splineToConstantHeading(START_CENTER.vec(), (20.0 + 90.0).toRadians)
                         .build();
         this.trajStartWallToStartCenter = trajStartwalltostartcenter
 
         //setZone(ONE)
         val trajPowershot_clockwise: Trajectory =
                 trajectoryBuilder(START_CENTER, 90.0.toRadians)
-                .splineToConstantHeading(CENTER_TO_SHOOT.vec(), (-90.0).toRadians
-//                        ,
-//                        MinVelocityConstraint(
-//                            Arrays.asList(
-//                                    AngularVelocityConstraint(DriveConstants.MAX_ANG_VEL),
-//                                    MecanumVelocityConstraint(10.0, DriveConstants.TRACK_WIDTH)
-//                            )
-//                    ),
-//                    ProfileAccelerationConstraint(DriveConstants.MAX_ACCEL)
-                )
-                .lineTo(RIGHT_TO_SHOOT.vec()
-//                        ,
-//                        MinVelocityConstraint(
-//                            Arrays.asList(
-//                                    AngularVelocityConstraint(DriveConstants.MAX_ANG_VEL),
-//                                    MecanumVelocityConstraint(10.0, DriveConstants.TRACK_WIDTH)
-//                            )
-//                    ),
-//                    ProfileAccelerationConstraint(DriveConstants.MAX_ACCEL)
-                )
-                .splineToSplineHeading(ZONE_VARIABLE,Math.toRadians(wobbleTangent)
-//                        ,
-//                        MinVelocityConstraint(
-//                            Arrays.asList(
-//                                    AngularVelocityConstraint(DriveConstants.MAX_ANG_VEL),
-//                                    MecanumVelocityConstraint(10.0, DriveConstants.TRACK_WIDTH)
-//                            )
-//                    ),
-//                    ProfileAccelerationConstraint(DriveConstants.MAX_ACCEL)
-                )
-                .build();
+                .splineToConstantHeading(CENTER_TO_SHOOT.vec(), (-90.0).toRadians)
+                .lineTo(RIGHT_TO_SHOOT.vec(), slowVelocityConstraint, slowAccelerationConstraint)
+                .splineToSplineHeading(ZONE_VARIABLE, Math.toRadians(wobbleTangent), velocityConstraint, accelerationConstraint)
+                .build()
         this.trajPowershot_clockwise = trajPowershot_clockwise
 
-        // From zone wobble dropoff position to rings pickup
+        // From zone wobble drop off position to rings pickup
         val trajPickupRingsFromZone: Trajectory =
                 trajectoryBuilder(trajPowershot_clockwise.end(), (wobbleTangent + 180.0).toRadians)
-                        .splineToSplineHeading(SHOOT,180.0.toRadians)
-                        .splineTo(toVector2d(RINGS),Math.toRadians(180.0 - 45.0))
+                        .splineToSplineHeading(SHOOT, 180.0.toRadians)
+                        .splineTo(toVector2d(RINGS), Math.toRadians(180.0 - 45.0))
                         .build()
         this.trajPickupRingsFromZone = trajPickupRingsFromZone
 
         // Claim wall wobble goal
         val trajShootToWallWobblePickup: Trajectory =
-                trajectoryBuilder(trajZoneToShoot1.end(),trajZoneToShoot1.end().heading)
-                        .splineToLinearHeading(WALL_WAY,-180.0.toRadians)
+                trajectoryBuilder(trajZoneToShoot1.end(), trajZoneToShoot1.end().heading)
+                        .splineToLinearHeading(WALL_WAY, -180.0.toRadians)
                         //.splineTo(WALL_WAY_START.vec(),-180.0.toRadians)
-                        .splineToLinearHeading(WOBBLE_WALL,(-180.0 - 0.0*45.0).toRadians)
+                        .splineToLinearHeading(WOBBLE_WALL, (-180.0 - 0.0 * 45.0).toRadians)
                         .build()
         this.trajShootToWallWobblePickup = trajShootToWallWobblePickup
 
@@ -239,12 +222,12 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
         var trajParkAfterWobbleDropoff: Trajectory =
                 when (ZONE_VARIABLE) {
                     ZONE_A ->
-                        trajectoryBuilder(trajClaimWobbleToZone.end(),trajClaimWobbleToZone.end().heading + 180.0.toRadians)
-                                .splineToConstantHeading(SHOOT.vec(),0.0.toRadians)
+                        trajectoryBuilder(trajClaimWobbleToZone.end(), trajClaimWobbleToZone.end().heading + 180.0.toRadians)
+                                .splineToConstantHeading(SHOOT.vec(), 0.0.toRadians)
                                 .splineTo(PARK.vec(), 0.0)
                                 .build()
                     else ->
-                        trajectoryBuilder(trajClaimWobbleToZone.end(),trajClaimWobbleToZone.end().heading + 180.0.toRadians)
+                        trajectoryBuilder(trajClaimWobbleToZone.end(), trajClaimWobbleToZone.end().heading + 180.0.toRadians)
                                 .lineTo(PARK.vec())
                                 .build()
                 }
@@ -263,6 +246,16 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
         return drive.trajectoryBuilder(pose, reversed)
     }
 
+    fun getMinVelocityConstraint(maxAngle: Double, MaxVelocity: Double, TrackWidth: Double): MinVelocityConstraint {
+        return MinVelocityConstraint(listOf(
+                AngularVelocityConstraint(maxAngle),
+                MecanumVelocityConstraint(MaxVelocity, TrackWidth)
+        ))
+    }
+
+    fun getMinAccelerationConstraint(MaxAccel: Double): ProfileAccelerationConstraint {
+        return ProfileAccelerationConstraint(MaxAccel)
+    }
 }
 
 val Double.toRadians get() = (Math.toRadians(this))
