@@ -246,6 +246,43 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
         return drive.trajectoryBuilder(pose, reversed)
     }
 
+    companion object {
+        @JvmStatic
+        fun getNearestCornerPose2d(pose: Pose2d): Pose2d {
+            val flipOffset = Pose2d(0.75,0.0,180.0.toRadians)
+            val corners = ArrayList<Pose2d>()
+            corners.add(Pose2d(-61.5,-61.0, (0.0).toRadians))
+            corners.add(Pose2d(60.75,-61.0, (0.0).toRadians))
+            corners.add(Pose2d(-61.5,+61.0, (0.0).toRadians))
+            corners.add(Pose2d(60.75,+61.0, (0.0).toRadians))
+
+            // Which direction, fwd 0.0 or reverse 180.0?
+            val isHeadingFwd = Math.abs(0.0.toRadians - pose.heading) < 90.0.toRadians
+            val orientationOffset =
+                if(isHeadingFwd) Pose2d(0.0,0.0,0.0)
+                else flipOffset
+
+            // Which point is the closest?
+            var closestCorner = corners.get(0).plus(orientationOffset)
+            var closestDistance = getDistance(pose, closestCorner)
+            for(corner in corners) {
+                var newCorner = corner;
+                var newDistance = getDistance(pose, newCorner)
+                if(newDistance < closestDistance) {
+                    closestCorner = newCorner.plus(orientationOffset)
+                    closestDistance = newDistance
+                }
+            }
+            return closestCorner
+        }
+
+        fun getDistance(pose1: Pose2d, pose2: Pose2d): Double {
+            val deltaX = Math.abs(pose1.x - pose2.x)
+            val deltaY = Math.abs(pose1.y - pose2.y)
+            return Math.sqrt( Math.pow(deltaX,2.0) + Math.pow(deltaY,2.0))
+        }
+    }
+
     fun getMinVelocityConstraint(maxAngle: Double, MaxVelocity: Double, TrackWidth: Double): MinVelocityConstraint {
         return MinVelocityConstraint(listOf(
                 AngularVelocityConstraint(maxAngle),
