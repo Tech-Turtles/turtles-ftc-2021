@@ -140,6 +140,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 trajectoryRR.setZone(rings);
                 if (doAdvancedTrajectory) {
                     nextState(DRIVE, new B_trajStartWallToStartCenter());
+                    trajectoryRR.setZone(RingDetectionAmount.FOUR);
                 } else {
                     nextState(DRIVE, new ToShoot());
                 }
@@ -353,6 +354,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             if(opmode.mecanumDrive.isIdle()) {
+                stateMachine.removeStateType(LAUNCHER);
                 nextState(DRIVE, new Stop());
             }
         }
@@ -534,9 +536,9 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             if (autoReturnToStart) {
                 nextState(DRIVE, new ReturnToStart());
             } else {
+                stateMachine.removeStateType(LAUNCHER);
                 nextState(DRIVE, new Stop());
             }
-
         }
     }
 

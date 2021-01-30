@@ -3,14 +3,18 @@ package org.firstinspires.ftc.teamcode.Utility;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.AutoDrive;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.Mecanum;
 import org.firstinspires.ftc.teamcode.Utility.Math.ElapsedTimer;
@@ -33,7 +37,8 @@ public class RobotHardware extends OpMode {
 
     private static final HashMap<Motors, DcMotorEx> motors = new HashMap<>();
     private static final HashMap<Servos, Servo> servos = new HashMap<>();
-    private static final HashMap<ContinuousServos, CRServo> crServos = new HashMap<>();
+    private static final HashMap<ContinuousServo, CRServo> crServos = new HashMap<>();
+    private static final HashMap<ColorSensor, RevColorSensorV3> colorSensors = new HashMap<>();
 
     public final MotorUtility motorUtility = new MotorUtility();
     public final ServoUtility servoUtility = new ServoUtility();
@@ -112,6 +117,10 @@ public class RobotHardware extends OpMode {
             getMotor(motor);
             if (m != null)
                 m.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        }
+
+        public void setPIDFCoefficients(DcMotor.RunMode runmode, PIDFCoefficients pidfCoefficients, Motors... motors) {
+
         }
 
         public void setTypeMotorsRunmode(MotorTypes type, DcMotor.RunMode runMode) {
@@ -200,10 +209,49 @@ public class RobotHardware extends OpMode {
             Mecanum.Wheels wheels = Mecanum.simpleJoystickToWheels(leftStickX, leftStickY, rightStickX, rightStickY);
             setDriveForMecanumWheels(wheels);
         }
+
+
+        /**
+         * @param motor The motor that will be driven
+         * @param targetTicks The position where the motor will be driven. Must be in encoder Ticks
+         * @param power The power at which the robot will be driven
+         * @param rampThreshold The position when the robot will start slowing the motor down before its destination
+         * @return Returns whether or not the motor arrived to the specified position
+         */
+        public boolean goToPosition(Motors motor, int targetTicks, double power, double rampThreshold) {
+            power = Range.clip(Math.abs(power), 0, 1);
+            int poweredDistance = 0;
+            int arrivedDistance = 50;
+            double maxRampPower = 1.0;
+            double minRampPower = 0.0;
+            int errorSignal = getEncoderValue(motor) - targetTicks;
+            double direction = errorSignal > 0 ? -1.0 : 1.0;
+            double rampDownRatio = AutoDrive.rampDown(Math.abs(errorSignal), rampThreshold, maxRampPower, minRampPower);
+
+            if (Math.abs(errorSignal) >= poweredDistance) {
+                setPower(motor, direction * power * rampDownRatio);
+            } else {
+                setPower(motor, 0);
+            }
+
+            return Math.abs(errorSignal) <= arrivedDistance;
+        }
+
+        /**
+         * @param motor The motor that will be driven
+         * @param targetTicks The position where the motor will be driven. Must be in encoder Ticks
+         * @param power The power at which the robot will be driven
+         * @return Returns whether or not the motor arrived to the specified position
+         */
+        public boolean goToPosition(Motors motor, int targetTicks, double power) {
+            int rampDistanceTicks = 400;
+            return goToPosition(motor, targetTicks, power, rampDistanceTicks);
+        }
     }
 
     public class ServoUtility {
         Servo s;
+        CRServo cr;
 
         private Servo getServo(Servos servo) {
             s = servos.get(servo);
@@ -211,6 +259,14 @@ public class RobotHardware extends OpMode {
                 telemetry.addData("Servo Missing", servo.name());
             }
             return s;
+        }
+
+        private CRServo getContinuousServo(ContinuousServo servo) {
+            cr = crServos.get(servo);
+            if (cr == null) {
+                telemetry.addData("CRServo Missing", servo.name());
+            }
+            return cr;
         }
 
         public void setAngle(Servos servo, double pos) {
@@ -246,6 +302,24 @@ public class RobotHardware extends OpMode {
 
             return isMovementDone;
         }
+
+        public void setPower(ContinuousServo continuousServo, double power) {
+            cr = getContinuousServo(continuousServo);
+            if(cr == null) return;
+            cr.setPower(power);
+        }
+    }
+
+    public RevColorSensorV3 getColorSensor(ColorSensor colorSensor) {
+        RevColorSensorV3 revColorSensorV3 = colorSensors.get(colorSensor);
+        if(revColorSensorV3 == null)
+            telemetry.addData("Sensor Missing", colorSensor.name());
+        return revColorSensorV3;
+    }
+
+    public double getDistance(RevColorSensorV3 colorSensor) {
+        if(colorSensor == null) return -1;
+        return ((DistanceSensor) colorSensor).getDistance(DistanceUnit.INCH);
     }
 
     public void loadVision(boolean debug) {
@@ -256,10 +330,6 @@ public class RobotHardware extends OpMode {
     public void clearHubCache() {
         try {
             expansionHub1.clearBulkCache();
-        } catch (Exception e) {
-            telemetry.addLine("Error: " + e.getMessage());
-        }
-        try {
             expansionHub2.clearBulkCache();
         } catch (Exception e) {
             telemetry.addLine("Error: " + e.getMessage());
@@ -313,11 +383,19 @@ public class RobotHardware extends OpMode {
             } catch (IllegalArgumentException ignore) {}
         }
 
-        for (ContinuousServos c : ContinuousServos.values()) {
+        for (ContinuousServo c : ContinuousServo.values()) {
             try {
                 CRServo crServo = hardwareMap.get(CRServo.class, c.getConfigName());
                 crServos.put(c, crServo);
                 crServo.setDirection(c.getDirection());
+            } catch (IllegalArgumentException ignore) {}
+        }
+
+        for (ColorSensor c : ColorSensor.values()) {
+            try {
+                RevColorSensorV3 colorSensor = hardwareMap.get(RevColorSensorV3.class, c.getConfig());
+                colorSensors.put(c, colorSensor);
+                colorSensor.enableLed(false);
             } catch (IllegalArgumentException ignore) {}
         }
 

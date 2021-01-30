@@ -12,7 +12,8 @@ public enum Motors {
     BACK_RIGHT( "back right",   ExpansionHubs.HUB1, MotorTypes.DRIVE, DcMotorSimple.Direction.FORWARD, ZeroPowerBehavior.BRAKE, RunMode.RUN_USING_ENCODER),
 
     INTAKE("intake", ExpansionHubs.HUB2, MotorTypes.OTHER, DcMotorSimple.Direction.FORWARD, ZeroPowerBehavior.FLOAT, RunMode.RUN_USING_ENCODER),
-    LAUNCHER("launcher", ExpansionHubs.HUB2, MotorTypes.OTHER, DcMotorSimple.Direction.FORWARD, ZeroPowerBehavior.FLOAT, RunMode.RUN_USING_ENCODER);
+    LAUNCHER("launcher", ExpansionHubs.HUB2, MotorTypes.OTHER, DcMotorSimple.Direction.FORWARD, ZeroPowerBehavior.FLOAT, RunMode.RUN_USING_ENCODER),
+    WOBBLE_ARM("wobble arm", ExpansionHubs.HUB2, MotorTypes.OTHER, DcMotorSimple.Direction.FORWARD, ZeroPowerBehavior.BRAKE, RunMode.RUN_USING_ENCODER);
 
 //    LEFT_WHEEL("left dead", ExpansionHubs.HUB2, MotorTypes.ODOMETRY, DcMotorSimple.Direction.FORWARD, ZeroPowerBehavior.FLOAT, RunMode.RUN_USING_ENCODER),
 //    CENTER_WHEEL("center dead", ExpansionHubs.HUB2, MotorTypes.ODOMETRY, DcMotorSimple.Direction.FORWARD, ZeroPowerBehavior.FLOAT, RunMode.RUN_USING_ENCODER),

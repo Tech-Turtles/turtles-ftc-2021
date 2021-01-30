@@ -17,6 +17,8 @@ public class Configuration {
 
     public static final double DRIVE_WHEEL_LATERAL_RATIO = 0.87572 * 120 / 121.47;
 
+    public static final double LAUNCHER_THEORETICAL_MAX = 3387.096774;
+
     public static final double MM_PER_IN = 25.4f;
     private static double rotationScaleIncrease = 0.99012 * 3600 / 2973.89;
     public static final double WHEELBASE_WIDTH_IN = 16.9 / rotationScaleIncrease;

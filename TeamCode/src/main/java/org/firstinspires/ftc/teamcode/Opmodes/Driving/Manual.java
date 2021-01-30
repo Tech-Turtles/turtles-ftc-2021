@@ -1,14 +1,18 @@
 package org.firstinspires.ftc.teamcode.Opmodes.Driving;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.HardwareTypes.ColorSensor;
+import org.firstinspires.ftc.teamcode.HardwareTypes.ContinuousServo;
 import org.firstinspires.ftc.teamcode.HardwareTypes.IMU;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
 import org.firstinspires.ftc.teamcode.Utility.*;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
+import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.*;
 
@@ -20,10 +24,25 @@ public class Manual extends RobotHardware {
     public static double launchspeed = 0.56;
     public static double precisionMode = 1.0;
     public static double precisionPercentage = 0.35;
+    public static double linearSpeed = 1.0;
+    public static double lateralSpeed = 1.0;
     public static double rotationSpeed = 1.0;
     public static boolean powershotMode = false;
     public static double highGoalSpeed = 0.56;
     public static double powerShotSpeed = 0.51;
+    public static int wobbleUp = 1400;
+    public static int wobbleStore = 0;
+    public static int wobbleDown = 3550;
+    public static double wobblePower = 1.0;
+    private WobbleStates wobbleState = WobbleStates.MANUAL;
+    private boolean wobbleArrived = false;
+
+    private enum WobbleStates {
+        MANUAL,
+        UP,
+        DOWN,
+        STORE
+    }
 
     @Override
     public void init() {
@@ -38,8 +57,8 @@ public class Manual extends RobotHardware {
     @Override
     public void start() {
         super.start();
-        mecanumNavigation = new MecanumNavigation(this, Configuration.getDriveTrainMecanum());
-        mecanumNavigation.initialize(new MecanumNavigation.Navigation2D(0, 0, 0));
+        mecanumDrive = new SampleMecanumDrive(hardwareMap);
+        mecanumDrive.setPoseEstimate(new Pose2d(0, 0, 0));
 
         imuUtil = new IMUUtilities(this, IMU.IMU1.getName());
         imuUtil.setCompensatedHeading(0);
@@ -49,17 +68,20 @@ public class Manual extends RobotHardware {
     public void loop() {
         super.loop();
 
-        motorUtility.setDriveForSimpleMecanum(
-                primary.left_stick_x  * (drivespeed * precisionMode),
-                primary.left_stick_y  * (drivespeed * precisionMode),
-                primary.right_stick_x * (drivespeed * precisionMode) * rotationSpeed,
-                primary.right_stick_y * (drivespeed * precisionMode));
-        mecanumNavigation.update();
+        mecanumDrive.setWeightedDrivePower(
+                new Pose2d(
+                        -gamepad1.left_stick_y * linearSpeed,
+                        -gamepad1.left_stick_x * lateralSpeed,
+                        -gamepad1.right_stick_x * rotationSpeed
+                )
+        );
+
+        mecanumDrive.update();
         imuUtil.update();
 
         if(primary.YOnce()) {
             imuUtil.setCompensatedHeading(0);
-            mecanumNavigation.setCurrentPosition(new MecanumNavigation.Navigation2D(0,0,0));
+            mecanumDrive.clearEstimatedPose();
         }
 
         if(primary.AOnce()) {
@@ -74,6 +96,31 @@ public class Manual extends RobotHardware {
             motorUtility.setPower(Motors.INTAKE, 0f);
         }
 
+        if(secondary.XOnce())
+            wobbleState = WobbleStates.UP;
+        else if(secondary.BOnce())
+            wobbleState = WobbleStates.DOWN;
+        else if(secondary.YOnce())
+            wobbleState = WobbleStates.STORE;
+
+        switch (wobbleState) {
+            case UP:
+                wobbleArrived = motorUtility.goToPosition(Motors.WOBBLE_ARM, wobbleUp, wobblePower);
+                break;
+            case DOWN:
+                wobbleArrived = motorUtility.goToPosition(Motors.WOBBLE_ARM, wobbleDown, wobblePower);
+                break;
+            case STORE:
+                wobbleArrived = motorUtility.goToPosition(Motors.WOBBLE_ARM, wobbleStore, wobblePower);
+                break;
+            case MANUAL:
+                motorUtility.setPower(Motors.WOBBLE_ARM, -secondary.right_stick_y * wobblePower);
+        }
+        wobbleState = wobbleArrived ? WobbleStates.MANUAL : wobbleState;
+
+        servoUtility.setPower(ContinuousServo.WOBBLE_LEFT, -secondary.left_stick_y);
+        servoUtility.setPower(ContinuousServo.WOBBLE_RIGHT, -secondary.left_stick_y);
+
         if(secondary.dpadUpOnce()) {
             launchspeed = Math.min(launchspeed + 0.01, 1.0);
         } else if(secondary.dpadDownOnce()) {
@@ -82,12 +129,7 @@ public class Manual extends RobotHardware {
 
         if(secondary.right_trigger > deadzone) {
             motorUtility.setPower(Motors.LAUNCHER, launchspeed);
-        }
-//       // Button to reverse the launcher in case we have trouble with rings not being pushed enough to launch
-//        else if(secondary.left_trigger > deadzone) {
-//            motorUtility.setPower(Motors.LAUNCHER, -launchspeed);
-//        }
-        else {
+        } else {
             motorUtility.setPower(Motors.LAUNCHER, 0f);
         }
 
@@ -102,19 +144,27 @@ public class Manual extends RobotHardware {
             launchspeed = powershotMode ? powerShotSpeed : highGoalSpeed;
         }
 
+        Pose2d poseEstimate = mecanumDrive.getPoseEstimate();
+
         telemetry.addData("Precision mode:      ", df.format(precisionMode));
         telemetry.addData("Launcher speed:      ", df.format(launchspeed));
         telemetry.addData("Powershot mode:      ", powershotMode);
+        try {
+            telemetry.addData("Wobble Distance: ", getDistance(getColorSensor(ColorSensor.WOBBLE_SENSOR)));
+        } catch(NullPointerException ignore) {}
         telemetry.addLine();
         telemetry.addLine("----Launcher----");
         telemetry.addData("Launch velocity:     ", motorUtility.getVelocity(Motors.LAUNCHER));
         telemetry.addData("Hopper position:     ", servoUtility.getAngle(Servos.HOPPER));
         telemetry.addLine();
         telemetry.addLine("----Navigation----");
-        mecanumNavigation.displayPosition();
+        telemetry.addData("X:                   ", poseEstimate.getX());
+        telemetry.addData("Y:                   ", poseEstimate.getY());
+        telemetry.addData("Heading:             ", Math.toDegrees(poseEstimate.getHeading()));
         telemetry.addData("IMU heading:         ", imuUtil.getCompensatedHeading());
         telemetry.addData("Drive speed:         ", df.format(drivespeed));
         telemetry.addData("Precision speed:     ", df.format(precisionPercentage));
         telemetry.addData("Loop time:           ", df_precise.format(period.getAveragePeriodSec()) + "s");
+        telemetry.update();
     }
 }
