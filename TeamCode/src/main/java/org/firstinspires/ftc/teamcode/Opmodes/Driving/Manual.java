@@ -10,7 +10,6 @@ import org.firstinspires.ftc.teamcode.HardwareTypes.IMU;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
 import org.firstinspires.ftc.teamcode.Utility.*;
-import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 
@@ -30,9 +29,6 @@ public class Manual extends RobotHardware {
     public static boolean powershotMode = false;
     public static double highGoalSpeed = 0.56;
     public static double powerShotSpeed = 0.51;
-    public static int wobbleUp = 1400;
-    public static int wobbleStore = 0;
-    public static int wobbleDown = 3550;
     public static double wobblePower = 1.0;
     private WobbleStates wobbleState = WobbleStates.MANUAL;
     private boolean wobbleArrived = false;
@@ -105,13 +101,13 @@ public class Manual extends RobotHardware {
 
         switch (wobbleState) {
             case UP:
-                wobbleArrived = motorUtility.goToPosition(Motors.WOBBLE_ARM, wobbleUp, wobblePower);
+                wobbleArrived = motorUtility.goToPosition(Motors.WOBBLE_ARM, WOBBLE_UP, wobblePower);
                 break;
             case DOWN:
-                wobbleArrived = motorUtility.goToPosition(Motors.WOBBLE_ARM, wobbleDown, wobblePower);
+                wobbleArrived = motorUtility.goToPosition(Motors.WOBBLE_ARM, WOBBLE_DOWN, wobblePower);
                 break;
             case STORE:
-                wobbleArrived = motorUtility.goToPosition(Motors.WOBBLE_ARM, wobbleStore, wobblePower);
+                wobbleArrived = motorUtility.goToPosition(Motors.WOBBLE_ARM, WOBBLE_STORE, wobblePower);
                 break;
             case MANUAL:
                 motorUtility.setPower(Motors.WOBBLE_ARM, -secondary.right_stick_y * wobblePower);
