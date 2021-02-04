@@ -452,6 +452,90 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         }
     }
 
+    /*
+    Split trajectory powershot clockwise into four, for 3 stationary shots.  Needs new states.
+    Makes powershot_clockwise obsolete
+       Replaced by:--------
+        traj_parkCenterToPowershotLeft
+        traj_PowershotLeftToPowershotCenter
+        traj_PowershotCenterPowershotRight
+        traj_PowershotRightToWobbleDropoff
+     */
+
+
+    class B_parkCenterToPowershotLeft extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTraj_parkCenterToPowershotLeft());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opmode.mecanumDrive.isIdle()) {
+                nextState(DRIVE, new B_PowershotLeftToPowershotCenter());
+            }
+        }
+    }
+
+   class B_PowershotLeftToPowershotCenter extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTraj_PowershotLeftToPowershotCenter());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opmode.mecanumDrive.isIdle()) {
+                nextState(DRIVE, new B_PowershotCenterPowershotRight());
+            }
+        }
+    }
+
+    class B_PowershotCenterPowershotRight extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTraj_PowershotCenterPowershotRight());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opmode.mecanumDrive.isIdle()) {
+                nextState(DRIVE, new B_PowershotRightToWobbleDropoff());
+            }
+        }
+    }
+
+    class B_PowershotRightToWobbleDropoff extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTraj_PowershotRightToWobbleDropoff());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opmode.mecanumDrive.isIdle()) {
+                nextState(DRIVE, new B_trajPickupRingsFromZone());
+            }
+        }
+    }
+
+    /*
+    End new split states from powershot
+     */
+
+
+
+
+
+
     class B_trajPickupRingsFromZone extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
