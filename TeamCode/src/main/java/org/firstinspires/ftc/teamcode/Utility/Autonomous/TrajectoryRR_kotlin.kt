@@ -197,7 +197,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
 //        setZone(ONE)
         val trajPowershot_clockwise: Trajectory =
                 trajectoryBuilder(START_CENTER, 90.0.toRadians)
-                .splineToConstantHeading(CENTER_TO_SHOOT.vec(), (-90.0).toRadians, slowVelocityConstraint, slowAccelerationConstraint)
+                .splineToConstantHeading(CENTER_TO_SHOOT.vec(), (-90.0).toRadians)
                 .lineTo(RIGHT_TO_SHOOT.vec(), slowVelocityConstraint, slowAccelerationConstraint)
                 .splineToSplineHeading(ZONE_VARIABLE, Math.toRadians(wobbleTangent), velocityConstraint, accelerationConstraint)
                 .build()

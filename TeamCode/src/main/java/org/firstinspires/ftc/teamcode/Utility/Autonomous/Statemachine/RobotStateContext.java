@@ -5,6 +5,7 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.HardwareTypes.ContinuousServo;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
 import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.AutoOpmode;
@@ -12,17 +13,19 @@ import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.StartPosition;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR_kotlin;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Waypoints;
+import org.firstinspires.ftc.teamcode.Utility.Configuration;
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.HashMap;
 
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.DRIVE;
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.LAUNCHER;
+import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.OTHER;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_OPEN_POS;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_PUSH_POS;
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.PowershotState.*;
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_DOWN;
 
 
 @Config
@@ -48,10 +51,9 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     public static double scanDelay = 2.0;
     public static double intakeDelay = 2.3;
 
-    public static double launcherVelocity = 1930;
     public static double launcherSpeed = 0.58;
-    public static double powershotVelocity = 1680;
     public static double powershotSpeed = 0.51;
+    public static double wobbleSpeed = 1.0;
 
     private RingDetectionAmount rings = RingDetectionAmount.ZERO;
 
@@ -262,11 +264,11 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 case 2:
                 case 3:
                     opMode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
-                    if(opMode.motorUtility.getVelocity(Motors.LAUNCHER) > launcherVelocity && !doneInitialOpen) {
+                    if(opMode.motorUtility.getVelocity(Motors.LAUNCHER) > (launcherSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95) && !doneInitialOpen) {
                         opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
                         doneInitialOpen = true;
                         stateTimer.reset();
-                    } else if(opMode.motorUtility.getVelocity(Motors.LAUNCHER) > launcherVelocity && stateTimer.seconds() > servoDelay && !finished) {
+                    } else if(opMode.motorUtility.getVelocity(Motors.LAUNCHER) > (launcherSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95) && stateTimer.seconds() > servoDelay && !finished) {
                         opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_PUSH_POS);
                         finished = true;
                         stateTimer.reset();
@@ -413,7 +415,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.update();
             switch (powershotState) {
                 case WIND_UP:
-                    nextState(LAUNCHER, new Launch_windUp(powershotSpeed, powershotVelocity));
+                    nextState(LAUNCHER, new Launch_windUp(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
                     if (pose.getX() > -12.0) {
                         powershotState = SHOOT1;
                     }
@@ -422,7 +424,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                     if (pose.getY() < powershotYPosition.get(SHOOT1)) {
                         opmode.telemetry.addData("Launcher Ready:",
                                 stateMachine.getStateReference(LAUNCHER).isDone);
-                        nextState(LAUNCHER, new Launch_fire(powershotSpeed, powershotVelocity));
+                        nextState(LAUNCHER, new Launch_fire(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
                         powershotState = SHOOT2;
                     }
                     break;
@@ -430,7 +432,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                     if (pose.getY() < powershotYPosition.get(SHOOT2)) {
                         opmode.telemetry.addData("Launcher Ready:",
                                 stateMachine.getStateReference(LAUNCHER).isDone);
-                        nextState(LAUNCHER, new Launch_fire(powershotSpeed, powershotVelocity));
+                        nextState(LAUNCHER, new Launch_fire(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
                         powershotState = SHOOT3;
                     }
                     break;
@@ -438,7 +440,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                     if (pose.getY() < powershotYPosition.get(SHOOT3)) {
                         opmode.telemetry.addData("Launcher Ready:",
                                 stateMachine.getStateReference(LAUNCHER).isDone);
-                        nextState(LAUNCHER, new Launch_fire(powershotSpeed, powershotVelocity));
+                        nextState(LAUNCHER, new Launch_fire(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
                         powershotState = DROP_GOAL;
                     }
                     break;
@@ -447,10 +449,12 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 default:
             }
             if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new B_trajPickupRingsFromZone());
+                nextState(OTHER, new WobblePosition(WOBBLE_DOWN));
+                nextState(DRIVE, new B_DropoffWobbleA());
             }
         }
     }
+
 
     /*
     Split trajectory powershot clockwise into four, for 3 stationary shots.  Needs new states.
@@ -532,6 +536,24 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      */
 
 
+    class B_DropoffWobbleA extends Executive.StateBase<AutoOpmode> {
+        boolean reset = false;
+
+        @Override
+        public void update() {
+            super.update();
+            if(stateMachine.getStateReference(OTHER).isDone) {
+                if(!reset) {
+                    nextState(OTHER, new WobbleIntake(true));
+                    stateTimer.reset();
+                    reset = true;
+                }
+                if(stateTimer.seconds() > 0.0) {
+                    nextState(DRIVE, new B_trajPickupRingsFromZone());
+                }
+            }
+        }
+    }
 
 
 
@@ -578,14 +600,30 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
             opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajShootToWallWobblePickup());
+            nextState(OTHER, new WobblePosition(WOBBLE_DOWN));
         }
 
         @Override
         public void update() {
             super.update();
-            if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new B_trajClaimWobbleToZone());
+            if(opmode.mecanumDrive.isIdle() & stateMachine.getStateReference(OTHER).isDone) {
+                nextState(DRIVE, new B_PickupWobble());
             }
+        }
+    }
+
+    class B_PickupWobble extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            nextState(OTHER, new WobbleIntake(false));
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(stateTimer.seconds() > 1.5)
+                nextState(DRIVE, new B_trajClaimWobbleToZone());
         }
     }
 
@@ -601,11 +639,27 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new B_trajParkAfterWobbleDropoff());
+                nextState(DRIVE, new B_DropoffWobbleB());
             }
         }
     }
 
+
+    class B_DropoffWobbleB extends Executive.StateBase<AutoOpmode> {
+
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            nextState(OTHER, new WobbleIntake(true));
+        }
+
+        @Override
+        public void update() {
+            super.update();
+                if(stateTimer.seconds() > 1.0)
+                    nextState(DRIVE, new B_trajParkAfterWobbleDropoff());
+        }
+    }
 
     class B_trajParkAfterWobbleDropoff extends Executive.StateBase<AutoOpmode> {
         @Override
@@ -647,11 +701,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             // If velocity is high enough, and servoDelay elapsed, then isDone = true
             opMode.motorUtility.setPower(Motors.LAUNCHER, this.launchSpeed);
             opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
-            if(opMode.motorUtility.getVelocity(Motors.LAUNCHER) > this.launchVelocity_tps && stateTimer.seconds() > servoDelay) {
-                isDone = true;
-            } else {
-                isDone = false;
-            }
+            isDone = opMode.motorUtility.getVelocity(Motors.LAUNCHER) > this.launchVelocity_tps && stateTimer.seconds() > servoDelay;
         }
     }
 
@@ -679,15 +729,43 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                     servoPushed = true;
                     servoTimer.reset();
                 }
-            } else if (servoPushed) {
+            } else {
                 if (servoTimer.seconds() > servoDelay) {
                     //isDone = true; // This indicates we've shot, but not that we're ready to shoot.
-                    nextState(LAUNCHER, new Launch_windUp(this.launchSpeed,this.launchVelocity_tps));
+                    nextState(LAUNCHER, new Launch_windUp(this.launchSpeed, this.launchVelocity_tps));
                 }
             }
         }
     }
 
+    class WobblePosition extends Executive.StateBase<AutoOpmode> {
+        private final int encoderTicks;
+
+        WobblePosition(int encoderTicks) {
+            this.encoderTicks = encoderTicks;
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            isDone = opMode.motorUtility.goToPosition(Motors.WOBBLE_ARM, encoderTicks, wobbleSpeed);
+        }
+    }
+
+    class WobbleIntake extends Executive.StateBase<AutoOpmode> {
+        private final int sign;
+
+        WobbleIntake(boolean reverse) {
+            this.sign = reverse ? -1 : 1;
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            opMode.servoUtility.setPower(ContinuousServo.WOBBLE_LEFT, sign);
+            opMode.servoUtility.setPower(ContinuousServo.WOBBLE_RIGHT, sign);
+        }
+    }
 
     public double getDriveScale(double seconds) {
         double driveScale;
