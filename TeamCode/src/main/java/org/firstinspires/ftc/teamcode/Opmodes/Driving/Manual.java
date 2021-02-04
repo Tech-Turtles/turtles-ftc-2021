@@ -70,9 +70,9 @@ public class Manual extends RobotHardware {
 
         mecanumDrive.setWeightedDrivePower(
                 new Pose2d(
-                        -gamepad1.left_stick_y * linearSpeed,
-                        -gamepad1.left_stick_x * lateralSpeed,
-                        -gamepad1.right_stick_x * rotationSpeed
+                        -gamepad1.left_stick_y * linearSpeed * precisionMode,
+                        -gamepad1.left_stick_x * lateralSpeed * precisionMode,
+                        -gamepad1.right_stick_x * rotationSpeed * precisionMode
                 )
         );
 
@@ -97,11 +97,11 @@ public class Manual extends RobotHardware {
         }
 
         if(secondary.XOnce())
-            wobbleState = WobbleStates.UP;
+            wobbleState = WobbleStates.STORE;
         else if(secondary.BOnce())
             wobbleState = WobbleStates.DOWN;
         else if(secondary.YOnce())
-            wobbleState = WobbleStates.STORE;
+            wobbleState = WobbleStates.UP;
 
         switch (wobbleState) {
             case UP:
@@ -118,8 +118,8 @@ public class Manual extends RobotHardware {
         }
         wobbleState = wobbleArrived ? WobbleStates.MANUAL : wobbleState;
 
-        servoUtility.setPower(ContinuousServo.WOBBLE_LEFT, -secondary.left_stick_y);
-        servoUtility.setPower(ContinuousServo.WOBBLE_RIGHT, -secondary.left_stick_y);
+        servoUtility.setPower(ContinuousServo.WOBBLE_LEFT, secondary.left_stick_y);
+        servoUtility.setPower(ContinuousServo.WOBBLE_RIGHT, secondary.left_stick_y);
 
         if(secondary.dpadUpOnce()) {
             launchspeed = Math.min(launchspeed + 0.01, 1.0);
