@@ -19,6 +19,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     val ringOffset: Pose2d = Pose2d(2.0, 5.0, 0.0)
     val wobbleOffset: Pose2d = Pose2d(-12.0, 0.0, 0.0)
     val wobblePickup: Pose2d = Pose2d(12.0, 0.0, 0.0)
+    val spacing_powershot: Double = 4.0;
 
     val START_WALL = Pose2d(-62.0, -42.0, Math.toRadians(180.0))
     var START_CENTER = Pose2d(-62.0, -18.0, Math.toRadians(180.0))
@@ -27,6 +28,9 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     var CENTER_TO_SHOOT = Pose2d(-2.0, -6.0, 0.0.toRadians)
     var RIGHT_TO_SHOOT = Pose2d(-2.0, -20.0, 0.0.toRadians)
     var POWER_SHOT = Pose2d(-2.0, -28.0, Math.toRadians(180.0 - 0.0))
+    var POWERSHOT_CENTER = Pose2d(-2.0,  -12.0,Math.toRadians(180.0 - 0.0))
+    var POWERSHOT_LEFT  = POWERSHOT_CENTER.plus(Pose2d(0.0,+1.0 * spacing_powershot, 0.0))
+    var POWERSHOT_RIGHT = POWERSHOT_CENTER.plus(Pose2d(0.0,-1.0 * spacing_powershot, 0.0))
     var ZONE_A = Pose2d(12.0, -60.0, Math.toRadians(0.0)).plus(wobbleOffset)
     var ZONE_B = Pose2d(36.0, -36.0, Math.toRadians(0.0)).plus(wobbleOffset)
     var ZONE_C = Pose2d(60.0, -60.0, Math.toRadians(0.0)).plus(wobbleOffset)
@@ -50,6 +54,13 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     var trajZoneToShoot1: Trajectory? = null
     var trajToPOWERSHOT: Trajectory? = null
     var trajPowershot_clockwise: Trajectory? = null
+    // Split clockwise into 4 parts
+    var traj_parkCenterToPowershotLeft: Trajectory? = null
+    var traj_PowershotLeftToPowershotCenter: Trajectory? = null
+    var traj_PowershotCenterPowershotRight: Trajectory? = null
+    var traj_PowershotRightToWobbleDropoff: Trajectory? = null
+
+
     var trajShootToWallWobblePickup: Trajectory? = null
     var trajStartWallToStartCenter: Trajectory? = null
     var trajClaimWobbleToZone: Trajectory? = null
@@ -191,7 +202,45 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
                 .splineToSplineHeading(ZONE_VARIABLE, Math.toRadians(wobbleTangent), velocityConstraint, accelerationConstraint)
                 .build()
         this.trajPowershot_clockwise = trajPowershot_clockwise
+/* Split traj_powershot_clockwise into 4 parts
+       parkCenterToPsLeft
+       PsLeftToPsCenter
+       PsCenterToPsRight
+       PsRightToWobbleZone
+        */
 
+        var traj_parkCenterToPowershotLeft: Trajectory =
+                trajectoryBuilder(START_CENTER, 0.0.toRadians)
+                        //.splineToConstantHeading(POWERSHOT_LEFT.vec(),45.0.toRadians)
+                        .lineToConstantHeading(POWERSHOT_LEFT.vec())
+                        .build();
+        this.traj_parkCenterToPowershotLeft = traj_parkCenterToPowershotLeft
+
+
+        var traj_PowershotLeftToPowershotCenter: Trajectory =
+                trajectoryBuilder(traj_parkCenterToPowershotLeft.end(), -90.0.toRadians)
+                        .lineToConstantHeading(POWERSHOT_CENTER.vec())
+                        .build();
+        this.traj_PowershotLeftToPowershotCenter = traj_PowershotLeftToPowershotCenter
+
+
+        var traj_PowershotCenterPowershotRight: Trajectory =
+                trajectoryBuilder(traj_PowershotLeftToPowershotCenter.end(), -90.0.toRadians)
+                        .lineToConstantHeading(POWERSHOT_RIGHT.vec())
+                        .build();
+        this.traj_PowershotCenterPowershotRight = traj_PowershotCenterPowershotRight
+
+
+        var traj_PowershotRightToWobbleDropoff: Trajectory =
+                trajectoryBuilder(traj_PowershotCenterPowershotRight.end(), -90.0.toRadians)
+                        //.lineTo(RIGHT_TO_SHOOT.vec())
+                        .splineToSplineHeading(ZONE_VARIABLE,Math.toRadians(wobbleTangent))
+                        .build();
+        this.traj_PowershotRightToWobbleDropoff = traj_PowershotRightToWobbleDropoff
+
+
+
+        //
         // From zone wobble drop off position to rings pickup
         val trajPickupRingsFromZone: Trajectory =
                 trajectoryBuilder(trajPowershot_clockwise.end(), (wobbleTangent + 180.0).toRadians)
