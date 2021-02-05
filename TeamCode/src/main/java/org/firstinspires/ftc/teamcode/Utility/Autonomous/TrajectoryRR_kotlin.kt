@@ -19,7 +19,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     val ringOffset: Pose2d = Pose2d(2.0, 5.0, 0.0)
     val wobbleOffset: Pose2d = Pose2d(-12.0, 0.0, 0.0)
     val wobblePickup: Pose2d = Pose2d(12.0, 0.0, 0.0)
-    val spacing_powershot: Double = 4.0;
+    val spacing_powershot: Double = 7.5;
 
     val START_WALL = Pose2d(-62.0, -42.0, Math.toRadians(180.0))
     var START_CENTER = Pose2d(-62.0, -18.0, Math.toRadians(180.0))
