@@ -26,6 +26,7 @@ import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_OPEN_P
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_PUSH_POS;
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.PowershotState.*;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_DOWN;
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_UP;
 
 
 @Config
@@ -386,7 +387,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new B_trajPowershot_clockwise());
+                nextState(DRIVE, new B_parkCenterToPowershotLeft());
             }
         }
     }
@@ -497,7 +498,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 nextState(DRIVE, new B_PowershotCenterPowershotRight());
             }
         }
-    }
+   }
 
     class B_PowershotCenterPowershotRight extends Executive.StateBase<AutoOpmode> {
         @Override
@@ -526,7 +527,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new B_trajPickupRingsFromZone());
+                nextState(OTHER, new WobblePosition(WOBBLE_DOWN));
+                nextState(DRIVE, new B_DropoffWobbleA());
             }
         }
     }
@@ -543,20 +545,17 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             if(stateMachine.getStateReference(OTHER).isDone) {
-                if(!reset) {
-                    nextState(OTHER, new WobbleIntake(true));
-                    stateTimer.reset();
-                    reset = true;
-                }
-                if(stateTimer.seconds() > 0.0) {
-                    nextState(DRIVE, new B_trajPickupRingsFromZone());
-                }
+                nextState(OTHER, new WobbleIntake(true));
+                stateTimer.reset();
+                reset = true;
+            }
+
+            if(stateTimer.seconds() > 1.0 && reset) {
+                nextState(OTHER, new WobblePosition(WOBBLE_UP));
+                nextState(DRIVE, new B_trajPickupRingsFromZone());
             }
         }
     }
-
-
-
 
     class B_trajPickupRingsFromZone extends Executive.StateBase<AutoOpmode> {
         @Override
@@ -622,12 +621,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void update() {
             super.update();
-            if(stateTimer.seconds() > 1.5)
+            if(stateTimer.seconds() > 1.5) {
                 nextState(DRIVE, new B_trajClaimWobbleToZone());
+            } else if(stateTimer.seconds() > 1.0) {
+                nextState(OTHER, new WobblePosition(WOBBLE_UP));
+            }
         }
     }
-
-
+    
     class B_trajClaimWobbleToZone extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
@@ -656,8 +657,12 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void update() {
             super.update();
-                if(stateTimer.seconds() > 1.0)
+                if(stateTimer.seconds() > 1.0) {
                     nextState(DRIVE, new B_trajParkAfterWobbleDropoff());
+                    opMode.servoUtility.setPower(ContinuousServo.WOBBLE_LEFT, 0);
+                    opMode.servoUtility.setPower(ContinuousServo.WOBBLE_RIGHT, 0);
+                    stateMachine.removeStateType(OTHER);
+                }
         }
     }
 
@@ -671,10 +676,11 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void update() {
             super.update();
+            stateMachine.removeStateType(LAUNCHER);
+            stateMachine.removeStateType(OTHER);
             if (autoReturnToStart) {
                 nextState(DRIVE, new ReturnToStart());
             } else {
-                stateMachine.removeStateType(LAUNCHER);
                 nextState(DRIVE, new Stop());
             }
         }
@@ -749,6 +755,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             isDone = opMode.motorUtility.goToPosition(Motors.WOBBLE_ARM, encoderTicks, wobbleSpeed);
+            if(isDone)
+                opMode.motorUtility.setPower(Motors.WOBBLE_ARM, 0);
         }
     }
 

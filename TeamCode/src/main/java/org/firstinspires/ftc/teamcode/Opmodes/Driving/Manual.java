@@ -161,6 +161,5 @@ public class Manual extends RobotHardware {
         telemetry.addData("Drive speed:         ", df.format(drivespeed));
         telemetry.addData("Precision speed:     ", df.format(precisionPercentage));
         telemetry.addData("Loop time:           ", df_precise.format(period.getAveragePeriodSec()) + "s");
-        telemetry.update();
     }
 }

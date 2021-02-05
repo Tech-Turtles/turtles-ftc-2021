@@ -9,11 +9,15 @@
             <Servo name="hopper" port="0" />
             <ContinuousRotationServo name="wobble_left" port="1" />
             <ContinuousRotationServo name="wobble_right" port="2" />
+            <RevColorSensorV3 name="colorSensor" port="0" bus="1" />
+            <RevTouchSensor name="wobbleTouch" port="0" />
+            <ModernRoboticsI2cRangeSensor name="rightRange" port="0" bus="2" />
             <LynxEmbeddedIMU name="IMU_1" port="0" bus="0" />
         </LynxModule>
         <LynxModule name="Expansion Hub 2" port="2">
             <Motor name="launcher" port="0" />
             <Motor name="intake" port="1" />
+            <Motor name="wobble arm" port="2" />
             <LynxEmbeddedIMU name="imu" port="0" bus="0" />
         </LynxModule>
     </LynxUsbDevice>

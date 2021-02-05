@@ -20,8 +20,8 @@ public class Configuration {
     public static final double LAUNCHER_THEORETICAL_MAX = 3387.096774;
 
     public static int WOBBLE_STORE = 0;
-    public static int WOBBLE_UP = 1400;
-    public static int WOBBLE_DOWN = 3550;
+    public static int WOBBLE_UP = 977;
+    public static int WOBBLE_DOWN = 3110;
 
     public static final double MM_PER_IN = 25.4f;
     private static double rotationScaleIncrease = 0.99012 * 3600 / 2973.89;
