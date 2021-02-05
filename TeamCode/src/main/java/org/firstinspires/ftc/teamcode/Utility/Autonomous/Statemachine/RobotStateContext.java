@@ -469,38 +469,50 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
 
 
     class B_parkCenterToPowershotLeft extends Executive.StateBase<AutoOpmode> {
+        boolean arrived = false;
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
             opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTraj_parkCenterToPowershotLeft());
+            nextState(LAUNCHER, new Launch_windUp(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
         }
 
         @Override
         public void update() {
             super.update();
-            if(opmode.mecanumDrive.isIdle()) {
+            if(opmode.mecanumDrive.isIdle() && !arrived) {
+                arrived = true;
+                nextState(LAUNCHER, new Launch_fire(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
+            }
+            if(arrived && stateMachine.getStateReference(LAUNCHER).isDone) {
                 nextState(DRIVE, new B_PowershotLeftToPowershotCenter());
             }
         }
     }
 
    class B_PowershotLeftToPowershotCenter extends Executive.StateBase<AutoOpmode> {
+        boolean arrived = false;
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
             opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTraj_PowershotLeftToPowershotCenter());
         }
 
-        @Override
+       @Override
         public void update() {
             super.update();
-            if(opmode.mecanumDrive.isIdle()) {
+            if(opmode.mecanumDrive.isIdle() && !arrived) {
+                arrived = true;
+                nextState(LAUNCHER, new Launch_fire(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
+            }
+            if(arrived && stateMachine.getStateReference(LAUNCHER).isDone) {
                 nextState(DRIVE, new B_PowershotCenterPowershotRight());
             }
         }
    }
 
     class B_PowershotCenterPowershotRight extends Executive.StateBase<AutoOpmode> {
+        boolean arrived = false;
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
@@ -510,7 +522,12 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void update() {
             super.update();
-            if(opmode.mecanumDrive.isIdle()) {
+            if(opmode.mecanumDrive.isIdle() && !arrived) {
+                arrived = true;
+                nextState(LAUNCHER, new Launch_fire(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
+            }
+            if(arrived && stateMachine.getStateReference(LAUNCHER).isDone) {
+
                 nextState(DRIVE, new B_PowershotRightToWobbleDropoff());
             }
         }
