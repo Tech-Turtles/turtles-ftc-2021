@@ -34,7 +34,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     val offsetRingPickupGrab = Pose2d(-7.0,-5.0,0.0)
     val ringPickupRotationRadians: Double = (149.0).toRadians
 
-    val spacing_powershot: Double = 7.5; // Spacing between the powershot sticks in the y axis, inches
+    val spacing_powershot: Double = 7.0; // Spacing between the powershot sticks in the y axis, inches
 
     // old offsets
     val ringOffset: Pose2d = Pose2d(2.0, 5.0, 0.0)
@@ -56,9 +56,9 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
 
     var SHOOT_HIGHGOAL = Pose2d(-2.0,  -42.0,Math.toRadians(180.0 - 0.0))
 
-    var POWERSHOT_CENTER = Pose2d(-2.0,  -12.0,Math.toRadians(180.0 - 0.0))
-    var POWERSHOT_LEFT  = POWERSHOT_CENTER.plus(Pose2d(0.0,+1.0 * spacing_powershot, 0.0))
-    var POWERSHOT_RIGHT = POWERSHOT_CENTER.plus(Pose2d(0.0,-1.0 * spacing_powershot, 0.0))
+    var POWERSHOT_LEFT  = Pose2d(-4.0,  -7.5,Math.toRadians(180.0 - 0.0))
+    var POWERSHOT_CENTER = POWERSHOT_LEFT.plus(Pose2d(0.0, -1.0 * spacing_powershot, 0.0))
+    var POWERSHOT_RIGHT = POWERSHOT_LEFT.plus(Pose2d(0.0,-2.0 * spacing_powershot, 0.0))
 
 
     // Offset added to rings

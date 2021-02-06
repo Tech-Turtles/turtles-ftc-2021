@@ -42,13 +42,13 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
 
 
     public static boolean autoReturnToStart = false;
-    public static boolean doAdvancedTrajectory = false;
+    public static boolean doAdvancedTrajectory = true;
     public static boolean pickupRings = true;
     public boolean ringsNotPickedUpYet; // Set in Start state
-    public static boolean fullAutoTest = true;
+    public static boolean fullAutoTest = false;
+    private boolean center = false;
 
-
-    public static double servoDelay = 0.35;
+    public static double servoDelay = 0.3;
     public static double scanDelay = 2.0;
     public static double intakeDelay = 2.3;
 
@@ -95,10 +95,12 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 case WALL:
                     setupInitialPosition(trajectoryRR.getSTART_WALL());
                     nextState(DRIVE, new Initial());
+                    center = false;
                     break;
                 case CENTER:
                     setupInitialPosition(trajectoryRR.getSTART_CENTER());
                     nextState(DRIVE, new Initial());
+                    center = true;
                     break;
                 default:
                    throw new IndexOutOfBoundsException("Invalid start position.");
@@ -142,8 +144,10 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             if(stateTimer.seconds() > scanDelay || !(rings.equals(RingDetectionAmount.ZERO))) {
                 trajectoryRR.setZone(rings);
                 if (doAdvancedTrajectory) {
-                    nextState(DRIVE, new B_trajStartWallToStartCenter());
-                    trajectoryRR.setZone(RingDetectionAmount.FOUR);
+                    if(center)
+                        nextState(DRIVE, new B_parkCenterToPowershotLeft());
+                    else
+                        nextState(DRIVE, new B_trajStartWallToStartCenter());
                 } else {
                     nextState(DRIVE, new ToShoot());
                 }
@@ -325,11 +329,11 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         }
     }
 
-    class Stop extends Executive.StateBase<AutoOpmode> {
+    static class Stop extends Executive.StateBase<AutoOpmode> {
         @Override
         public void update() {
             super.update();
-            opMode.stop();
+            opMode.motorUtility.stopAllMotors();
         }
     }
 
@@ -373,8 +377,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     trajShootToWallWobblePickup
     trajClaimWobbleToZone
     trajParkAfterWobbleDropoff
-   */
 
+   */
 
     class B_trajStartWallToStartCenter extends Executive.StateBase<AutoOpmode> {
         @Override
@@ -391,8 +395,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             }
         }
     }
-
-
 
     enum PowershotState { WIND_UP, SHOOT1, SHOOT2, SHOOT3, DROP_GOAL}
 
@@ -511,7 +513,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         }
    }
 
-    class B_PowershotCenterPowershotRight extends Executive.StateBase<AutoOpmode> {
+   class B_PowershotCenterPowershotRight extends Executive.StateBase<AutoOpmode> {
         boolean arrived = false;
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
@@ -562,11 +564,11 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 nextState(DRIVE, new C_WobbleDropoffToWobblePickupAlign());
             }
         }
-    }
+   }
 
     /*
     End new split states from powershot
-     */
+    */
 
    /* New reworked states */
 
@@ -735,7 +737,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             if(stateMachine.getStateReference(OTHER).isDone) {
-                nextState(OTHER, new WobbleIntake(true));
+                nextState(OTHER, new WobbleIntake(-1.0));
                 stateTimer.reset();
                 reset = true;
             }
@@ -766,7 +768,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         }
     }
 
-
     class B_trajToShoot2 extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
@@ -782,7 +783,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             }
         }
     }
-
 
     class B_trajShootToWallWobblePickup extends Executive.StateBase<AutoOpmode> {
         @Override
@@ -805,7 +805,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            nextState(OTHER, new WobbleIntake(false));
+            nextState(OTHER, new WobbleIntake(1.0));
         }
 
         @Override
@@ -829,19 +829,21 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void update() {
             super.update();
+            if(stateMachine.getStateReference(OTHER).isDone)
+                nextState(OTHER, new WobbleIntake(0));
+
             if(opmode.mecanumDrive.isIdle()) {
                 nextState(DRIVE, new B_DropoffWobbleB());
             }
         }
     }
 
-
     class B_DropoffWobbleB extends Executive.StateBase<AutoOpmode> {
 
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            nextState(OTHER, new WobbleIntake(true));
+            nextState(OTHER, new WobbleIntake(-1.0));
         }
 
         @Override
@@ -881,7 +883,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
    *    constructor, so this mode works with powershots and high goal shots.
    *    However, the feedback that shows we're ready to shoot is to support moving powershots.
     */
-    class Launch_windUp extends Executive.StateBase<AutoOpmode> {
+   static class Launch_windUp extends Executive.StateBase<AutoOpmode> {
         double launchSpeed;
         double launchVelocity_tps; // encoder ticks per second
 
@@ -934,7 +936,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         }
     }
 
-    class WobblePosition extends Executive.StateBase<AutoOpmode> {
+    static class WobblePosition extends Executive.StateBase<AutoOpmode> {
         private final int encoderTicks;
 
         WobblePosition(int encoderTicks) {
@@ -950,18 +952,18 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         }
     }
 
-    class WobbleIntake extends Executive.StateBase<AutoOpmode> {
-        private final int sign;
+    static class WobbleIntake extends Executive.StateBase<AutoOpmode> {
+        private final double power;
 
-        WobbleIntake(boolean reverse) {
-            this.sign = reverse ? -1 : 1;
+        WobbleIntake(double power) {
+            this.power = power;
         }
 
         @Override
         public void update() {
             super.update();
-            opMode.servoUtility.setPower(ContinuousServo.WOBBLE_LEFT, sign);
-            opMode.servoUtility.setPower(ContinuousServo.WOBBLE_RIGHT, sign);
+            opMode.servoUtility.setPower(ContinuousServo.WOBBLE_LEFT, power);
+            opMode.servoUtility.setPower(ContinuousServo.WOBBLE_RIGHT, power);
         }
     }
 

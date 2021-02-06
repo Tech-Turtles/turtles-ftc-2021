@@ -1,7 +1,10 @@
 package org.firstinspires.ftc.teamcode.Utility;
 
+import android.util.Log;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -64,6 +67,13 @@ public class RobotHardware extends OpMode {
 
     public SampleMecanumDrive mecanumDrive;
 
+    public static Pose2d lastPosition = new Pose2d(0,0,0);
+//    public static Pose2d shoot1;
+//    public static Pose2d shoot2;
+//    public static Pose2d shoot3;
+    public static int lastWobblePosition = 0;
+
+
     public class MotorUtility {
 
         private DcMotorEx m;
@@ -106,7 +116,7 @@ public class RobotHardware extends OpMode {
 
         public void stopAllMotors() {
             for (Motors motor : Motors.values())
-                setPower(motor, 0f);
+                setPower(motor, 0);
         }
 
         public void stopResetAllMotors() {
@@ -436,6 +446,14 @@ public class RobotHardware extends OpMode {
     @Override
     public void stop() {
         clearHubCache();
+        try {
+            lastPosition = mecanumDrive.getPoseEstimate();
+            lastWobblePosition = motorUtility.getEncoderValue(Motors.WOBBLE_ARM);
+        } catch (Exception e) {
+            Log.wtf("Unable to save positions", e.getMessage());
+        }
         motorUtility.stopAllMotors();
+        for (ContinuousServo servo : ContinuousServo.values())
+            servoUtility.setPower(servo, 0);
     }
 }
