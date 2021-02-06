@@ -69,7 +69,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     }
 
     public void init() {
-        new Thread(() -> opmode.loadVision(false)).start();
         trajectoryRR = new TrajectoryRR_kotlin(opmode.mecanumDrive);
         stateMachine.changeState(DRIVE, new Start());
         stateMachine.init();
@@ -142,7 +141,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             if(opMode.ringDetector != null)
                 rings = opMode.ringDetector.getHeight();
 
-            if(stateTimer.seconds() > scanDelay || !(rings.equals(RingDetectionAmount.ZERO))) {
+            if((stateTimer.seconds() > scanDelay || !rings.equals(RingDetectionAmount.ZERO)) || (opMode.initializationRingDetectionAmount != null)) {
                 trajectoryRR.setZone(rings);
                 if (doAdvancedTrajectory) {
                     if(center)

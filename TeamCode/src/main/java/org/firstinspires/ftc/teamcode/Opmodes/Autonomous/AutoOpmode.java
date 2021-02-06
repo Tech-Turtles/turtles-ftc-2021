@@ -12,6 +12,7 @@ import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount;
 
 
 public class AutoOpmode extends RobotHardware {
@@ -19,6 +20,7 @@ public class AutoOpmode extends RobotHardware {
     AllianceColor robotColor;
     StartPosition robotStartPos;
     private Executive.RobotStateMachineContextInterface robotStateContext;
+    public RingDetectionAmount initializationRingDetectionAmount = null;
 
     @Autonomous(name="Wall Red", group="A")
     public static class AutoRedPickup extends AutoOpmode {
@@ -66,7 +68,12 @@ public class AutoOpmode extends RobotHardware {
         if(robotColor == null && robotStartPos == null)
             robotStateContext = new BehaviorSandBox(AutoOpmode.this, AllianceColor.RED, StartPosition.CENTER);
         else
-            robotStateContext = new RobotStateContext(AutoOpmode.this, robotColor, robotStartPos);
+            robotStateContext = new RobotStateContext(this, robotColor, robotStartPos);
+        new Thread(() -> loadVision(false)).start();
+        mecanumDrive = new SampleMecanumDrive(hardwareMap);
+        mecanumDrive.setPoseEstimate(new Pose2d(0, 0, 0));
+
+        robotStateContext.init();
         telemetry.addData("Initialization: ", "Successful!");
     }
 
@@ -74,16 +81,16 @@ public class AutoOpmode extends RobotHardware {
     public void init_loop() {
         super.init_loop();
         primary.update();
+
+        if(ringDetector != null) {
+            initializationRingDetectionAmount = ringDetector.getHeight();
+            telemetry.addData("Initialization Ring Amount", initializationRingDetectionAmount.name());
+        }
     }
 
     @Override
     public void start() {
         super.start();
-
-        mecanumDrive = new SampleMecanumDrive(hardwareMap);
-        mecanumDrive.setPoseEstimate(new Pose2d(0, 0, 0));
-
-        robotStateContext.init();
     }
 
     @Override
