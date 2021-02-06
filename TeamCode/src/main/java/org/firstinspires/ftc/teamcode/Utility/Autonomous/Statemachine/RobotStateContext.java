@@ -527,11 +527,26 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 nextState(LAUNCHER, new Launch_fire(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
             }
             if(arrived && stateMachine.getStateReference(LAUNCHER).isDone) {
-
                 nextState(DRIVE, new B_PowershotRightToWobbleDropoff());
             }
         }
     }
+
+
+   /* New States 2/6/2021
+   // New Trajectories
+    modified traj_PowershotRightToWobbleDropoff
+   trajWobbleDropoffToWobblePickupAlign
+   trajWobbleAlignToWobblePickup
+   trajWobblePickupToDropoffAlign
+   trajWobbleAlignToSecondDropoff
+   trajSecondWobbleDropoffToPark
+   trajSecondWobbleDropoffToRingPickupAlign
+   trajRingAlignToRingGrab
+   trajRingGrabToShootHighGoal
+   trajFromShootHighGoalToPark
+    */
+
 
     class B_PowershotRightToWobbleDropoff extends Executive.StateBase<AutoOpmode> {
         @Override
@@ -544,8 +559,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             if(opmode.mecanumDrive.isIdle()) {
-                nextState(OTHER, new WobblePosition(WOBBLE_DOWN));
-                nextState(DRIVE, new B_DropoffWobbleA());
+                nextState(DRIVE, new C_WobbleDropoffToWobblePickupAlign());
             }
         }
     }
@@ -554,6 +568,165 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     End new split states from powershot
      */
 
+   /* New reworked states */
+
+    class C_WobbleDropoffToWobblePickupAlign extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobbleDropoffToWobblePickupAlign());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opmode.mecanumDrive.isIdle()) {
+                nextState(DRIVE, new C_WobbleAlignToWobblePickup());
+            }
+        }
+    }
+
+
+    class C_WobbleAlignToWobblePickup extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobbleAlignToWobblePickup());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opmode.mecanumDrive.isIdle()) {
+                nextState(DRIVE, new C_WobblePickupToDropoffAlign());
+            }
+        }
+    }
+
+
+    class C_WobblePickupToDropoffAlign extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobblePickupToDropoffAlign());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opmode.mecanumDrive.isIdle()) {
+                nextState(DRIVE, new C_WobbleAlignToSecondDropoff());
+            }
+        }
+    }
+
+
+    class C_WobbleAlignToSecondDropoff extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobbleAlignToSecondDropoff());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opmode.mecanumDrive.isIdle()) {
+                nextState(DRIVE, new C_SecondWobbleDropoffToPark());
+            }
+        }
+    }
+
+
+    // An END STATE after Second WobbleDropoff
+    class C_SecondWobbleDropoffToPark extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobbleDropoffToWobblePickupAlign());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opmode.mecanumDrive.isIdle()) {
+                nextState(DRIVE, new Stop());
+            }
+        }
+    }
+
+
+    class C_SecondWobbleDropoffToRingPickupAlign extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajSecondWobbleDropoffToRingPickupAlign());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opmode.mecanumDrive.isIdle()) {
+                nextState(DRIVE, new C_RingAlignToRingGrab());
+            }
+        }
+    }
+
+
+    class C_RingAlignToRingGrab extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajRingAlignToRingGrab());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opmode.mecanumDrive.isIdle()) {
+                nextState(DRIVE, new C_RingGrabToShootHighGoal());
+            }
+        }
+    }
+
+
+
+    class C_RingGrabToShootHighGoal extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajRingGrabToShootHighGoal());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opmode.mecanumDrive.isIdle()) {
+                nextState(DRIVE, new C_FromShootHighGoalToPark());
+            }
+        }
+    }
+
+
+    class C_FromShootHighGoalToPark extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajFromShootHighGoalToPark());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opmode.mecanumDrive.isIdle()) {
+                nextState(DRIVE, new Stop());
+            }
+        }
+    }
+
+
+
+    /* Old states */
 
     class B_DropoffWobbleA extends Executive.StateBase<AutoOpmode> {
         boolean reset = false;

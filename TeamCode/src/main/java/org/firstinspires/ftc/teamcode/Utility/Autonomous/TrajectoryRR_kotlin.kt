@@ -125,6 +125,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     var trajParkAfterWobbleDropoff: Trajectory? = null
     var trajPickupRingsFromZone: Trajectory? = null
 
+    // New Trajectories
     var trajWobbleDropoffToWobblePickupAlign: Trajectory? = null
     var trajWobbleAlignToWobblePickup: Trajectory? = null
     var trajWobblePickupToDropoffAlign: Trajectory? = null
