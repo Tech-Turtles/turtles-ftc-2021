@@ -20,14 +20,16 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     /*
    Offset system
     */
-    val offsetWobbleArmReach: Double = 12.0
-    val offsetWobbleDropoffAlign = Pose2d(-offsetWobbleArmReach - 6.0,0.0,0.0)
-    val offsetWobbleDropoffDeep = Pose2d(-offsetWobbleArmReach + 2.0,0.0,0.0)
-    val offsetWobbleDropoffShallow = Pose2d(-offsetWobbleArmReach - 2.0,0.0,0.0)
+    val offsetWobbleArmReach: Double = 12.0 + 4.0
+    val wobbleDropoffLateral: Double = 3.0
+    val wobblePickupLateral: Double = -3.0
+    val offsetWobbleDropoffAlign = Pose2d(-offsetWobbleArmReach - 6.0,wobbleDropoffLateral,0.0)
+    val offsetWobbleDropoffDeep = Pose2d(-offsetWobbleArmReach + 2.0,wobbleDropoffLateral,0.0)
+    val offsetWobbleDropoffShallow = Pose2d(-offsetWobbleArmReach - 2.0,wobbleDropoffLateral,0.0)
     val wobbleDropoffRotationRadians: Double = 0.0.toRadians
 
-    val offsetWobblePickupAlign = Pose2d(-offsetWobbleArmReach - 8.0,0.0,0.0)
-    val offsetWobblePickupGrab = Pose2d(-offsetWobbleArmReach + 3.0,0.0,0.0) // Drive through wobble goal
+    val offsetWobblePickupAlign = Pose2d(-offsetWobbleArmReach - 8.0,wobblePickupLateral,0.0)
+    val offsetWobblePickupGrab = Pose2d(-offsetWobbleArmReach + 3.0 + 4.0 + 3.0,wobblePickupLateral,0.0) // Drive through wobble goal
     val wobblePickupRotationRadians: Double = (165.0).toRadians
 
     val offsetRingPickupAlign = Pose2d(-14.0,-5.0,0.0)
@@ -367,7 +369,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
         // Grab Wobble Goal
         var trajWobbleAlignToWobblePickup: Trajectory =
                 trajectoryBuilder(trajWobbleDropoffToWobblePickupAlign.end(), 0.0.toRadians)
-                        .lineToConstantHeading(wobblePickupGrab.vec())
+                        .lineToConstantHeading(wobblePickupGrab.vec(), slowVelocityConstraint, slowAccelerationConstraint)
                         .build();
         this.trajWobbleAlignToWobblePickup = trajWobbleAlignToWobblePickup
 
