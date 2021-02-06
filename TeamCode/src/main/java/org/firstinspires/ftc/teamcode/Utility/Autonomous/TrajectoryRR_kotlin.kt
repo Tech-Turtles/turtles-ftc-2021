@@ -16,24 +16,81 @@ import kotlin.collections.ArrayList
 @Config
 class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     val drive: SampleMecanumDrive = sampleMecanumDrive
+
+    /*
+   Offset system
+    */
+    val offsetWobbleArmReach: Double = 12.0
+    val offsetWobbleDropoffAlign = Pose2d(-offsetWobbleArmReach - 6.0,0.0,0.0)
+    val offsetWobbleDropoffDeep = Pose2d(-offsetWobbleArmReach + 2.0,0.0,0.0)
+    val offsetWobbleDropoffShallow = Pose2d(-offsetWobbleArmReach - 2.0,0.0,0.0)
+    val wobbleDropoffRotationRadians: Double = 0.0.toRadians
+
+    val offsetWobblePickupAlign = Pose2d(-offsetWobbleArmReach - 8.0,0.0,0.0)
+    val offsetWobblePickupGrab = Pose2d(-offsetWobbleArmReach + 3.0,0.0,0.0) // Drive through wobble goal
+    val wobblePickupRotationRadians: Double = (165.0).toRadians
+
+    val offsetRingPickupAlign = Pose2d(-14.0,-5.0,0.0)
+    val offsetRingPickupGrab = Pose2d(-7.0,-5.0,0.0)
+    val ringPickupRotationRadians: Double = (149.0).toRadians
+
+    val spacing_powershot: Double = 7.5; // Spacing between the powershot sticks in the y axis, inches
+
+    // old offsets
     val ringOffset: Pose2d = Pose2d(2.0, 5.0, 0.0)
     val wobbleOffset: Pose2d = Pose2d(-12.0, 0.0, 0.0)
     val wobblePickup: Pose2d = Pose2d(12.0, 0.0, 0.0)
-    val spacing_powershot: Double = 7.5;
 
+
+    // Actual locations before offsets for robot grabber
+    var RINGS_ACTUAL = Pose2d(-24.0, -36.0,Math.toRadians(0.0))  // Needs rotation for pickup
+    var WOBBLE_PICKUP_ACTUAL = Pose2d(-48.0, -50.0,Math.toRadians(0.0)) // Needs rotation for pickup
+    var ZONE_A_CENTER = Pose2d(12.0, -60.0,Math.toRadians(0.0))
+    var ZONE_B_CENTER = Pose2d(36.0, -36.0,Math.toRadians(0.0))
+    var ZONE_C_CENTER = Pose2d(60.0, -60.0,Math.toRadians(0.0))
+
+    // Start Positions
     val START_WALL = Pose2d(-62.0, -42.0, Math.toRadians(180.0))
     var START_CENTER = Pose2d(-62.0, -18.0, Math.toRadians(180.0))
-    var RINGS = Pose2d(-24.0, -36.0, Math.toRadians(180.0)).plus(ringOffset)
-    var SHOOT = Pose2d(-2.0, -42.0 + 2.0, Math.toRadians(180.0 - 0.0))
-    var CENTER_TO_SHOOT = Pose2d(-2.0, -6.0, 0.0.toRadians)
-    var RIGHT_TO_SHOOT = Pose2d(-2.0, -20.0, 0.0.toRadians)
-    var POWER_SHOT = Pose2d(-2.0, -28.0, Math.toRadians(180.0 - 0.0))
+
+
+    var SHOOT_HIGHGOAL = Pose2d(-2.0,  -42.0,Math.toRadians(180.0 - 0.0))
+
     var POWERSHOT_CENTER = Pose2d(-2.0,  -12.0,Math.toRadians(180.0 - 0.0))
     var POWERSHOT_LEFT  = POWERSHOT_CENTER.plus(Pose2d(0.0,+1.0 * spacing_powershot, 0.0))
     var POWERSHOT_RIGHT = POWERSHOT_CENTER.plus(Pose2d(0.0,-1.0 * spacing_powershot, 0.0))
-    var ZONE_A = Pose2d(12.0, -60.0, Math.toRadians(0.0)).plus(wobbleOffset)
-    var ZONE_B = Pose2d(36.0, -36.0, Math.toRadians(0.0)).plus(wobbleOffset)
-    var ZONE_C = Pose2d(60.0, -60.0, Math.toRadians(0.0)).plus(wobbleOffset)
+
+
+    // Offset added to rings
+    var RINGS = RINGS_ACTUAL .plus(Pose2d(8.0,4.0,0.0)
+            .rotateFrame(-45.0.toRadians))//.plus(ringOffset)
+    var SHOOT = Pose2d(-2.0, -42.0 + 2.0, Math.toRadians(180.0 - 0.0))
+
+
+    // Variable waypoints
+    var ZONE_CENTER_VARIABLE = ZONE_A_CENTER
+    var wobbleDropoffAlign: Pose2d = ZONE_CENTER_VARIABLE.plus(offsetWobbleDropoffAlign.rotateFrame(
+            wobbleDropoffRotationRadians))
+    var wobbleDropoffDeep: Pose2d = ZONE_CENTER_VARIABLE.plus(offsetWobbleDropoffDeep.rotateFrame(
+            wobbleDropoffRotationRadians))
+    var wobbleDropoffShallow: Pose2d = ZONE_CENTER_VARIABLE.plus(offsetWobbleDropoffShallow.rotateFrame(
+            wobbleDropoffRotationRadians))
+    var wobblePickupAlign: Pose2d = WOBBLE_PICKUP_ACTUAL.plus(offsetWobblePickupAlign.rotateFrame(
+            wobblePickupRotationRadians ))
+    var wobblePickupGrab: Pose2d = WOBBLE_PICKUP_ACTUAL.plus(offsetWobblePickupGrab.rotateFrame(
+            wobblePickupRotationRadians ))
+    var ringPickupAlign: Pose2d = RINGS_ACTUAL.plus(offsetRingPickupAlign.rotateFrame(ringPickupRotationRadians))
+    var ringPickupGrab: Pose2d = RINGS_ACTUAL.plus(offsetRingPickupGrab.rotateFrame(ringPickupRotationRadians))
+
+
+    // Older waypoints
+    var CENTER_TO_SHOOT = Pose2d(-2.0, -6.0, 0.0.toRadians)
+    var RIGHT_TO_SHOOT = Pose2d(-2.0, -20.0, 0.0.toRadians)
+    var POWER_SHOT = Pose2d(-2.0, -28.0, Math.toRadians(180.0 - 0.0))
+
+    var ZONE_A = ZONE_A_CENTER.plus(wobbleOffset)
+    var ZONE_B = ZONE_B_CENTER.plus(wobbleOffset)
+    var ZONE_C = ZONE_C_CENTER.plus(wobbleOffset)
     var PARK = Pose2d(12.0, -42.0, Math.toRadians(180.0))
     var WOBBLE_WALL = Pose2d(-48.0, -50.0, Math.toRadians(180.0)).plus(wobblePickup)
 
@@ -45,6 +102,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     var ZONE_VARIABLE: Pose2d = ZONE_C
     var wobbleTangent: Double = -45.0
 
+    // Define trajectories
     var trajToShoot1: Trajectory? = null
     var trajToPark: Trajectory? = null
     var trajPickupRings: Trajectory? = null
@@ -67,6 +125,16 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     var trajParkAfterWobbleDropoff: Trajectory? = null
     var trajPickupRingsFromZone: Trajectory? = null
 
+    var trajWobbleDropoffToWobblePickupAlign: Trajectory? = null
+    var trajWobbleAlignToWobblePickup: Trajectory? = null
+    var trajWobblePickupToDropoffAlign: Trajectory? = null
+    var trajWobbleAlignToSecondDropoff: Trajectory? = null
+    var trajSecondWobbleDropoffToPark: Trajectory? = null
+    var trajSecondWobbleDropoffToRingPickupAlign: Trajectory? = null
+    var trajRingAlignToRingGrab: Trajectory? = null
+    var trajRingGrabToShootHighGoal: Trajectory? = null
+    var trajFromShootHighGoalToPark: Trajectory? = null
+
     private var velocityConstraint: TrajectoryVelocityConstraint? = null
     private var accelerationConstraint: TrajectoryAccelerationConstraint? = null
     private var slowVelocityConstraint: TrajectoryVelocityConstraint? = null
@@ -82,6 +150,11 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
             ZERO -> ZONE_A
             ONE -> ZONE_B
             FOUR -> ZONE_C
+        }
+        ZONE_CENTER_VARIABLE = when (ringAmount) {
+            ZERO -> ZONE_A_CENTER
+            ONE -> ZONE_B_CENTER
+            FOUR -> ZONE_C_CENTER
         }
         wobbleTangent = when (ringAmount) {
             ZERO -> -40.0
@@ -195,6 +268,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
         this.trajStartWallToStartCenter = trajStartwalltostartcenter
 
 //        setZone(ONE)
+        // Redundant because trajectory is split into 4
         val trajPowershot_clockwise: Trajectory =
                 trajectoryBuilder(START_CENTER, 90.0.toRadians)
                 .splineToConstantHeading(CENTER_TO_SHOOT.vec(), (-90.0).toRadians)
@@ -202,12 +276,28 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
                 .splineToSplineHeading(ZONE_VARIABLE, Math.toRadians(wobbleTangent), velocityConstraint, accelerationConstraint)
                 .build()
         this.trajPowershot_clockwise = trajPowershot_clockwise
-/* Split traj_powershot_clockwise into 4 parts
-       parkCenterToPsLeft
-       PsLeftToPsCenter
-       PsCenterToPsRight
-       PsRightToWobbleZone
-        */
+
+
+        /*
+        **************************************************************
+        * Rework trajectories
+         */
+
+        // Recalculate class variable waypoints based on ZONE_CENTER_VARIABLE
+        wobbleDropoffAlign = ZONE_CENTER_VARIABLE.plus(offsetWobbleDropoffAlign.rotateFrame(wobbleDropoffRotationRadians))
+        wobbleDropoffDeep = ZONE_CENTER_VARIABLE.plus(offsetWobbleDropoffDeep.rotateFrame(wobbleDropoffRotationRadians))
+        wobbleDropoffShallow = ZONE_CENTER_VARIABLE.plus(offsetWobbleDropoffShallow.rotateFrame(wobbleDropoffRotationRadians))
+        wobblePickupAlign = WOBBLE_PICKUP_ACTUAL.plus(offsetWobblePickupAlign.rotateFrame(wobblePickupRotationRadians))
+        wobblePickupGrab = WOBBLE_PICKUP_ACTUAL.plus(offsetWobblePickupGrab.rotateFrame(wobblePickupRotationRadians))
+        ringPickupAlign = RINGS_ACTUAL.plus(offsetRingPickupAlign.rotateFrame(ringPickupRotationRadians))
+        ringPickupGrab = RINGS_ACTUAL.plus(offsetRingPickupGrab.rotateFrame(ringPickupRotationRadians))
+
+        /* Split traj_powershot_clockwise into 4 parts
+        parkCenterToPsLeft
+        PsLeftToPsCenter
+        PsCenterToPsRight
+        PsRightToWobbleZone
+         */
 
         var traj_parkCenterToPowershotLeft: Trajectory =
                 trajectoryBuilder(START_CENTER, 0.0.toRadians)
@@ -232,12 +322,147 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
 
 
         var traj_PowershotRightToWobbleDropoff: Trajectory =
-                trajectoryBuilder(traj_PowershotCenterPowershotRight.end(), -90.0.toRadians)
-                        //.lineTo(RIGHT_TO_SHOOT.vec())
-                        .splineToSplineHeading(ZONE_VARIABLE,Math.toRadians(wobbleTangent))
-                        .build();
+                when(ZONE_CENTER_VARIABLE) {
+                    ZONE_A_CENTER ->
+                        trajectoryBuilder(traj_PowershotCenterPowershotRight.end(), -90.0.toRadians)
+                                .splineToSplineHeading(wobbleDropoffDeep.plus(Pose2d(0.0,6.0,0.0)),Math.toRadians(-90.0))
+                                .lineToConstantHeading(wobbleDropoffDeep.vec())
+                                .build();
+                    ZONE_B_CENTER ->
+                        trajectoryBuilder(traj_PowershotCenterPowershotRight.end(), -50.0.toRadians)
+                                .splineToSplineHeading(wobbleDropoffAlign,0.0)
+                                .lineToConstantHeading(wobbleDropoffDeep.vec())
+                                .build();
+                    else -> // Zone C
+                        trajectoryBuilder(traj_PowershotCenterPowershotRight.end(), 0.0.toRadians)
+                                //TODO: Improve Zone C, prevent arm conflict with wall
+                                //.splineToSplineHeading(wobbleDropoffAlign.plus(Pose2d(0.0,10.0,0.0)),0.0)
+                                //.lineToConstantHeading(wobbleDropoffDeep.vec())
+                                .lineToLinearHeading(wobbleDropoffDeep)
+                                //.splineToLinearHeading(wobbleDropoffDeep,-45.0.toRadians)
+                                .build();
+                }
         this.traj_PowershotRightToWobbleDropoff = traj_PowershotRightToWobbleDropoff
 
+        // From zone wobble dropoff position to rings pickup align
+        var trajWobbleDropoffToWobblePickupAlign: Trajectory =
+                when (ZONE_CENTER_VARIABLE) {
+                    ZONE_A_CENTER ->
+                        trajectoryBuilder(traj_PowershotRightToWobbleDropoff.end(), 120.0.toRadians)
+                                .splineToSplineHeading(wobblePickupAlign, wobblePickupRotationRadians)
+                                .build();
+                    ZONE_B_CENTER ->
+                        trajectoryBuilder(traj_PowershotRightToWobbleDropoff.end(), 180.0.toRadians)
+                                .splineToSplineHeading(wobblePickupAlign, wobblePickupRotationRadians)
+                                .build();
+                    else ->
+                        trajectoryBuilder(traj_PowershotRightToWobbleDropoff.end(), 150.0.toRadians)
+                                .splineToSplineHeading(wobblePickupAlign, wobblePickupRotationRadians)
+                                .build();
+                }
+        this.trajWobbleDropoffToWobblePickupAlign = trajWobbleDropoffToWobblePickupAlign
+
+
+        // Grab Wobble Goal
+        var trajWobbleAlignToWobblePickup: Trajectory =
+                trajectoryBuilder(trajWobbleDropoffToWobblePickupAlign.end(), 0.0.toRadians)
+                        .lineToConstantHeading(wobblePickupGrab.vec())
+                        .build();
+        this.trajWobbleAlignToWobblePickup = trajWobbleAlignToWobblePickup
+
+
+        // Align to dropoff second wobble goal
+        var trajWobblePickupToDropoffAlign: Trajectory =
+                when(ZONE_CENTER_VARIABLE) {
+                    ZONE_A_CENTER ->
+                        trajectoryBuilder(trajWobbleAlignToWobblePickup.end(), wobblePickupRotationRadians + 180.0.toRadians)
+                                .splineToSplineHeading(wobbleDropoffAlign,Math.toRadians(-30.0))
+                                //.lineToConstantHeading(wobbleDropoffAlign.vec())
+                                .build();
+                    ZONE_B_CENTER ->
+                        trajectoryBuilder(trajWobbleAlignToWobblePickup.end(), wobblePickupRotationRadians + 180.0.toRadians)
+                                .lineToConstantHeading(wobblePickupAlign.vec())
+                                .splineToSplineHeading(wobbleDropoffAlign,25.0.toRadians)
+                                //.lineToConstantHeading(wobbleDropoffDeep.vec())
+                                .build();
+                    else -> // Zone C
+                        trajectoryBuilder(trajWobbleAlignToWobblePickup.end(), wobblePickupRotationRadians + (180.0).toRadians)
+                                //.lineToConstantHeading(wobblePickupAlign.vec())
+                                .splineToSplineHeading(wobbleDropoffAlign,-20.0.toRadians)
+                                .build();
+                }
+        this.trajWobblePickupToDropoffAlign = trajWobblePickupToDropoffAlign
+
+
+        // Dropoff Second WobbleGoal
+        var trajWobbleAlignToSecondDropoff: Trajectory =
+                trajectoryBuilder(trajWobblePickupToDropoffAlign.end(), 0.0.toRadians)
+                        .lineToConstantHeading(wobbleDropoffShallow.vec())
+                        .build();
+        this.trajWobbleAlignToSecondDropoff = trajWobbleAlignToSecondDropoff
+
+
+        // Second WobbleGoal to Park (safe option)
+        var trajSecondWobbleDropoffToPark: Trajectory =
+                when(ZONE_CENTER_VARIABLE) {
+                    ZONE_A_CENTER ->
+                        trajectoryBuilder(trajWobbleAlignToSecondDropoff.end(), 180.0.toRadians)
+                                .lineToConstantHeading( wobbleDropoffAlign.vec() )
+                                .splineToConstantHeading(PARK.vec().plus(Vector2d(0.0,12.0)),0.0.toRadians)
+                                .build();
+                    else ->
+                        trajectoryBuilder(trajWobbleAlignToSecondDropoff.end(), 135.0.toRadians)
+                                .lineToConstantHeading(PARK.vec().plus(Vector2d(0.0,12.0)))
+                                .build();
+                }
+        this.trajSecondWobbleDropoffToPark = trajSecondWobbleDropoffToPark
+
+
+        // Second WobbleGoal to Ring Pickup Align
+        var trajSecondWobbleDropoffToRingPickupAlign: Trajectory =
+                when(ZONE_CENTER_VARIABLE) {
+                    ZONE_A_CENTER ->
+                        trajectoryBuilder(trajWobbleAlignToSecondDropoff.end(), 180.0.toRadians)
+                                .lineToConstantHeading( wobbleDropoffAlign.vec().plus(Vector2d(0.0,7.0)) )
+                                .splineToSplineHeading( ringPickupAlign, 90.0.toRadians + 0.0*ringPickupRotationRadians)
+                                //.lineToLinearHeading( ringPickupAlign)
+                                .build();
+                    else ->
+                        trajectoryBuilder(trajWobbleAlignToSecondDropoff.end(), 180.0.toRadians)
+                                .lineToLinearHeading(ringPickupAlign)
+                                .build();
+                }
+        this.trajSecondWobbleDropoffToRingPickupAlign = trajSecondWobbleDropoffToRingPickupAlign
+
+
+        // Pickup Rings
+        var trajRingAlignToRingGrab: Trajectory =
+                trajectoryBuilder(trajSecondWobbleDropoffToRingPickupAlign.end(), 0.0.toRadians)
+                        .lineToConstantHeading(ringPickupGrab.vec())
+                        .build();
+        this.trajRingAlignToRingGrab = trajRingAlignToRingGrab
+
+
+        // Take picked up rings to shoot
+        var trajRingGrabToShootHighGoal: Trajectory =
+                trajectoryBuilder(trajRingAlignToRingGrab.end(), 0.0.toRadians)
+                        .lineToConstantHeading(ringPickupAlign.vec())
+                        .splineToSplineHeading(SHOOT_HIGHGOAL,0.0)
+                        .build();
+        this.trajRingGrabToShootHighGoal = trajRingGrabToShootHighGoal
+
+
+        // After shooting into highgoal, go park
+        var trajFromShootHighGoalToPark: Trajectory =
+                trajectoryBuilder(trajRingGrabToShootHighGoal.end(), 0.0.toRadians)
+                        .lineToLinearHeading(PARK)
+                        .build();
+        this.trajFromShootHighGoalToPark = trajFromShootHighGoalToPark
+
+
+
+        //
+        // End New stuff 2/6/2021
 
 
         //
@@ -345,3 +570,14 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
 }
 
 val Double.toRadians get() = (Math.toRadians(this))
+
+/*
+    +x is the 'positive' direction, and rotation is counter-clockwise around (0,0)
+    https://en.wikipedia.org/wiki/Rotation_matrix
+ */
+fun Pose2d.rotateFrame(rotationRadians: Double): Pose2d
+{
+    return Pose2d(this.x * kotlin.math.cos(rotationRadians) - this.y * kotlin.math.sin(rotationRadians),
+            this.x * kotlin.math.sin(rotationRadians) + this.y * kotlin.math.cos(rotationRadians),
+            this.heading + rotationRadians)
+}
