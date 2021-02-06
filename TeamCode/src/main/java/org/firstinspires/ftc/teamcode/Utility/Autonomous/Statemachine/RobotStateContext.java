@@ -26,6 +26,7 @@ import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_OPEN_P
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_PUSH_POS;
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.PowershotState.*;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_DOWN;
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_STORE;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_UP;
 
 
@@ -458,7 +459,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         }
     }
 
-
     /*
     Split trajectory powershot clockwise into four, for 3 stationary shots.  Needs new states.
     Makes powershot_clockwise obsolete
@@ -551,17 +551,33 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
 
 
     class B_PowershotRightToWobbleDropoff extends Executive.StateBase<AutoOpmode> {
+
+        private boolean changedState = false;
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
             opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTraj_PowershotRightToWobbleDropoff());
+            nextState(OTHER, new WobblePosition(WOBBLE_DOWN));
+            stateMachine.removeStateType(LAUNCHER);
+            try {
+                opMode.motorUtility.setPower(Motors.LAUNCHER, 0);
+            } catch (Exception ignore) {}
         }
 
         @Override
         public void update() {
             super.update();
             if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new C_WobbleDropoffToWobblePickupAlign());
+                if(!changedState) {
+                    nextState(OTHER, new WobbleIntake(-1.0));
+                    changedState = true;
+                    stateTimer.reset();
+                }
+
+                if(changedState && stateTimer.seconds() > 0.75) {
+                    nextState(DRIVE, new C_WobbleDropoffToWobblePickupAlign());
+                    nextState(OTHER, new WobblePosition(WOBBLE_UP));
+                }
             }
         }
    }
@@ -573,6 +589,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
    /* New reworked states */
 
     class C_WobbleDropoffToWobblePickupAlign extends Executive.StateBase<AutoOpmode> {
+        boolean changedState = false;
+
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
@@ -582,17 +600,25 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void update() {
             super.update();
-            if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new C_WobbleAlignToWobblePickup());
+            if(opmode.mecanumDrive.isIdle() ) {
+                if(!changedState) {
+                    nextState(OTHER, new WobblePosition(WOBBLE_DOWN));
+                    changedState = true;
+                }
+                if(changedState && stateMachine.getStateReference(OTHER).isDone) {
+                    nextState(DRIVE, new C_WobbleAlignToWobblePickup());
+                }
             }
         }
     }
 
-
     class C_WobbleAlignToWobblePickup extends Executive.StateBase<AutoOpmode> {
+        private boolean bool = false;
+
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
+            nextState(OTHER, new WobbleIntake(1.0));
             opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobbleAlignToWobblePickup());
         }
 
@@ -600,11 +626,20 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new C_WobblePickupToDropoffAlign());
+                if(!bool) {
+                    stateTimer.reset();
+                    bool = true;
+                }
+
+                if(bool && stateTimer.seconds() > 0.75) {
+                    opMode.servoUtility.setPower(ContinuousServo.WOBBLE_LEFT, 0);
+                    opMode.servoUtility.setPower(ContinuousServo.WOBBLE_RIGHT, 0);
+                    nextState(OTHER, new WobblePosition(WOBBLE_UP));
+                    nextState(DRIVE, new C_WobblePickupToDropoffAlign());
+                }
             }
         }
     }
-
 
     class C_WobblePickupToDropoffAlign extends Executive.StateBase<AutoOpmode> {
         @Override
@@ -622,8 +657,9 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         }
     }
 
-
     class C_WobbleAlignToSecondDropoff extends Executive.StateBase<AutoOpmode> {
+        private boolean changedState = false;
+
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
@@ -634,7 +670,18 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new C_SecondWobbleDropoffToPark());
+                if(!changedState) {
+                    nextState(OTHER, new WobbleIntake(-1.0));
+                    changedState = true;
+                    stateTimer.reset();
+                }
+
+                if(changedState && stateTimer.seconds() > 1.0) {
+                    opMode.servoUtility.setPower(ContinuousServo.WOBBLE_LEFT, 0);
+                    opMode.servoUtility.setPower(ContinuousServo.WOBBLE_RIGHT, 0);
+                    nextState(OTHER, new WobblePosition(WOBBLE_STORE));
+                    nextState(DRIVE, new C_SecondWobbleDropoffToPark());
+                }
             }
         }
     }
@@ -645,13 +692,15 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobbleDropoffToWobblePickupAlign());
+            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajSecondWobbleDropoffToPark());
         }
 
         @Override
         public void update() {
             super.update();
             if(opmode.mecanumDrive.isIdle()) {
+                stateMachine.removeStateType(LAUNCHER);
+                stateMachine.removeStateType(OTHER);
                 nextState(DRIVE, new Stop());
             }
         }
@@ -721,6 +770,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             if(opmode.mecanumDrive.isIdle()) {
+                stateMachine.removeStateType(LAUNCHER);
+                stateMachine.removeStateType(OTHER);
                 nextState(DRIVE, new Stop());
             }
         }
