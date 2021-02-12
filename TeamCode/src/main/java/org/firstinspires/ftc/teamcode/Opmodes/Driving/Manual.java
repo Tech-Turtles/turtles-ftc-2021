@@ -9,6 +9,7 @@ import org.firstinspires.ftc.teamcode.HardwareTypes.ContinuousServo;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
 import org.firstinspires.ftc.teamcode.Utility.*;
+import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR_kotlin;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.*;
@@ -59,7 +60,7 @@ public class Manual extends RobotHardware {
     public void start() {
         super.start();
         mecanumDrive = new SampleMecanumDrive(hardwareMap);
-        mecanumDrive.setPoseEstimate(lastPosition);
+        mecanumDrive.setPoseEstimate(lastPosition == null ? new TrajectoryRR_kotlin(mecanumDrive).getSTART_CENTER() : lastPosition);
     }
 
     @Override
