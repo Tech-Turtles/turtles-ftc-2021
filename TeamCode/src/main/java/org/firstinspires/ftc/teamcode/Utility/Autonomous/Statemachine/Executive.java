@@ -170,8 +170,8 @@ public class Executive {
     static public abstract class StateBase <T_opmode extends RobotHardware> {
 
         StateMachine<T_opmode> stateMachine; // Reference to outer state machine, for modifying states.
-        T_opmode opMode;
-        ElapsedTime stateTimer; // Time how long state has been active
+        protected T_opmode opMode;
+        protected ElapsedTime stateTimer; // Time how long state has been active
         ElapsedTime statePeriod; // Time how long since state has been executed.
         double lastStatePeriod = -1;
         boolean isDone = false;

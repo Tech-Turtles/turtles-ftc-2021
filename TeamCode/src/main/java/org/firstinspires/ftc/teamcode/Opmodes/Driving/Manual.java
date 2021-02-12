@@ -2,17 +2,22 @@ package org.firstinspires.ftc.teamcode.Opmodes.Driving;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
+import com.qualcomm.ftccommon.LaunchActivityConstantsList;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.ColorSensor;
 import org.firstinspires.ftc.teamcode.HardwareTypes.ContinuousServo;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
+import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.AutoOpmode;
 import org.firstinspires.ftc.teamcode.Utility.*;
+import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR_kotlin;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.*;
+import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.*;
 
 @Config
 @TeleOp(name="Manual", group="A")
@@ -32,6 +37,8 @@ public class Manual extends RobotHardware {
     public static double manualWobblePower = 0.5;
     private WobbleStates wobbleState = WobbleStates.MANUAL;
     private boolean wobbleArrived = false;
+    private final Executive.StateMachine<Manual> stateMachine;
+    private TrajectoryRR_kotlin trajectoryRR;
 
     private enum WobbleStates {
         MANUAL,
@@ -46,9 +53,18 @@ public class Manual extends RobotHardware {
         HIGHGOAL
     }
 
+    public Manual() {
+        stateMachine =  new Executive.StateMachine<>(this);
+        stateMachine.update();
+    }
+
     @Override
     public void init() {
         super.init();
+        trajectoryRR = new TrajectoryRR_kotlin(this.mecanumDrive);
+        stateMachine.changeState(DRIVE, new Drive_Manual());
+        stateMachine.changeState(LAUNCHER, new LaunchArm_Manual());
+        stateMachine.init();
     }
 
     @Override
@@ -66,14 +82,41 @@ public class Manual extends RobotHardware {
     @Override
     public void loop() {
         super.loop();
-        drivetrainControls();
+        stateMachine.update();
         mecanumDrive.update();
-        intakeControls();
-        armControls();
-        launcherControls();
-        displayTelemetyry();
+        chordedControls(); // Controls for when left bumper is held down.
+        //drivetrainControls(); // In Drive_Manual
+        //intakeControls(); // In Drive_Manual
+        //armControls(); // In LaunchArm_Manual
+        //launcherControls(); // In LaunchArm_Manual
+        displayTelemetry();
     }
 
+    /*
+    Manual Control States
+     */
+    static class Drive_Manual extends Executive.StateBase<Manual> {
+        @Override
+        public void update() {
+            super.update();
+            opMode.drivetrainControls();
+            opMode.intakeControls();
+        }
+    }
+
+    static class LaunchArm_Manual extends Executive.StateBase<Manual> {
+        @Override
+        public void update() {
+            super.update();
+            opMode.armControls();
+            opMode.launcherControls();
+
+        }
+    }
+
+    /*
+    End of Manual Control States
+     */
 
     void drivetrainControls() {
         mecanumDrive.setWeightedDrivePower(
@@ -159,7 +202,32 @@ public class Manual extends RobotHardware {
         }
     }
 
-    void displayTelemetyry() {
+
+    void chordedControls() {
+        if(primary.leftBumper()) {
+
+            if(primary.YOnce())  // Drive to auto start position
+                stateMachine.changeState(DRIVE, new ReturnToStart());
+
+            if(primary.XOnce()) { // set pose to nearest corner
+                mecanumDrive.setPoseEstimate(
+                        TrajectoryRR_kotlin.getNearestCornerPose2d(
+                                mecanumDrive.getPoseEstimate())
+                );
+            }
+
+
+        }
+    }
+
+    boolean isDrivetrainManualInputActive() {
+        double threshold = 0.1;
+        return (Math.abs(primary.left_stick_x) > threshold)
+            || (Math.abs(primary.left_stick_y) > threshold)
+            || (Math.abs(primary.right_stick_x) > threshold);
+    }
+
+    void displayTelemetry() {
         Pose2d poseEstimate = mecanumDrive.getPoseEstimate();
 
         telemetry.addData("Precision mode:      ", df.format(precisionMode));
@@ -182,4 +250,32 @@ public class Manual extends RobotHardware {
         telemetry.addData("Precision speed:     ", df.format(precisionPercentage));
         telemetry.addData("Loop time:           ", df_precise.format(period.getAveragePeriodSec()) + "s");
     }
+
+/*
+Auto Control States
+ */
+
+
+    class ReturnToStart extends Executive.StateBase<Manual> {
+        Trajectory traj_home;
+        @Override
+        public void init(Executive.StateMachine<Manual> stateMachine) {
+            super.init(stateMachine);
+            Pose2d startWall = new Pose2d(trajectoryRR.getSTART_CENTER().vec(),trajectoryRR.getSTART_CENTER().getHeading());
+            traj_home = mecanumDrive.trajectoryBuilder(mecanumDrive.getPoseEstimate(),Math.toRadians(180.0))
+                    .lineToLinearHeading(startWall)
+                    .build();
+            mecanumDrive.followTrajectoryAsync(traj_home);
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(mecanumDrive.isIdle() || isDrivetrainManualInputActive()) {
+                nextState(DRIVE, new Drive_Manual());
+            }
+        }
+    }
+
+
 }
