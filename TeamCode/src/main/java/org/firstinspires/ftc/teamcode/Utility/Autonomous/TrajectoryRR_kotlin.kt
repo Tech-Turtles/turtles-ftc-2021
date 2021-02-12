@@ -43,7 +43,6 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     val wobbleOffset: Pose2d = Pose2d(-12.0, 0.0, 0.0)
     val wobblePickup: Pose2d = Pose2d(12.0, 0.0, 0.0)
 
-
     // Actual locations before offsets for robot grabber
     var RINGS_ACTUAL = Pose2d(-24.0, -36.0,Math.toRadians(0.0))  // Needs rotation for pickup
     var WOBBLE_PICKUP_ACTUAL = Pose2d(-48.0, -50.0,Math.toRadians(0.0)) // Needs rotation for pickup
@@ -52,13 +51,14 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     var ZONE_C_CENTER = Pose2d(60.0, -60.0,Math.toRadians(0.0))
 
     // Start Positions
+    // True X is -60.75, not -62.0
+    //TODO Change start position and update old positions with the new value
     val START_WALL = Pose2d(-62.0, -42.0, Math.toRadians(180.0))
     var START_CENTER = Pose2d(-62.0, -18.0, Math.toRadians(180.0))
 
 
     var SHOOT_HIGHGOAL = Pose2d(-2.0,  -42.0,Math.toRadians(180.0 - 0.0))
-
-    var POWERSHOT_LEFT  = Pose2d(-4.0,  -7.5,Math.toRadians(180.0 - 0.0))
+    var POWERSHOT_LEFT  = Pose2d(-4.0,  -6.5,Math.toRadians(180.0 - 0.0))
     var POWERSHOT_CENTER = POWERSHOT_LEFT.plus(Pose2d(0.0, -1.0 * spacing_powershot - 1.5, 0.0))
     var POWERSHOT_RIGHT = POWERSHOT_LEFT.plus(Pose2d(0.0,-2.0 * spacing_powershot - 1.5, 0.0))
 
