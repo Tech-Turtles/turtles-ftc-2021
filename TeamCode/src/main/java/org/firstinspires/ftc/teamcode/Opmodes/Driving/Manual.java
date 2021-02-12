@@ -137,7 +137,7 @@ public class Manual extends RobotHardware {
             servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
         }
 
-        if(secondary.AOnce()) {
+        if(secondary.AOnce() && !secondary.start()) {
             powershotMode = !powershotMode;
             launchspeed = powershotMode ? powerShotSpeed : highGoalSpeed;
         }
@@ -148,7 +148,7 @@ public class Manual extends RobotHardware {
         telemetry.addData("Launcher speed:      ", df.format(launchspeed));
         telemetry.addData("Powershot mode:      ", powershotMode);
         try {
-            telemetry.addData("Wobble Distance: ", getDistance(getColorSensor(ColorSensor.WOBBLE_SENSOR)));
+            telemetry.addData("Wobble Distance: ", df.format(getDistance(getColorSensor(ColorSensor.WOBBLE_SENSOR))));
         } catch(NullPointerException ignore) {}
         telemetry.addLine();
         telemetry.addLine("----Launcher----");
@@ -156,9 +156,9 @@ public class Manual extends RobotHardware {
         telemetry.addData("Hopper position:     ", servoUtility.getAngle(Servos.HOPPER));
         telemetry.addLine();
         telemetry.addLine("----Navigation----");
-        telemetry.addData("X:                   ", poseEstimate.getX());
-        telemetry.addData("Y:                   ", poseEstimate.getY());
-        telemetry.addData("Heading:             ", Math.toDegrees(poseEstimate.getHeading()));
+        telemetry.addData("X:                   ", df.format(poseEstimate.getX()));
+        telemetry.addData("Y:                   ", df.format(poseEstimate.getY()));
+        telemetry.addData("Heading:             ", df.format(Math.toDegrees(poseEstimate.getHeading())));
         telemetry.addData("Drive speed:         ", df.format(drivespeed));
         telemetry.addData("Precision speed:     ", df.format(precisionPercentage));
         telemetry.addData("Loop time:           ", df_precise.format(period.getAveragePeriodSec()) + "s");

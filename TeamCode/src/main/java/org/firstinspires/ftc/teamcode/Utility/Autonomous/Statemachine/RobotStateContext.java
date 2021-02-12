@@ -16,6 +16,7 @@ import org.firstinspires.ftc.teamcode.Utility.Configuration;
 import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.EnumMap;
 
@@ -39,6 +40,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     private final AllianceColor allianceColor;
     private final StartPosition startPosition;
     private TrajectoryRR_kotlin trajectoryRR;
+    DecimalFormat df;
 
 
     public static boolean autoReturnToStart = false;
@@ -64,6 +66,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         this.startPosition = startPosition;
         this.stateMachine = new Executive.StateMachine<>(opmode);
         stateMachine.update();
+        this.df = opmode.df;
     }
 
     public void init() {
@@ -76,9 +79,9 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         stateMachine.update();
         Pose2d poseEstimate = opmode.mecanumDrive.getPoseEstimate();
         opmode.telemetry.addData("Rings: ", rings.name());
-        opmode.telemetry.addData("X:                   ", poseEstimate.getX());
-        opmode.telemetry.addData("Y:                   ", poseEstimate.getY());
-        opmode.telemetry.addData("Heading:             ", Math.toDegrees(poseEstimate.getHeading()));
+        opmode.telemetry.addData("X:                   ", df.format(poseEstimate.getX()));
+        opmode.telemetry.addData("Y:                   ", df.format(poseEstimate.getY()));
+        opmode.telemetry.addData("Heading:             ", df.format(Math.toDegrees(poseEstimate.getHeading())));
         opmode.telemetry.addData("Shoot 1: ", RobotHardware.shoot1);
         opmode.telemetry.addData("Shoot 2: ", RobotHardware.shoot2);
         opmode.telemetry.addData("Shoot 3: ", RobotHardware.shoot3);
