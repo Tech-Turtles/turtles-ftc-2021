@@ -68,9 +68,9 @@ public class RobotHardware extends OpMode {
     public SampleMecanumDrive mecanumDrive;
 
     public static Pose2d lastPosition = new Pose2d(0,0,0);
-//    public static Pose2d shoot1;
-//    public static Pose2d shoot2;
-//    public static Pose2d shoot3;
+    public static Pose2d shoot1;
+    public static Pose2d shoot2;
+    public static Pose2d shoot3;
     public static int lastWobblePosition = 0;
 
 

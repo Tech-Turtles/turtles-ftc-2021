@@ -12,8 +12,8 @@ import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.AutoOpmode;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.StartPosition;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR_kotlin;
-import org.firstinspires.ftc.teamcode.Utility.Autonomous.Waypoints;
 import org.firstinspires.ftc.teamcode.Utility.Configuration;
+import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount;
 
 import java.util.ArrayList;
@@ -38,7 +38,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     private final Executive.StateMachine<AutoOpmode> stateMachine;
     private final AllianceColor allianceColor;
     private final StartPosition startPosition;
-    private final Waypoints waypoints;
     private TrajectoryRR_kotlin trajectoryRR;
 
 
@@ -64,7 +63,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         this.allianceColor = allianceColor;
         this.startPosition = startPosition;
         this.stateMachine = new Executive.StateMachine<>(opmode);
-        this.waypoints = new Waypoints(allianceColor);
         stateMachine.update();
     }
 
@@ -76,7 +74,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
 
     public void update() {
         stateMachine.update();
+        Pose2d poseEstimate = opmode.mecanumDrive.getPoseEstimate();
         opmode.telemetry.addData("Rings: ", rings.name());
+        opmode.telemetry.addData("X:                   ", poseEstimate.getX());
+        opmode.telemetry.addData("Y:                   ", poseEstimate.getY());
+        opmode.telemetry.addData("Heading:             ", Math.toDegrees(poseEstimate.getHeading()));
+        opmode.telemetry.addData("Shoot 1: ", RobotHardware.shoot1);
+        opmode.telemetry.addData("Shoot 2: ", RobotHardware.shoot2);
+        opmode.telemetry.addData("Shoot 3: ", RobotHardware.shoot3);
     }
 
     public String getCurrentState() {
@@ -333,34 +338,51 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void update() {
             super.update();
-            opMode.motorUtility.stopAllMotors();
+            opMode.stop();
         }
     }
 
     class ReturnToStart extends Executive.StateBase<AutoOpmode> {
+        double delay = 0;
+        boolean isSetToDrive = false;
+        Trajectory traj_home;
+
+        ReturnToStart() {}
+
+        ReturnToStart(double delay) {
+            this.delay = delay;
+        }
+
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            double wallY = -56.0;
+            double wallY = -18.0;
             double resetHeading = Math.toRadians(180.0);
             Pose2d testEnd = opmode.mecanumDrive.getPoseEstimate();
-            Pose2d startWall = new Pose2d(trajectoryRR.getSTART_WALL().vec(),trajectoryRR.getSTART_WALL().getHeading());
+            Pose2d startWall = new Pose2d(trajectoryRR.getSTART_CENTER().vec(),trajectoryRR.getSTART_CENTER().getHeading());
             Pose2d goalTaper = new Pose2d(testEnd.getX(),wallY,resetHeading);
             Pose2d startTaper = new Pose2d(startWall.getX() + 20.0,wallY,resetHeading);
 
-            Trajectory traj_home = opmode.mecanumDrive.trajectoryBuilder(testEnd,Math.toRadians(180.0))
-                    .splineToSplineHeading(goalTaper,Math.toRadians(180.0))
-                    .splineToSplineHeading(startTaper,Math.toRadians(180.0))
-                    .splineToLinearHeading(startWall,Math.toRadians(180.0))
+            traj_home = opmode.mecanumDrive.trajectoryBuilder(testEnd,Math.toRadians(180.0))
+//                    .splineToSplineHeading(goalTaper,Math.toRadians(180.0))
+//                    .splineToSplineHeading(startTaper,Math.toRadians(180.0))
+//                    .splineToLinearHeading(startWall,Math.toRadians(180.0))
+                    .lineToLinearHeading(startWall)
                     .build();
-
-            opmode.mecanumDrive.followTrajectoryAsync(traj_home);
         }
 
         @Override
         public void update() {
             super.update();
-            if(opmode.mecanumDrive.isIdle()) {
+
+            if(stateTimer.seconds() > delay && !isSetToDrive) {
+                if(delay >= 0 || opmode.primary.AOnce()) {
+                    isSetToDrive = true;
+                    opmode.mecanumDrive.followTrajectoryAsync(traj_home);
+                }
+            }
+
+            if(opmode.mecanumDrive.isIdle() && isSetToDrive) {
                 stateMachine.removeStateType(LAUNCHER);
                 nextState(DRIVE, new Stop());
             }
@@ -486,6 +508,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 nextState(LAUNCHER, new Launch_fire(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
             }
             if(arrived && stateMachine.getStateReference(LAUNCHER).isDone) {
+                RobotHardware.shoot1 = opMode.mecanumDrive.getPoseEstimate();
                 nextState(DRIVE, new B_PowershotLeftToPowershotCenter());
             }
         }
@@ -507,6 +530,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 nextState(LAUNCHER, new Launch_fire(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
             }
             if(arrived && stateMachine.getStateReference(LAUNCHER).isDone) {
+                RobotHardware.shoot2 = opMode.mecanumDrive.getPoseEstimate();
                 nextState(DRIVE, new B_PowershotCenterPowershotRight());
             }
         }
@@ -528,7 +552,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 nextState(LAUNCHER, new Launch_fire(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
             }
             if(arrived && stateMachine.getStateReference(LAUNCHER).isDone) {
-                nextState(DRIVE, new B_PowershotRightToWobbleDropoff());
+                RobotHardware.shoot3 = opMode.mecanumDrive.getPoseEstimate();
+                nextState(DRIVE, new ReturnToStart(-42.0));
             }
         }
     }
@@ -630,7 +655,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                     bool = true;
                 }
 
-                if(bool && stateTimer.seconds() > 0.75) {
+                if(bool && stateTimer.seconds() > 0.5) {
                     opMode.servoUtility.setPower(ContinuousServo.WOBBLE_LEFT, 0);
                     opMode.servoUtility.setPower(ContinuousServo.WOBBLE_RIGHT, 0);
                     nextState(OTHER, new WobblePosition(WOBBLE_UP));
