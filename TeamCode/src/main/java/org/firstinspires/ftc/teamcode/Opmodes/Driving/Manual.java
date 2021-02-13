@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.Opmodes.Driving;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -101,8 +102,23 @@ public class Manual extends RobotHardware {
         @Override
         public void update() {
             super.update();
-            opMode.drivetrainControls();
+            opMode.drivetrainStandardControls();
+            opMode.drivetrainUtilityControls();
             opMode.intakeControls();
+            if(opMode.primary.leftBumper() && opMode.primary.startOnce())
+                nextState(DRIVE, new Drive_ManualFieldCentric());
+        }
+    }
+
+    static class Drive_ManualFieldCentric extends Executive.StateBase<Manual> {
+        @Override
+        public void update() {
+            super.update();
+            opMode.drivetrainFieldCentricControls();
+            opMode.drivetrainUtilityControls();
+            opMode.intakeControls();
+            if(opMode.primary.leftBumper() && opMode.primary.startOnce())
+                nextState(DRIVE, new Drive_Manual());
         }
     }
 
@@ -119,7 +135,7 @@ public class Manual extends RobotHardware {
     End of Manual Control States
      */
 
-    void drivetrainControls() {
+    void drivetrainStandardControls() {
         mecanumDrive.setWeightedDrivePower(
                 new Pose2d(
                         -gamepad1.left_stick_y * linearSpeed * precisionMode,
@@ -127,7 +143,26 @@ public class Manual extends RobotHardware {
                         -gamepad1.right_stick_x * rotationSpeed * precisionMode
                 )
         );
+    }
 
+
+    void drivetrainFieldCentricControls() {
+        Pose2d poseEstimate = mecanumDrive.getPoseEstimate();
+        Vector2d input = new Vector2d(
+                -gamepad1.left_stick_y * linearSpeed * precisionMode,
+                -gamepad1.left_stick_x * lateralSpeed * precisionMode)
+                .rotated(-poseEstimate.getHeading());
+
+        mecanumDrive.setWeightedDrivePower(
+                new Pose2d(
+                        input.getX(),
+                        input.getY(),
+                        -gamepad1.right_stick_x * rotationSpeed * precisionMode
+                )
+        );
+    }
+
+    void drivetrainUtilityControls() {
         if (primary.YOnce()) {
             mecanumDrive.clearEstimatedPose();
         }
