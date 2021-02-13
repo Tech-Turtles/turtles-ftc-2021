@@ -3,14 +3,12 @@ package org.firstinspires.ftc.teamcode.Opmodes.Driving;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import com.qualcomm.ftccommon.LaunchActivityConstantsList;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.ColorSensor;
 import org.firstinspires.ftc.teamcode.HardwareTypes.ContinuousServo;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
-import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.AutoOpmode;
 import org.firstinspires.ftc.teamcode.Utility.*;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR_kotlin;
@@ -40,17 +38,13 @@ public class Manual extends RobotHardware {
     private final Executive.StateMachine<Manual> stateMachine;
     private TrajectoryRR_kotlin trajectoryRR;
 
+    private Pose2d saveLocation = new Pose2d();
+
     private enum WobbleStates {
         MANUAL,
         UP,
         DOWN,
         STORE
-    }
-
-    private enum DriveStates {
-        MANUAL,
-        POWERSHOT,
-        HIGHGOAL
     }
 
     public Manual() {
@@ -85,11 +79,19 @@ public class Manual extends RobotHardware {
         stateMachine.update();
         mecanumDrive.update();
         chordedControls(); // Controls for when left bumper is held down.
+        displayTelemetry();
         //drivetrainControls(); // In Drive_Manual
         //intakeControls(); // In Drive_Manual
         //armControls(); // In LaunchArm_Manual
         //launcherControls(); // In LaunchArm_Manual
-        displayTelemetry();
+
+        /*  Exit auto operation if driver inputs are used.
+        if(isDrivetrainManualInputActive() && stateMachine.getCurrentStates(DRIVE) != "Drive_Manual") {
+            stopAutoDriving();
+            stateMachine.changeState(DRIVE, new Drive_Manual());
+            stateMachine.changeState(LAUNCHER, new LaunchArm_Manual());
+        }
+        */
     }
 
     /*
@@ -110,7 +112,6 @@ public class Manual extends RobotHardware {
             super.update();
             opMode.armControls();
             opMode.launcherControls();
-
         }
     }
 
@@ -206,22 +207,43 @@ public class Manual extends RobotHardware {
     void chordedControls() {
         if(primary.leftBumper()) {
 
-            if(primary.YOnce())  // Drive to auto start position
-                stateMachine.changeState(DRIVE, new ReturnToStart());
+            if(primary.dpadDownOnce())  // Drive to auto start position
+                stateMachine.changeState(DRIVE, new Drive_ToPose(trajectoryRR.getSTART_CENTER()));
+                //stateMachine.changeState(DRIVE, new Drive_ReturnToStart());  // Redundant to Drive_ToPose
 
-            if(primary.XOnce()) { // set pose to nearest corner
+            if (primary.AOnce()) // Set pose to parked center (auto start position)
+                mecanumDrive.setPoseEstimate(trajectoryRR.getSTART_CENTER());
+
+            if (primary.dpadRightOnce()) // Goto Save Location
+                stateMachine.changeState(DRIVE, new Drive_ToPose(saveLocation));
+
+            if (primary.BOnce()) // Save Location
+                saveLocation = mecanumDrive.getPoseEstimate();
+
+            if (primary.dpadUpOnce())
+                stateMachine.changeState(DRIVE, new Drive_ToPose(trajectoryRR.getSHOOT_HIGHGOAL()));
+
+
+            if(primary.YOnce()) { // set pose to nearest corner
                 mecanumDrive.setPoseEstimate(
                         TrajectoryRR_kotlin.getNearestCornerPose2d(
                                 mecanumDrive.getPoseEstimate())
                 );
             }
 
+            if(primary.dpadLeftOnce()) {
+                // Do powershots
+            }
+
+            if(primary.XOnce()) {
+                // Nothing defined
+            }
 
         }
     }
 
     boolean isDrivetrainManualInputActive() {
-        double threshold = 0.1;
+        double threshold = 0.3;
         return (Math.abs(primary.left_stick_x) > threshold)
             || (Math.abs(primary.left_stick_y) > threshold)
             || (Math.abs(primary.right_stick_x) > threshold);
@@ -251,12 +273,18 @@ public class Manual extends RobotHardware {
         telemetry.addData("Loop time:           ", df_precise.format(period.getAveragePeriodSec()) + "s");
     }
 
+    void stopAutoDriving() {
+        mecanumDrive.cancelFollowing();
+        mecanumDrive.setDrivePower(new Pose2d());
+    }
+
+
 /*
 Auto Control States
  */
 
 
-    class ReturnToStart extends Executive.StateBase<Manual> {
+    class Drive_ReturnToStart extends Executive.StateBase<Manual> {
         Trajectory traj_home;
         @Override
         public void init(Executive.StateMachine<Manual> stateMachine) {
@@ -272,10 +300,41 @@ Auto Control States
         public void update() {
             super.update();
             if(mecanumDrive.isIdle() || isDrivetrainManualInputActive()) {
+                stopAutoDriving(); // In case still mid trajectory
                 nextState(DRIVE, new Drive_Manual());
             }
         }
     }
+
+
+
+    class Drive_ToPose extends Executive.StateBase<Manual> {
+        Trajectory trajectory;
+        Pose2d final_pose;
+
+        Drive_ToPose(Pose2d final_pose) {
+            this.final_pose = final_pose;
+        }
+
+        @Override
+        public void init(Executive.StateMachine<Manual> stateMachine) {
+            super.init(stateMachine);
+            trajectory = mecanumDrive.trajectoryBuilder(mecanumDrive.getPoseEstimate())
+                    .lineToLinearHeading(final_pose)
+                    .build();
+            mecanumDrive.followTrajectoryAsync(trajectory);
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(mecanumDrive.isIdle() || isDrivetrainManualInputActive()) {
+                stopAutoDriving(); // In case still mid trajectory
+                nextState(DRIVE, new Drive_Manual());
+            }
+        }
+    }
+
 
 
 }

@@ -220,6 +220,10 @@ public class SampleMecanumDrive extends MecanumDrive {
         waitForIdle();
     }
 
+    public void cancelFollowing() {
+        mode = Mode.IDLE;
+    }
+	
     public Pose2d getLastError() {
         switch (mode) {
             case FOLLOW_TRAJECTORY:
@@ -407,6 +411,17 @@ public class SampleMecanumDrive extends MecanumDrive {
         return imu.getAngularOrientation().firstAngle;
     }
 
+    double getBatteryVoltage(HardwareMap hardwareMap) {
+        double result = Double.POSITIVE_INFINITY;
+        for (VoltageSensor sensor : hardwareMap.voltageSensor) {
+            double voltage = sensor.getVoltage();
+            if (voltage > 0) {
+                result = Math.min(result, voltage);
+            }
+        }
+        return result;
+    }
+	
     public void clearEstimatedPose() {
         poseHistory.clear();
         setPoseEstimate(new Pose2d(0,0,0));
