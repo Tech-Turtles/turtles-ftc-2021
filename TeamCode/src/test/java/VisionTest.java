@@ -1,6 +1,9 @@
+import com.acmerobotics.roadrunner.geometry.Pose2d;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
+import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR_kotlin;
 import org.firstinspires.ftc.teamcode.Utility.Vision.Old.AveragingPipeline;
 
 import org.firstinspires.ftc.teamcode.Utility.Vision.Old.SkystoneDetector;
@@ -70,7 +73,14 @@ public class VisionTest {
         saveMatAsRGB(writePath, input);
         File outputFile = new File(writePath);
         assertThat(outputFile.exists()).isTrue();
+
+
     }
+
+    @Test
+    public void cornerTest() {
+        System.out.println(TrajectoryRR_kotlin.getNearestCornerPose2d(new Pose2d(-60.0, 82.0, Math.toRadians(-100.0))));
+}
 
     @Test
     public void colorThresholding() {

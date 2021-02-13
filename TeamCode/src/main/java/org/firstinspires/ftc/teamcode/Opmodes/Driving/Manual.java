@@ -4,8 +4,11 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
+import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.HardwareTypes.ColorSensor;
 import org.firstinspires.ftc.teamcode.HardwareTypes.ContinuousServo;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
@@ -34,6 +37,9 @@ public class Manual extends RobotHardware {
     public static double powerShotSpeed = 0.51;
     public static double wobblePower = 1.0;
     public static double manualWobblePower = 0.5;
+
+    private DistanceSensor sensorRange, sensorRangee;
+
     private WobbleStates wobbleState = WobbleStates.MANUAL;
     private boolean wobbleArrived = false;
     private final Executive.StateMachine<Manual> stateMachine;
@@ -56,7 +62,6 @@ public class Manual extends RobotHardware {
     @Override
     public void init() {
         super.init();
-        trajectoryRR = new TrajectoryRR_kotlin(this.mecanumDrive);
         stateMachine.changeState(DRIVE, new Drive_Manual());
         stateMachine.changeState(LAUNCHER, new LaunchArm_Manual());
         stateMachine.init();
@@ -72,6 +77,11 @@ public class Manual extends RobotHardware {
         super.start();
         mecanumDrive = new SampleMecanumDrive(hardwareMap);
         mecanumDrive.setPoseEstimate(lastPosition == null ? new TrajectoryRR_kotlin(mecanumDrive).getSTART_CENTER() : lastPosition);
+        trajectoryRR = new TrajectoryRR_kotlin(this.mecanumDrive);
+        sensorRange = hardwareMap.get(DistanceSensor.class, "leftDistance");
+        sensorRangee = hardwareMap.get(DistanceSensor.class, "backDistance");
+
+
     }
 
     @Override
@@ -81,7 +91,15 @@ public class Manual extends RobotHardware {
         mecanumDrive.update();
         chordedControls(); // Controls for when left bumper is held down.
         displayTelemetry();
-        //drivetrainControls(); // In Drive_Manual
+
+        // generic DistanceSensor methods.
+        telemetry.addLine("leftDistance");
+        telemetry.addData("range", String.format("%.01f in", sensorRange.getDistance(DistanceUnit.INCH)));
+
+        telemetry.addLine("backDistance");
+        telemetry.addData("range", String.format("%.01f in", sensorRangee.getDistance(DistanceUnit.INCH)));
+
+            //drivetrainControls(); // In Drive_Manual
         //intakeControls(); // In Drive_Manual
         //armControls(); // In LaunchArm_Manual
         //launcherControls(); // In LaunchArm_Manual
@@ -145,7 +163,6 @@ public class Manual extends RobotHardware {
         );
     }
 
-
     void drivetrainFieldCentricControls() {
         Pose2d poseEstimate = mecanumDrive.getPoseEstimate();
         Vector2d input = new Vector2d(
@@ -163,16 +180,17 @@ public class Manual extends RobotHardware {
     }
 
     void drivetrainUtilityControls() {
-        if (primary.YOnce()) {
-            mecanumDrive.clearEstimatedPose();
-        }
+        if(!primary.leftBumper()) {
+            if (primary.YOnce()) {
+                mecanumDrive.clearEstimatedPose();
+            }
 
-        if (primary.AOnce() && !primary.start()) {
-            rotationSpeed = precisionMode == 1.0 ? 0.75 : 1.0;
-            precisionMode = precisionMode == 1.0 ? precisionPercentage : 1.0;
+            if (primary.AOnce() && !primary.start()) {
+                rotationSpeed = precisionMode == 1.0 ? 0.75 : 1.0;
+                precisionMode = precisionMode == 1.0 ? precisionPercentage : 1.0;
+            }
         }
     }
-
 
     void intakeControls() {
         if (primary.right_trigger > deadzone) {
@@ -212,7 +230,6 @@ public class Manual extends RobotHardware {
 
     }
 
-
     void launcherControls() {
         if (secondary.dpadUpOnce()) {
             launchspeed = Math.min(launchspeed + 0.01, 1.0);
@@ -244,7 +261,6 @@ public class Manual extends RobotHardware {
 
             if(primary.dpadDownOnce())  // Drive to auto start position
                 stateMachine.changeState(DRIVE, new Drive_ToPose(trajectoryRR.getSTART_CENTER()));
-                //stateMachine.changeState(DRIVE, new Drive_ReturnToStart());  // Redundant to Drive_ToPose
 
             if (primary.AOnce()) // Set pose to parked center (auto start position)
                 mecanumDrive.setPoseEstimate(trajectoryRR.getSTART_CENTER());
@@ -313,35 +329,9 @@ public class Manual extends RobotHardware {
         mecanumDrive.setDrivePower(new Pose2d());
     }
 
-
-/*
-Auto Control States
- */
-
-
-    class Drive_ReturnToStart extends Executive.StateBase<Manual> {
-        Trajectory traj_home;
-        @Override
-        public void init(Executive.StateMachine<Manual> stateMachine) {
-            super.init(stateMachine);
-            Pose2d startWall = new Pose2d(trajectoryRR.getSTART_CENTER().vec(),trajectoryRR.getSTART_CENTER().getHeading());
-            traj_home = mecanumDrive.trajectoryBuilder(mecanumDrive.getPoseEstimate(),Math.toRadians(180.0))
-                    .lineToLinearHeading(startWall)
-                    .build();
-            mecanumDrive.followTrajectoryAsync(traj_home);
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            if(mecanumDrive.isIdle() || isDrivetrainManualInputActive()) {
-                stopAutoDriving(); // In case still mid trajectory
-                nextState(DRIVE, new Drive_Manual());
-            }
-        }
-    }
-
-
+    /*
+    Auto Control States
+     */
 
     class Drive_ToPose extends Executive.StateBase<Manual> {
         Trajectory trajectory;
@@ -369,7 +359,4 @@ Auto Control States
             }
         }
     }
-
-
-
 }

@@ -9,9 +9,11 @@
             <Servo name="hopper" port="0" />
             <ContinuousRotationServo name="wobble_left" port="1" />
             <ContinuousRotationServo name="wobble_right" port="2" />
-            <RevColorSensorV3 name="colorSensor" port="0" bus="1" />
             <RevTouchSensor name="wobbleTouch" port="0" />
             <LynxEmbeddedIMU name="IMU_1" port="0" bus="0" />
+            <REV_VL53L0X_RANGE_SENSOR name="leftDistance" port="1" bus="0" />
+            <RevColorSensorV3 name="colorSensor" port="0" bus="1" />
+            <REV_VL53L0X_RANGE_SENSOR name="backDistance" port="0" bus="3" />
         </LynxModule>
         <LynxModule name="Expansion Hub 2" port="2">
             <Motor name="launcher" port="0" />

@@ -11,6 +11,9 @@ import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount.*
 import kotlin.collections.ArrayList
+import kotlin.math.abs
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 
 @Config
@@ -57,7 +60,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     var START_CENTER = Pose2d(-62.0, -18.0, Math.toRadians(180.0))
 
 
-    var SHOOT_HIGHGOAL = Pose2d(-2.0,  -42.0,Math.toRadians(180.0 - 0.0))
+    var SHOOT_HIGHGOAL = Pose2d(-2.0,  -42.0 + 2.0,Math.toRadians(180.0 - 0.0))
     var POWERSHOT_LEFT  = Pose2d(-4.0,  -6.5,Math.toRadians(180.0 - 0.0))
     var POWERSHOT_CENTER = POWERSHOT_LEFT.plus(Pose2d(0.0, -1.0 * spacing_powershot - 1.5, 0.0))
     var POWERSHOT_RIGHT = POWERSHOT_LEFT.plus(Pose2d(0.0,-2.0 * spacing_powershot - 1.5, 0.0))
@@ -528,10 +531,10 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
         fun getNearestCornerPose2d(pose: Pose2d): Pose2d {
             val flipOffset = Pose2d(0.75,0.0,180.0.toRadians)
             val corners = ArrayList<Pose2d>()
-            corners.add(Pose2d(-61.5,-61.0, (0.0).toRadians))
-            corners.add(Pose2d(60.75,-61.0, (0.0).toRadians))
-            corners.add(Pose2d(-61.5,+61.0, (0.0).toRadians))
-            corners.add(Pose2d(60.75,+61.0, (0.0).toRadians))
+            corners.add(Pose2d(-61.5, -61.0, (0.0).toRadians))
+            corners.add(Pose2d( 60.75, -61.0, (0.0).toRadians))
+            corners.add(Pose2d(-61.5, 61.0, (0.0).toRadians))
+            corners.add(Pose2d( 60.75, 61.0, (0.0).toRadians))
 
             // Which direction, fwd 0.0 or reverse 180.0?
             val isHeadingFwd = Math.abs(0.0.toRadians - pose.heading) < 90.0.toRadians
@@ -540,10 +543,10 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
                 else flipOffset
 
             // Which point is the closest?
-            var closestCorner = corners.get(0).plus(orientationOffset)
+            var closestCorner = corners[0].plus(orientationOffset)
             var closestDistance = getDistance(pose, closestCorner)
             for(corner in corners) {
-                var newCorner = corner;
+                var newCorner = corner
                 var newDistance = getDistance(pose, newCorner)
                 if(newDistance < closestDistance) {
                     closestCorner = newCorner.plus(orientationOffset)
@@ -554,9 +557,9 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
         }
 
         fun getDistance(pose1: Pose2d, pose2: Pose2d): Double {
-            val deltaX = Math.abs(pose1.x - pose2.x)
-            val deltaY = Math.abs(pose1.y - pose2.y)
-            return Math.sqrt( Math.pow(deltaX,2.0) + Math.pow(deltaY,2.0))
+            val deltaX = abs(pose1.x - pose2.x)
+            val deltaY = abs(pose1.y - pose2.y)
+            return sqrt(deltaX.pow(2.0) + deltaY.pow(2.0))
         }
     }
 
