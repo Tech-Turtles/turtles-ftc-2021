@@ -40,4 +40,12 @@ public class Configuration {
                 DRIVE_WHEEL_DIAMETER_INCHES, DRIVE_WHEEL_STEPS_PER_ROT,
                 DRIVE_WHEEL_LATERAL_RATIO);
     }
+
+    /*
+        PowerSpeed is meant to be the speed given to the motor, from [-1,1]
+        which the controller PID interprets as a objective rate in ticks per second.
+     */
+    public static int getLaunchTicksPerSecondFromPowerSpeed(double powerSpeed) {
+        return (int) (LAUNCHER_THEORETICAL_MAX * powerSpeed);
+    }
 }

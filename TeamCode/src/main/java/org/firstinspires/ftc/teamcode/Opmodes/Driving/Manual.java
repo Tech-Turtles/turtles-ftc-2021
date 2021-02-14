@@ -7,17 +7,23 @@ import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.HardwareTypes.ColorSensor;
 import org.firstinspires.ftc.teamcode.HardwareTypes.ContinuousServo;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
+import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.AutoOpmode;
+import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.TrajectoryRR;
 import org.firstinspires.ftc.teamcode.Utility.*;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive;
+import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR_kotlin;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 
+import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.powershotSpeed;
+import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.servoDelay;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.*;
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.*;
 
@@ -284,6 +290,13 @@ public class Manual extends RobotHardware {
 
             if(primary.dpadLeftOnce()) {
                 // Do powershots
+                // Hopefully no problem is created from constructing all state objects
+                // before using them.
+                stateMachine.changeState(DRIVE,
+                        new Drive_moveAndShoot(trajectoryRR.getPOWERSHOT_RIGHT(),
+                        new Drive_moveAndShoot(trajectoryRR.getPOWERSHOT_CENTER(),
+                        new Drive_moveAndShoot(trajectoryRR.getPOWERSHOT_LEFT(),
+                        new Drive_Manual_AllStates()))));
             }
 
             if(primary.XOnce()) {
@@ -359,4 +372,119 @@ public class Manual extends RobotHardware {
             }
         }
     }
+
+
+    class Drive_moveAndShoot extends Executive.StateBase<Manual> {
+        boolean arrived = false;
+        Trajectory trajectory;
+        Pose2d final_pose;
+        Executive.StateBase<Manual> nextDriveState;
+
+        Drive_moveAndShoot(Pose2d final_pose, Executive.StateBase<Manual> nextDriveState) {
+            this.final_pose = final_pose;
+            this.nextDriveState = nextDriveState;
+        }
+
+        @Override
+        public void init(Executive.StateMachine<Manual> stateMachine) {
+            super.init(stateMachine);
+            trajectory = mecanumDrive.trajectoryBuilder(mecanumDrive.getPoseEstimate())
+                    .lineToLinearHeading(final_pose)
+                    .build();
+            mecanumDrive.followTrajectoryAsync(trajectory);
+            nextState(LAUNCHER, new Launch_windUp(powershotSpeed));
+        }
+
+        @Override
+        public void update() {
+            super.update();
+
+            if(isDrivetrainManualInputActive()) { // Return manual control
+                stopAutoDriving();
+                stateMachine.changeState(DRIVE, new Drive_Manual());
+                stateMachine.changeState(LAUNCHER, new LaunchArm_Manual());
+            }
+            if(opMode.mecanumDrive.isIdle() && !arrived) {
+                arrived = true;
+                nextState(LAUNCHER, new Launch_fire(powershotSpeed));
+            }
+            if(arrived && stateMachine.getStateReference(LAUNCHER).isDone) {
+                nextState(DRIVE, nextDriveState);
+            }
+        }
+    }
+
+
+    // Restores all states to driver controlled
+    class Drive_Manual_AllStates extends Executive.StateBase<Manual> {
+        @Override
+        public void update() {
+            super.update();
+            nextState(LAUNCHER, new LaunchArm_Manual());
+            nextState(DRIVE, new Drive_Manual());
+        }
+    }
+
+
+    /*
+     *    launchSpeed (percent) is an argument of the
+     *    constructor, so this mode works with powershots and high goal shots.
+     *    However, the feedback that shows we're ready to shoot is to support moving powershots.
+     */
+    static class Launch_windUp extends Executive.StateBase<Manual> {
+        double launchSpeed;
+        double launchVelocity_tps; // encoder ticks per second
+
+        Launch_windUp(double launchSpeed) {
+            this.launchSpeed = launchSpeed;
+            this.launchVelocity_tps = (0.95 * Configuration.getLaunchTicksPerSecondFromPowerSpeed(launchSpeed));
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            // Set launch speed and servo position.
+            // If velocity is high enough, and servoDelay elapsed, then isDone = true
+            opMode.motorUtility.setPower(Motors.LAUNCHER, this.launchSpeed);
+            opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
+            isDone = opMode.motorUtility.getVelocity(Motors.LAUNCHER) > this.launchVelocity_tps && stateTimer.seconds() > servoDelay;
+        }
+    }
+
+    /*
+     * Launch_fire
+     */
+    class Launch_fire extends Executive.StateBase<Manual> {
+        double launchSpeed;
+        double launchVelocity_tps; // encoder ticks per second
+        boolean servoPushed = false;
+        ElapsedTime servoTimer = new ElapsedTime();
+
+        Launch_fire(double launchSpeed) {
+            this.launchSpeed = launchSpeed;
+            this.launchVelocity_tps = (0.95 * Configuration.getLaunchTicksPerSecondFromPowerSpeed(launchSpeed));
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            opMode.motorUtility.setPower(Motors.LAUNCHER, this.launchSpeed);
+            if (!(servoPushed)) {
+                if (opMode.motorUtility.getVelocity(Motors.LAUNCHER) > this.launchVelocity_tps) {
+                    opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_PUSH_POS);
+                    servoPushed = true;
+                    servoTimer.reset();
+                }
+            } else {
+                if (servoTimer.seconds() > servoDelay) {
+                    //isDone = true; // This indicates we've shot, but not that we're ready to shoot.
+                    nextState(LAUNCHER, new Launch_windUp(this.launchSpeed));
+                }
+            }
+        }
+    }
+
+
+
+
 }

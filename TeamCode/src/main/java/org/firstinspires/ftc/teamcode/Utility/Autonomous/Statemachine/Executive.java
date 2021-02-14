@@ -174,7 +174,7 @@ public class Executive {
         protected ElapsedTime stateTimer; // Time how long state has been active
         ElapsedTime statePeriod; // Time how long since state has been executed.
         double lastStatePeriod = -1;
-        boolean isDone = false;
+        public boolean isDone = false;
 
         private boolean initialized = false;
         private boolean deleteRequested = false;

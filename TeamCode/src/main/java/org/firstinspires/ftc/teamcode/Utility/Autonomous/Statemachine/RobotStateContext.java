@@ -443,7 +443,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.update();
             switch (powershotState) {
                 case WIND_UP:
-                    nextState(LAUNCHER, new Launch_windUp(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
+                    nextState(LAUNCHER, new Launch_windUp(powershotSpeed));
                     if (pose.getX() > -12.0) {
                         powershotState = SHOOT1;
                     }
@@ -452,7 +452,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                     if (pose.getY() < powershotYPosition.get(SHOOT1)) {
                         opmode.telemetry.addData("Launcher Ready:",
                                 stateMachine.getStateReference(LAUNCHER).isDone);
-                        nextState(LAUNCHER, new Launch_fire(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
+                        nextState(LAUNCHER, new Launch_fire(powershotSpeed));
                         powershotState = SHOOT2;
                     }
                     break;
@@ -460,7 +460,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                     if (pose.getY() < powershotYPosition.get(SHOOT2)) {
                         opmode.telemetry.addData("Launcher Ready:",
                                 stateMachine.getStateReference(LAUNCHER).isDone);
-                        nextState(LAUNCHER, new Launch_fire(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
+                        nextState(LAUNCHER, new Launch_fire(powershotSpeed));
                         powershotState = SHOOT3;
                     }
                     break;
@@ -468,7 +468,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                     if (pose.getY() < powershotYPosition.get(SHOOT3)) {
                         opmode.telemetry.addData("Launcher Ready:",
                                 stateMachine.getStateReference(LAUNCHER).isDone);
-                        nextState(LAUNCHER, new Launch_fire(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
+                        nextState(LAUNCHER, new Launch_fire(powershotSpeed));
                         powershotState = DROP_GOAL;
                     }
                     break;
@@ -500,7 +500,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
             opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTraj_parkCenterToPowershotLeft());
-            nextState(LAUNCHER, new Launch_windUp(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
+            nextState(LAUNCHER, new Launch_windUp(powershotSpeed));
         }
 
         @Override
@@ -508,7 +508,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.update();
             if(opmode.mecanumDrive.isIdle() && !arrived) {
                 arrived = true;
-                nextState(LAUNCHER, new Launch_fire(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
+                nextState(LAUNCHER, new Launch_fire(powershotSpeed));
             }
             if(arrived && stateMachine.getStateReference(LAUNCHER).isDone) {
                 RobotHardware.shoot1 = opMode.mecanumDrive.getPoseEstimate();
@@ -530,7 +530,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.update();
             if(opmode.mecanumDrive.isIdle() && !arrived) {
                 arrived = true;
-                nextState(LAUNCHER, new Launch_fire(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
+                nextState(LAUNCHER, new Launch_fire(powershotSpeed));
             }
             if(arrived && stateMachine.getStateReference(LAUNCHER).isDone) {
                 RobotHardware.shoot2 = opMode.mecanumDrive.getPoseEstimate();
@@ -552,7 +552,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.update();
             if(opmode.mecanumDrive.isIdle() && !arrived) {
                 arrived = true;
-                nextState(LAUNCHER, new Launch_fire(powershotSpeed, (powershotSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95)));
+                nextState(LAUNCHER, new Launch_fire(powershotSpeed));
             }
             if(arrived && stateMachine.getStateReference(LAUNCHER).isDone) {
                 RobotHardware.shoot3 = opMode.mecanumDrive.getPoseEstimate();
@@ -965,9 +965,9 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         double launchSpeed;
         double launchVelocity_tps; // encoder ticks per second
 
-        Launch_windUp(double launchSpeed, double launchVelocity_tps) {
+        Launch_windUp(double launchSpeed) {
             this.launchSpeed = launchSpeed;
-            this.launchVelocity_tps = launchVelocity_tps;
+            this.launchVelocity_tps = (0.95 * Configuration.getLaunchTicksPerSecondFromPowerSpeed(launchSpeed));
         }
 
         @Override
@@ -990,9 +990,9 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         boolean servoPushed = false;
         ElapsedTime servoTimer = new ElapsedTime();
 
-        Launch_fire(double launchSpeed, double launchVelocity_tps) {
+        Launch_fire(double launchSpeed) {
             this.launchSpeed = launchSpeed;
-            this.launchVelocity_tps = launchVelocity_tps;
+            this.launchVelocity_tps = (0.95 * Configuration.getLaunchTicksPerSecondFromPowerSpeed(launchSpeed));
         }
 
         @Override
@@ -1008,7 +1008,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             } else {
                 if (servoTimer.seconds() > servoDelay) {
                     //isDone = true; // This indicates we've shot, but not that we're ready to shoot.
-                    nextState(LAUNCHER, new Launch_windUp(this.launchSpeed, this.launchVelocity_tps));
+                    nextState(LAUNCHER, new Launch_windUp(this.launchSpeed));
                 }
             }
         }
