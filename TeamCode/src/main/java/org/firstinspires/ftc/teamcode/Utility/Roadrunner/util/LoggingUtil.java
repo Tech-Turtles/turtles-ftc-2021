@@ -1,8 +1,18 @@
 package org.firstinspires.ftc.teamcode.Utility.Roadrunner.util;
 
+import com.opencsv.CSVWriter;
+import com.opencsv.bean.HeaderColumnNameMappingStrategy;
+import com.opencsv.bean.StatefulBeanToCsv;
+import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import com.opencsv.bean.comparator.LiteralComparator;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
+
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -56,5 +66,29 @@ public class LoggingUtil {
         pruneLogsIfNecessary();
 
         return new File(ROAD_RUNNER_FOLDER, name);
+    }
+
+
+    public static void saveTelemetryLogListToFile(File file, List<TelemetryLog> telemetryLogs) {
+        // Create FileWriter from File object
+        try {
+            FileWriter fw = new FileWriter(file);
+            HeaderColumnNameMappingStrategy<TelemetryLog> strategy = new HeaderColumnNameMappingStrategy<>();
+            strategy.setType(TelemetryLog.class);
+            strategy.setColumnOrderOnWrite(new LiteralComparator<>(TelemetryLog.fieldOrder));
+
+            StatefulBeanToCsv sbc = new StatefulBeanToCsvBuilder(fw)
+                    .withSeparator(CSVWriter.DEFAULT_SEPARATOR)
+                    .withMappingStrategy(strategy)
+                    .build();
+            sbc.write(telemetryLogs);
+            fw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (CsvRequiredFieldEmptyException e) {
+            e.printStackTrace();
+        } catch (CsvDataTypeMismatchException e) {
+            e.printStackTrace();
+        }
     }
 }

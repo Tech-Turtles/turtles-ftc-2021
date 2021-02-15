@@ -4,6 +4,13 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.*;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
+import org.firstinspires.ftc.teamcode.Utility.Roadrunner.util.LoggingUtil;
+import org.firstinspires.ftc.teamcode.Utility.Roadrunner.util.TelemetryLog;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.List;
 
 /**
  * @author Christian
@@ -12,10 +19,13 @@ import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
 @TeleOp(name="Diagnostic", group="C")
 public class Diagnostic extends Manual {
 
+    List<TelemetryLog> telemetryLogList = new ArrayList<>();
+    EnumMap<Motors,Integer> motorEncoderMap = new EnumMap<Motors, Integer>(Motors.class);
+
     @Override
     public void init() {
         super.init();
-        imuUtil = new IMUUtilities(this, IMU.IMU1.getName(), IMUUtilities.ImuMode.SLOW_ALL_MEASUREMENTS);
+        imuUtil = new IMUUtilities(this, IMU.IMU1.getName(), IMUUtilities.ImuMode.FAST_HEADING_ONLY);
         telemetry.addLine("\n----Diagnostic Initialized----");
     }
 
@@ -32,6 +42,13 @@ public class Diagnostic extends Manual {
     @Override
     public void loop() {
         super.loop();
+
+
+        // Add latest position to the log
+        for (Motors motor : Motors.values()) {
+            motorEncoderMap.put(motor, motorUtility.getEncoderValue(motor));
+        }
+        telemetryLogList.add(new TelemetryLog(getTime(),mecanumDrive.getPoseEstimate(), motorEncoderMap));
 
         for (MotorTypes type : MotorTypes.values()) {
             telemetry.addLine(type.name());
@@ -53,4 +70,12 @@ public class Diagnostic extends Manual {
             imuUtil.displayTelemetry();
         }
     }
+
+    @Override
+    public void stop() {
+        super.stop();
+        File logFile = LoggingUtil.getLogFile("debugLogFile.csv");
+        LoggingUtil.saveTelemetryLogListToFile(logFile, telemetryLogList);
+    }
+
 }

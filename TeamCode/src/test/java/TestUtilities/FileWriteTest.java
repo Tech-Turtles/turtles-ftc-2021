@@ -123,8 +123,15 @@ public class FileWriteTest {
                     put(Motors.BACK_LEFT,100);
                 }});
 
-        List<TelemetryLog> list = new ArrayList();
-        list.add(testLog);
+        List<TelemetryLog> telemetryLogList = new ArrayList();
+        telemetryLogList.add(testLog);
+        telemetryLogList.add(new TelemetryLog(11.5, new Pose2d(11, 18, Math.toRadians(90.0)),
+                new EnumMap<Motors, Integer>(Motors.class){{
+                    put(Motors.FRONT_RIGHT,1500);
+                    put(Motors.FRONT_LEFT,1000);
+                    put(Motors.BACK_RIGHT,2000);
+                    put(Motors.BACK_LEFT,1000);
+                }}));
 
         // Path and file creation
         String writePath = "./TestData/openCV_output/skystone/" + "test.csv";
@@ -134,23 +141,19 @@ public class FileWriteTest {
             directory.mkdir();
         }
 
-        String[] headingOrder = {"TIME", "POSE"};
         // Create FileWriter from File object
         try {
             FileWriter fw = new FileWriter(file);
             HeaderColumnNameMappingStrategy<TelemetryLog> strategy = new HeaderColumnNameMappingStrategy<>();
             strategy.setType(TelemetryLog.class);
-            strategy.setColumnOrderOnWrite(new LiteralComparator<>(headingOrder));
+            strategy.setColumnOrderOnWrite(new LiteralComparator<>(TelemetryLog.fieldOrder));
 
             StatefulBeanToCsv sbc = new StatefulBeanToCsvBuilder(fw)
                     .withSeparator(CSVWriter.DEFAULT_SEPARATOR)
                     .withMappingStrategy(strategy)
                     .build();
-
-            sbc.write(list);
-//            fw.write(csvString);
+            sbc.write(telemetryLogList);
             fw.close();
-
         } catch (IOException e) {
             e.printStackTrace();
         } catch (CsvRequiredFieldEmptyException e) {
