@@ -300,7 +300,10 @@ public class Manual extends RobotHardware {
             }
 
             if(primary.XOnce()) {
-                // Nothing defined
+                // Drive test to show angle error in start position
+                stateMachine.changeState(DRIVE,
+                        new Drive_ToPose(trajectoryRR.getSTART_CENTER()
+                        .plus(new Pose2d(96,0,0))));
             }
 
         }

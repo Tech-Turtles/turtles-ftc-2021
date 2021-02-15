@@ -57,7 +57,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     // True X is -60.75, not -62.0
     //TODO Change start position and update old positions with the new value
     val START_WALL = Pose2d(-62.0, -42.0, Math.toRadians(180.0))
-    var START_CENTER = Pose2d(-62.0, -18.0, Math.toRadians(180.0))
+    var START_CENTER = Pose2d(-62.0, -18.0, Math.toRadians(180.0+0.0))
 
 
     var SHOOT_HIGHGOAL = Pose2d(-2.0,  -42.0 + 2.0,Math.toRadians(180.0 - 0.0))
