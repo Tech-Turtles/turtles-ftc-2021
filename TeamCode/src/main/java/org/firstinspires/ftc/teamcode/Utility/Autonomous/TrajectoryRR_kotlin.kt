@@ -173,10 +173,10 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
 
 
     init {
-        velocityConstraint = getMinVelocityConstraint(DriveConstants.MAX_ANG_VEL, DriveConstants.MAX_VEL, DriveConstants.TRACK_WIDTH)
+        velocityConstraint = getMinVelocityConstraint(DriveConstants.MAX_VEL)
         accelerationConstraint = getMinAccelerationConstraint(DriveConstants.MAX_ACCEL)
 
-        slowVelocityConstraint = getMinVelocityConstraint(DriveConstants.MAX_ANG_VEL, slowVelocity, DriveConstants.TRACK_WIDTH)
+        slowVelocityConstraint = getMinVelocityConstraint(slowVelocity)
         slowAccelerationConstraint = getMinAccelerationConstraint(slowAcceleration)
         buildTrajectories()
         setZone(ZERO)
@@ -563,10 +563,10 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
         }
     }
 
-    fun getMinVelocityConstraint(maxAngle: Double, MaxVelocity: Double, TrackWidth: Double): MinVelocityConstraint {
+    fun getMinVelocityConstraint(MaxVelocity: Double): MinVelocityConstraint {
         return MinVelocityConstraint(listOf(
-                AngularVelocityConstraint(maxAngle),
-                MecanumVelocityConstraint(MaxVelocity, TrackWidth)
+                AngularVelocityConstraint(DriveConstants.MAX_ANG_VEL),
+                MecanumVelocityConstraint(MaxVelocity, DriveConstants.TRACK_WIDTH)
         ))
     }
 
