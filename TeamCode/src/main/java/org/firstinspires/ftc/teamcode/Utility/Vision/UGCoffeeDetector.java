@@ -14,8 +14,6 @@ import org.openftc.easyopencv.OpenCvInternalCamera;
 public class UGCoffeeDetector {
     private OpenCvCamera camera;
     private boolean isUsingWebcam;
-    private boolean debug;
-    private Telemetry telemetry;
     private String webcamName;
     private HardwareMap hardwareMap;
     private UGContourRingPipeline pipeline;
@@ -26,12 +24,10 @@ public class UGCoffeeDetector {
         hardwareMap = hMap;
     }
 
-    public UGCoffeeDetector(HardwareMap hMap, String webcamName, Telemetry telemetry, boolean debug) {
+    public UGCoffeeDetector(HardwareMap hMap, String webcamName) {
         hardwareMap = hMap;
         isUsingWebcam = true;
         this.webcamName = webcamName;
-        this.telemetry = telemetry;
-        this.debug = debug;
     }
 
     public void init() {
@@ -54,8 +50,6 @@ public class UGCoffeeDetector {
             return pipeline.getHeight();
         } catch (NullPointerException e) {
             Log.w("Vision Error", "NullPointerException on the vision pipeline");
-            if(telemetry != null)
-                telemetry.addData("Vision Error: ", e.getMessage());
             return  RingDetectionAmount.ZERO;
         }
     }

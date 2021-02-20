@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.Utility;
 import android.util.Log;
 
 import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
@@ -27,7 +27,6 @@ import java.text.DecimalFormat;
 import java.util.HashMap;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.*;
-import org.firstinspires.ftc.teamcode.Menu.InteractiveInitialization;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
@@ -39,10 +38,10 @@ import org.firstinspires.ftc.teamcode.Utility.Vision.UGCoffeeDetector;
  */
 public class RobotHardware extends OpMode {
 
-    private static final HashMap<Motors, DcMotorEx> motors = new HashMap<>();
-    private static final HashMap<Servos, Servo> servos = new HashMap<>();
-    private static final HashMap<ContinuousServo, CRServo> crServos = new HashMap<>();
-    private static final HashMap<ColorSensor, RevColorSensorV3> colorSensors = new HashMap<>();
+    private final HashMap<Motors, DcMotorEx> motors = new HashMap<>();
+    private final HashMap<Servos, Servo> servos = new HashMap<>();
+    private final HashMap<ContinuousServo, CRServo> crServos = new HashMap<>();
+    private final HashMap<ColorSensor, RevColorSensorV3> colorSensors = new HashMap<>();
 
     public final MotorUtility motorUtility = new MotorUtility();
     public final ServoUtility servoUtility = new ServoUtility();
@@ -52,45 +51,34 @@ public class RobotHardware extends OpMode {
 
     public IMUUtilities imuUtil;
 
-    public InteractiveInitialization initMenu;
-
-    protected LynxModule expansionHub1;
-    protected LynxModule expansionHub2;
+    protected LynxModule expansionHub1, expansionHub2;
 
     public final ElapsedTimer period = new ElapsedTimer();
 
     public Controller primary, secondary;
 
-    public MecanumNavigation mecanumNavigation;
-    public AutoDrive autoDrive;
-
     public UGCoffeeDetector ringDetector;
-
     public SampleMecanumDrive mecanumDrive;
+
+    private FtcDashboard dashboard;
+    public TelemetryPacket packet;
 
     public static Pose2d lastPosition = new Pose2d(0,0,0);
     public static int lastWobblePosition = 0;
-
 
     public class MotorUtility {
 
         private DcMotorEx m;
 
-        /**
-         * Do not make this function public.
-         * If the motor is null, any function run on it will cause a fatal error.
-         */
-        private DcMotorEx getMotor(Motors motor) {
+        private void getMotor(Motors motor) {
             m = motors.get(motor);
-            if (m == null)
-                telemetry.addData("Motor Missing", motor.name());
-            return m;
+            if (m == null && packet != null)
+                packet.put("Motor Missing", motor.name());
         }
 
         public double getPower(Motors motor) {
             getMotor(motor);
-            if (m == null)
-                return 0;
+            if (m == null) return 0;
             return m.getPower();
         }
 
@@ -134,7 +122,11 @@ public class RobotHardware extends OpMode {
         }
 
         public void setPIDFCoefficients(DcMotor.RunMode runmode, PIDFCoefficients pidfCoefficients, Motors... motors) {
-
+            for(Motors motor : motors) {
+                getMotor(motor);
+                if(m == null) continue;
+                m.setPIDFCoefficients(runmode, pidfCoefficients);
+            }
         }
 
         public void setTypeMotorsRunmode(MotorTypes type, DcMotor.RunMode runMode) {
@@ -269,16 +261,16 @@ public class RobotHardware extends OpMode {
 
         private Servo getServo(Servos servo) {
             s = servos.get(servo);
-            if (s == null) {
-                telemetry.addData("Servo Missing", servo.name());
+            if (s == null && packet != null) {
+                packet.put("Servo Missing", servo.name());
             }
             return s;
         }
 
         private CRServo getContinuousServo(ContinuousServo servo) {
             cr = crServos.get(servo);
-            if (cr == null) {
-                telemetry.addData("CRServo Missing", servo.name());
+            if (cr == null && packet != null) {
+                packet.put("CRServo Missing", servo.name());
             }
             return cr;
         }
@@ -326,8 +318,8 @@ public class RobotHardware extends OpMode {
 
     public RevColorSensorV3 getColorSensor(ColorSensor colorSensor) {
         RevColorSensorV3 revColorSensorV3 = colorSensors.get(colorSensor);
-        if(revColorSensorV3 == null)
-            telemetry.addData("Sensor Missing", colorSensor.name());
+        if(revColorSensorV3 == null && packet != null)
+            packet.put("Sensor Missing", colorSensor.name());
         return revColorSensorV3;
     }
 
@@ -336,8 +328,8 @@ public class RobotHardware extends OpMode {
         return ((DistanceSensor) colorSensor).getDistance(DistanceUnit.INCH);
     }
 
-    public void loadVision(boolean debug) {
-        ringDetector = new UGCoffeeDetector(hardwareMap, Webcam.WEBCAM_1.getName(), telemetry, debug);
+    public void loadVision() {
+        ringDetector = new UGCoffeeDetector(hardwareMap, Webcam.WEBCAM_1.getName());
         ringDetector.init();
     }
 
@@ -346,20 +338,9 @@ public class RobotHardware extends OpMode {
             expansionHub1.clearBulkCache();
             expansionHub2.clearBulkCache();
         } catch (Exception e) {
-            telemetry.addLine("Error: " + e.getMessage());
+            if(packet != null)
+                packet.put("Error: ", e.getMessage());
         }
-    }
-
-    /**
-     * Updates the mecanumNavigation heading from the imu heading.
-     * This function forces the IMU to refresh immediately.
-     */
-    public void updateMecanumHeadingFromGyroNow(IMUUtilities imuUtil, MecanumNavigation mecanumNavigation) {
-        if(imuUtil == null || mecanumNavigation == null) return;
-        imuUtil.updateNow();
-        MecanumNavigation.Navigation2D currentPosition = mecanumNavigation.getCurrentPosition();
-        currentPosition.theta = Math.toRadians(imuUtil.getCompensatedHeading());
-        mecanumNavigation.setCurrentPosition(currentPosition);
     }
 
     public double getTime() {
@@ -368,8 +349,11 @@ public class RobotHardware extends OpMode {
 
     @Override
     public void init() {
-        telemetry.setDisplayFormat(Telemetry.DisplayFormat.CLASSIC);
-        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+        dashboard = FtcDashboard.getInstance();
+        dashboard.setTelemetryTransmissionInterval(25);
+
+        telemetry.setDisplayFormat(Telemetry.DisplayFormat.HTML);
+        packet = new TelemetryPacket();
 
         try {
             expansionHub1 = hardwareMap.get(LynxModule.class, ExpansionHubs.HUB1.getHub());
@@ -378,7 +362,8 @@ public class RobotHardware extends OpMode {
             expansionHub1.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
             expansionHub2.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
         } catch (IllegalArgumentException | NullPointerException e) {
-            telemetry.addLine("Error: " + e.getMessage());
+            if(packet != null)
+                packet.put("Error: ", e.getMessage());
         }
         clearHubCache();
 
@@ -413,17 +398,21 @@ public class RobotHardware extends OpMode {
             } catch (IllegalArgumentException ignore) {}
         }
 
-//        initMenu = new InteractiveInitialization(this);
         primary = new Controller(gamepad1);
         secondary = new Controller(gamepad2);
         motorUtility.stopAllMotors();
+        if(packet != null)
+            dashboard.sendTelemetryPacket(packet);
         period.reset();
     }
 
     @Override
     public void init_loop() {
+        if(packet != null) {
+            dashboard.sendTelemetryPacket(packet);
+            packet = new TelemetryPacket();
+        }
         clearHubCache();
-//        initMenu.loop();
         period.updatePeriodTime();
         primary.update();
         secondary.update();
@@ -431,6 +420,10 @@ public class RobotHardware extends OpMode {
 
     @Override
     public void start() {
+        if(packet != null) {
+            dashboard.sendTelemetryPacket(packet);
+            packet = new TelemetryPacket();
+        }
         clearHubCache();
         motorUtility.stopAllMotors();
         period.reset();
@@ -438,6 +431,10 @@ public class RobotHardware extends OpMode {
 
     @Override
     public void loop() {
+        if(packet != null) {
+            dashboard.sendTelemetryPacket(packet);
+            packet = new TelemetryPacket();
+        }
         clearHubCache();
         period.updatePeriodTime();
         primary.update();
@@ -449,6 +446,10 @@ public class RobotHardware extends OpMode {
      */
     @Override
     public void stop() {
+        if(packet != null)
+            dashboard.sendTelemetryPacket(packet);
+        packet = null;
+        dashboard = null;
         clearHubCache();
         try {
             lastPosition = mecanumDrive.getPoseEstimate();

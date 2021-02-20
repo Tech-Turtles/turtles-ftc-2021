@@ -18,7 +18,6 @@ import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR_kotlin;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 
-import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.powershotSpeed;
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.servoDelay;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.*;
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.*;
@@ -28,16 +27,12 @@ import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Exe
 public class Manual extends RobotHardware {
 
     public static double drivespeed = 1.0;
-    public static double launchspeed = 0.56;
     public static double precisionMode = 1.0;
     public static double precisionPercentage = 0.35;
     public static double linearSpeed = 1.0;
     public static double lateralSpeed = 1.0;
     public static double rotationSpeed = 1.0;
     public static boolean powershotMode = false;
-    public static double highGoalSpeed = 0.56;
-    public static double powerShotSpeed = 0.51;
-    public static double wobblePower = 1.0;
     public static double manualWobblePower = 0.5;
 
     private DistanceSensor leftRange, backRange;
@@ -89,16 +84,9 @@ public class Manual extends RobotHardware {
     public void loop() {
         super.loop();
         stateMachine.update();
-        mecanumDrive.update();
+        mecanumDrive.update(packet);
         chordedControls(); // Controls for when left bumper is held down.
         displayTelemetry();
-
-        // generic DistanceSensor methods.
-        telemetry.addLine("leftDistance");
-        telemetry.addData("range", df_precise.format(leftRange.getDistance(DistanceUnit.INCH)));
-
-        telemetry.addLine("backDistance");
-        telemetry.addData("range", df_precise.format(backRange.getDistance(DistanceUnit.INCH)));
 
             //drivetrainControls(); // In Drive_Manual
         //intakeControls(); // In Drive_Manual
@@ -233,13 +221,13 @@ public class Manual extends RobotHardware {
 
     void launcherControls() {
         if (secondary.dpadUpOnce()) {
-            launchspeed = Math.min(launchspeed + 0.01, 1.0);
+            highGoalSpeed = Math.min(highGoalSpeed + 0.01, 1.0);
         } else if (secondary.dpadDownOnce()) {
-            launchspeed = Math.max(launchspeed - 0.01, 0);
+            highGoalSpeed = Math.max(highGoalSpeed - 0.01, 0);
         }
 
         if (secondary.right_trigger > deadzone) {
-            motorUtility.setPower(Motors.LAUNCHER, launchspeed);
+            motorUtility.setPower(Motors.LAUNCHER, highGoalSpeed);
         } else {
             motorUtility.setPower(Motors.LAUNCHER, 0f);
         }
@@ -252,7 +240,7 @@ public class Manual extends RobotHardware {
 
         if (secondary.AOnce() && !secondary.start()) {
             powershotMode = !powershotMode;
-            launchspeed = powershotMode ? powerShotSpeed : highGoalSpeed;
+            highGoalSpeed = powershotMode ? powerShotSpeed : highGoalSpeed;
         }
     }
 
@@ -289,9 +277,9 @@ public class Manual extends RobotHardware {
                 // before using them.
                 stateMachine.changeState(DRIVE,
                         new Drive_moveAndShoot(trajectoryRR.getPOWERSHOT_RIGHT(),
-                        new Drive_moveAndShoot(trajectoryRR.getPOWERSHOT_CENTER(),
-                        new Drive_moveAndShoot(trajectoryRR.getPOWERSHOT_LEFT(),
-                        new Drive_Manual_AllStates()))));
+                                new Drive_moveAndShoot(trajectoryRR.getPOWERSHOT_CENTER(),
+                                        new Drive_moveAndShoot(trajectoryRR.getPOWERSHOT_LEFT(),
+                                                new Drive_Manual_AllStates()))));
             }
 
             if(primary.XOnce()) {
@@ -315,24 +303,27 @@ public class Manual extends RobotHardware {
         Pose2d poseEstimate = mecanumDrive.getPoseEstimate();
 
         telemetry.addData("Precision mode:      ", df.format(precisionMode));
-        telemetry.addData("Launcher speed:      ", df.format(launchspeed));
+        telemetry.addData("Launcher speed:      ", df.format(highGoalSpeed));
         telemetry.addData("Powershot mode:      ", powershotMode);
-        try {
-            telemetry.addData("Wobble Distance: ", df.format(getDistance(getColorSensor(ColorSensor.WOBBLE_SENSOR))));
-        } catch (NullPointerException ignore) {
+        if(packet != null) {
+            packet.addLine("--MANUAL--");
+            packet.put("Precision mode:      ", df.format(precisionMode));
+            packet.put("Launcher speed:      ", df.format(highGoalSpeed));
+            packet.put("Powershot mode:      ", powershotMode);
+            packet.put("Launch velocity:     ", motorUtility.getVelocity(Motors.LAUNCHER));
+            packet.put("Hopper position:     ", servoUtility.getAngle(Servos.HOPPER));
+            packet.put("X:                   ", df.format(poseEstimate.getX()));
+            packet.put("Y:                   ", df.format(poseEstimate.getY()));
+            packet.put("Heading:             ", df.format(Math.toDegrees(poseEstimate.getHeading())));
+            packet.put("leftDistance range   ", df_precise.format(leftRange.getDistance(DistanceUnit.INCH)));
+            packet.put("backDistance range   ", df_precise.format(backRange.getDistance(DistanceUnit.INCH)));
+            try {
+                packet.put("Wobble Distance: ", df.format(getDistance(getColorSensor(ColorSensor.WOBBLE_SENSOR))));
+            } catch (NullPointerException ignore) {}
+            packet.put("Drive speed:         ", df.format(drivespeed));
+            packet.put("Precision speed:     ", df.format(precisionPercentage));
+            packet.put("Loop time:           ", df_precise.format(period.getAveragePeriodSec()) + "s");
         }
-        telemetry.addLine();
-        telemetry.addLine("----Launcher----");
-        telemetry.addData("Launch velocity:     ", motorUtility.getVelocity(Motors.LAUNCHER));
-        telemetry.addData("Hopper position:     ", servoUtility.getAngle(Servos.HOPPER));
-        telemetry.addLine();
-        telemetry.addLine("----Navigation----");
-        telemetry.addData("X:                   ", df.format(poseEstimate.getX()));
-        telemetry.addData("Y:                   ", df.format(poseEstimate.getY()));
-        telemetry.addData("Heading:             ", df.format(Math.toDegrees(poseEstimate.getHeading())));
-        telemetry.addData("Drive speed:         ", df.format(drivespeed));
-        telemetry.addData("Precision speed:     ", df.format(precisionPercentage));
-        telemetry.addData("Loop time:           ", df_precise.format(period.getAveragePeriodSec()) + "s");
     }
 
     void stopAutoDriving() {
@@ -343,7 +334,6 @@ public class Manual extends RobotHardware {
     /*
     Auto Control States
      */
-
     class Drive_ToPose extends Executive.StateBase<Manual> {
         Trajectory trajectory;
         Pose2d final_pose;
@@ -371,7 +361,6 @@ public class Manual extends RobotHardware {
         }
     }
 
-
     class Drive_moveAndShoot extends Executive.StateBase<Manual> {
         boolean arrived = false;
         Trajectory trajectory;
@@ -390,7 +379,7 @@ public class Manual extends RobotHardware {
                     .lineToLinearHeading(final_pose)
                     .build();
             mecanumDrive.followTrajectoryAsync(trajectory);
-            nextState(LAUNCHER, new Launch_windUp(powershotSpeed));
+            nextState(LAUNCHER, new Launch_windUp(powerShotSpeed));
         }
 
         @Override
@@ -404,7 +393,7 @@ public class Manual extends RobotHardware {
             }
             if(opMode.mecanumDrive.isIdle() && !arrived) {
                 arrived = true;
-                nextState(LAUNCHER, new Launch_fire(powershotSpeed));
+                nextState(LAUNCHER, new Launch_fire(powerShotSpeed));
             }
             if(arrived && stateMachine.getStateReference(LAUNCHER).isDone) {
                 nextState(DRIVE, nextDriveState);
@@ -412,9 +401,8 @@ public class Manual extends RobotHardware {
         }
     }
 
-
     // Restores all states to driver controlled
-    class Drive_Manual_AllStates extends Executive.StateBase<Manual> {
+    static class Drive_Manual_AllStates extends Executive.StateBase<Manual> {
         @Override
         public void update() {
             super.update();
@@ -422,7 +410,6 @@ public class Manual extends RobotHardware {
             nextState(DRIVE, new Drive_Manual());
         }
     }
-
 
     /*
      *    launchSpeed (percent) is an argument of the

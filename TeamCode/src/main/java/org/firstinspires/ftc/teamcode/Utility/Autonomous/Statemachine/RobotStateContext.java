@@ -23,6 +23,7 @@ import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_PUSH_P
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_DOWN;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_STORE;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_UP;
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.powerShotSpeed;
 import static org.firstinspires.ftc.teamcode.Utility.RobotHardware.df;
 
 
@@ -42,10 +43,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     public static double wobbleOuttakeDelay = 0.75;
     public static double wobbleIntakeDelay = 0.5;
 
-    public static int wobbleDownOffset = 0;
+    public static int wobbleDownOffset = -700;
 
-    public static double launcherSpeed = 0.58;
-    public static double powershotSpeed = 0.51;
     public static double wobbleArmSpeed = 1.0;
     public static double wobbleIntakeSpeed = 1.0;
 
@@ -68,10 +67,13 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     public void update() {
         stateMachine.update();
         Pose2d poseEstimate = opmode.mecanumDrive.getPoseEstimate();
-        opmode.telemetry.addData("Rings    :", rings.name());
-        opmode.telemetry.addData("X        :", df.format(poseEstimate.getX()));
-        opmode.telemetry.addData("Y        :", df.format(poseEstimate.getY()));
-        opmode.telemetry.addData("Heading  :", df.format(Math.toDegrees(poseEstimate.getHeading())));
+        opmode.telemetry.addData("Rings:", rings.name());
+        if(opmode.packet != null) {
+            opmode.packet.put("Rings:   ", rings.name());
+            opmode.packet.put("X:       ", df.format(poseEstimate.getX()));
+            opmode.packet.put("Y:       ", df.format(poseEstimate.getY()));
+            opmode.packet.put("Heading: ", df.format(Math.toDegrees(poseEstimate.getHeading())));
+        }
     }
 
     public String getCurrentState() {
@@ -193,7 +195,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
             opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajParkCenterToPowershotLeft());
-            nextState(LAUNCHER, new Launch_windUp(powershotSpeed));
+            nextState(LAUNCHER, new Launch_windUp(powerShotSpeed));
         }
 
         @Override
@@ -201,7 +203,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.update();
             if(opMode.mecanumDrive.isIdle() && !isDone) {
                 isDone = true;
-                nextState(LAUNCHER, new Launch_fire(powershotSpeed));
+                nextState(LAUNCHER, new Launch_fire(powerShotSpeed));
             }
 
             if(isDone && stateMachine.getStateReference(LAUNCHER).isDone)
@@ -229,7 +231,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.update();
             if(opMode.mecanumDrive.isIdle() && !isDone) {
                 isDone = true;
-                nextState(LAUNCHER, new Launch_fire(powershotSpeed));
+                nextState(LAUNCHER, new Launch_fire(powerShotSpeed));
             }
             if(isDone && stateMachine.getStateReference(LAUNCHER).isDone) {
                 nextState(DRIVE, new CenterPowershotToRightPowershot());
@@ -257,7 +259,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.update();
             if(opMode.mecanumDrive.isIdle() && !isDone) {
                 isDone = true;
-                nextState(LAUNCHER, new Launch_fire(powershotSpeed));
+                nextState(LAUNCHER, new Launch_fire(powerShotSpeed));
             }
             if(isDone && stateMachine.getStateReference(LAUNCHER).isDone) {
                 nextState(LAUNCHER, new StopMotors(Motors.LAUNCHER));

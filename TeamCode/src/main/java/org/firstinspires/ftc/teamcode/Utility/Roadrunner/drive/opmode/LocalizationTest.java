@@ -35,7 +35,7 @@ public class LocalizationTest extends LinearOpMode {
                     )
             );
 
-            drive.update();
+            drive.update(null);
 
             if (gamepad1.y)
                 drive.clearEstimatedPose();

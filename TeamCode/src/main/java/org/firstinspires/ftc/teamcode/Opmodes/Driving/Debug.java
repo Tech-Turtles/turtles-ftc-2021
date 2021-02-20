@@ -22,7 +22,7 @@ public class Debug extends Manual {
     public void init() {
         super.init();
         imuUtil = new IMUUtilities(this, IMU.IMU1.getName(), IMUUtilities.ImuMode.FAST_HEADING_ONLY);
-        telemetry.addLine("\n----Debug Initialized----");
+        telemetry.addLine("----Debug Initialized----");
     }
 
     @Override

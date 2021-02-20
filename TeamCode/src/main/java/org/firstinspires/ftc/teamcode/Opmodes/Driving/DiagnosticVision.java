@@ -8,7 +8,7 @@ public class DiagnosticVision extends Diagnostic {
     @Override
     public void init() {
         super.init();
-        new Thread(() -> loadVision(true)).start();
+        new Thread(this::loadVision).start();
         telemetry.addLine("Diagnostic Vision OpMode Initialized");
     }
 

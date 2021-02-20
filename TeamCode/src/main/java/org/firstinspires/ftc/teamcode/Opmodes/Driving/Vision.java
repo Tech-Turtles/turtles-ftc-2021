@@ -8,7 +8,7 @@ public class Vision extends Manual {
     @Override
     public void init() {
         super.init();
-        new Thread(() -> loadVision(false)).start();
+        new Thread(this::loadVision).start();
         telemetry.addLine("Vision OpMode Initialized");
     }
 

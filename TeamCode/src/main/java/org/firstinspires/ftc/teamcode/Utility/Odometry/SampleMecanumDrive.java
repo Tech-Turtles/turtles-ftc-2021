@@ -236,7 +236,7 @@ public class SampleMecanumDrive extends MecanumDrive {
         throw new AssertionError();
     }
 
-    public void update() {
+    public void update(TelemetryPacket packet) {
         updatePoseEstimate();
 
         Pose2d currentPose = getPoseEstimate();
@@ -248,18 +248,20 @@ public class SampleMecanumDrive extends MecanumDrive {
             poseHistory.removeFirst();
         }
 
-        TelemetryPacket packet = new TelemetryPacket();
-        Canvas fieldOverlay = packet.fieldOverlay();
+        Canvas fieldOverlay = null;
+        if(packet != null) {
+            fieldOverlay = packet.fieldOverlay();
 
-        packet.put("mode", mode);
+            packet.put("mode", mode);
 
-        packet.put("x", currentPose.getX());
-        packet.put("y", currentPose.getY());
-        packet.put("heading", Math.toDegrees(currentPose.getHeading()));
+            packet.put("x", currentPose.getX());
+            packet.put("y", currentPose.getY());
+            packet.put("heading", Math.toDegrees(currentPose.getHeading()));
 
-        packet.put("xError", lastError.getX());
-        packet.put("yError", lastError.getY());
-        packet.put("headingError", Math.toDegrees(lastError.getHeading()));
+            packet.put("xError", lastError.getX());
+            packet.put("yError", lastError.getY());
+            packet.put("headingError", Math.toDegrees(lastError.getHeading()));
+        }
 
         switch (mode) {
             case IDLE:
@@ -284,8 +286,10 @@ public class SampleMecanumDrive extends MecanumDrive {
 
                 Pose2d newPose = lastPoseOnTurn.copy(lastPoseOnTurn.getX(), lastPoseOnTurn.getY(), targetState.getX());
 
-                fieldOverlay.setStroke("#4CAF50");
-                DashboardUtil.drawRobot(fieldOverlay, newPose);
+                if(packet != null) {
+                    fieldOverlay.setStroke("#4CAF50");
+                    DashboardUtil.drawRobot(fieldOverlay, newPose);
+                }
 
                 if (t >= turnProfile.duration()) {
                     mode = Mode.IDLE;
@@ -299,14 +303,16 @@ public class SampleMecanumDrive extends MecanumDrive {
 
                 Trajectory trajectory = follower.getTrajectory();
 
-                fieldOverlay.setStrokeWidth(1);
-                fieldOverlay.setStroke("#4CAF50");
-                DashboardUtil.drawSampledPath(fieldOverlay, trajectory.getPath());
-                double t = follower.elapsedTime();
-                DashboardUtil.drawRobot(fieldOverlay, trajectory.get(t));
+                if(packet != null) {
+                    fieldOverlay.setStrokeWidth(1);
+                    fieldOverlay.setStroke("#4CAF50");
+                    DashboardUtil.drawSampledPath(fieldOverlay, trajectory.getPath());
+                    double t = follower.elapsedTime();
+                    DashboardUtil.drawRobot(fieldOverlay, trajectory.get(t));
 
-                fieldOverlay.setStroke("#3F51B5");
-                DashboardUtil.drawPoseHistory(fieldOverlay, poseHistory);
+                    fieldOverlay.setStroke("#3F51B5");
+                    DashboardUtil.drawPoseHistory(fieldOverlay, poseHistory);
+                }
 
                 if (!follower.isFollowing()) {
                     mode = Mode.IDLE;
@@ -317,15 +323,15 @@ public class SampleMecanumDrive extends MecanumDrive {
             }
         }
 
-        fieldOverlay.setStroke("#3F51B5");
-        DashboardUtil.drawRobot(fieldOverlay, currentPose);
-
-        dashboard.sendTelemetryPacket(packet);
+        if(packet != null) {
+            fieldOverlay.setStroke("#3F51B5");
+            DashboardUtil.drawRobot(fieldOverlay, currentPose);
+        }
     }
 
     public void waitForIdle() {
         while (!Thread.currentThread().isInterrupted() && isBusy()) {
-            update();
+            update(null);
         }
     }
 
