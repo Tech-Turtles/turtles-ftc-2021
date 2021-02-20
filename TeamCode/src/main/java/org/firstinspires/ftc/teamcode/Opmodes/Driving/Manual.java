@@ -4,7 +4,6 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -14,11 +13,8 @@ import org.firstinspires.ftc.teamcode.HardwareTypes.ColorSensor;
 import org.firstinspires.ftc.teamcode.HardwareTypes.ContinuousServo;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
-import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.AutoOpmode;
-import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.TrajectoryRR;
 import org.firstinspires.ftc.teamcode.Utility.*;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive;
-import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR_kotlin;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 
@@ -44,7 +40,7 @@ public class Manual extends RobotHardware {
     public static double wobblePower = 1.0;
     public static double manualWobblePower = 0.5;
 
-    private DistanceSensor sensorRange, sensorRangee;
+    private DistanceSensor leftRange, backRange;
 
     private WobbleStates wobbleState = WobbleStates.MANUAL;
     private boolean wobbleArrived = false;
@@ -61,7 +57,7 @@ public class Manual extends RobotHardware {
     }
 
     public Manual() {
-        stateMachine =  new Executive.StateMachine<>(this);
+        stateMachine = new Executive.StateMachine<>(this);
         stateMachine.update();
     }
 
@@ -84,10 +80,9 @@ public class Manual extends RobotHardware {
         mecanumDrive = new SampleMecanumDrive(hardwareMap);
         mecanumDrive.setPoseEstimate(lastPosition == null ? new TrajectoryRR_kotlin(mecanumDrive).getSTART_CENTER() : lastPosition);
         trajectoryRR = new TrajectoryRR_kotlin(this.mecanumDrive);
-        sensorRange = hardwareMap.get(DistanceSensor.class, "leftDistance");
-        sensorRangee = hardwareMap.get(DistanceSensor.class, "backDistance");
 
-
+        leftRange = hardwareMap.get(DistanceSensor.class, "leftDistance");
+        backRange = hardwareMap.get(DistanceSensor.class, "backDistance");
     }
 
     @Override
@@ -100,10 +95,10 @@ public class Manual extends RobotHardware {
 
         // generic DistanceSensor methods.
         telemetry.addLine("leftDistance");
-        telemetry.addData("range", String.format("%.01f in", sensorRange.getDistance(DistanceUnit.INCH)));
+        telemetry.addData("range", df_precise.format(leftRange.getDistance(DistanceUnit.INCH)));
 
         telemetry.addLine("backDistance");
-        telemetry.addData("range", String.format("%.01f in", sensorRangee.getDistance(DistanceUnit.INCH)));
+        telemetry.addData("range", df_precise.format(backRange.getDistance(DistanceUnit.INCH)));
 
             //drivetrainControls(); // In Drive_Manual
         //intakeControls(); // In Drive_Manual
@@ -486,8 +481,4 @@ public class Manual extends RobotHardware {
             }
         }
     }
-
-
-
-
 }
