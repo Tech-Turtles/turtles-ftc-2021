@@ -118,10 +118,10 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     var trajToPOWERSHOT: Trajectory? = null
     var trajPowershot_clockwise: Trajectory? = null
     // Split clockwise into 4 parts
-    var traj_parkCenterToPowershotLeft: Trajectory? = null
-    var traj_PowershotLeftToPowershotCenter: Trajectory? = null
-    var traj_PowershotCenterPowershotRight: Trajectory? = null
-    var traj_PowershotRightToWobbleDropoff: Trajectory? = null
+    var trajParkCenterToPowershotLeft: Trajectory? = null
+    var trajPowershotLeftToPowershotCenter: Trajectory? = null
+    var trajPowershotCenterPowershotRight: Trajectory? = null
+    var trajPowershotRightToWobbleDropOff: Trajectory? = null
 
 
     var trajShootToWallWobblePickup: Trajectory? = null
@@ -310,21 +310,21 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
                         //.splineToConstantHeading(POWERSHOT_LEFT.vec(),45.0.toRadians)
                         .lineToConstantHeading(POWERSHOT_LEFT.vec())
                         .build();
-        this.traj_parkCenterToPowershotLeft = traj_parkCenterToPowershotLeft
+        this.trajParkCenterToPowershotLeft = traj_parkCenterToPowershotLeft
 
 
         var traj_PowershotLeftToPowershotCenter: Trajectory =
                 trajectoryBuilder(traj_parkCenterToPowershotLeft.end(), -90.0.toRadians)
                         .lineToConstantHeading(POWERSHOT_CENTER.vec())
                         .build();
-        this.traj_PowershotLeftToPowershotCenter = traj_PowershotLeftToPowershotCenter
+        this.trajPowershotLeftToPowershotCenter = traj_PowershotLeftToPowershotCenter
 
 
         var traj_PowershotCenterPowershotRight: Trajectory =
                 trajectoryBuilder(traj_PowershotLeftToPowershotCenter.end(), -90.0.toRadians)
                         .lineToConstantHeading(POWERSHOT_RIGHT.vec())
                         .build();
-        this.traj_PowershotCenterPowershotRight = traj_PowershotCenterPowershotRight
+        this.trajPowershotCenterPowershotRight = traj_PowershotCenterPowershotRight
 
 
         var traj_PowershotRightToWobbleDropoff: Trajectory =
@@ -348,7 +348,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
                                 //.splineToLinearHeading(wobbleDropoffDeep,-45.0.toRadians)
                                 .build();
                 }
-        this.traj_PowershotRightToWobbleDropoff = traj_PowershotRightToWobbleDropoff
+        this.trajPowershotRightToWobbleDropOff = traj_PowershotRightToWobbleDropoff
 
         // From zone wobble dropoff position to rings pickup align
         var trajWobbleDropoffToWobblePickupAlign: Trajectory =

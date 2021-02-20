@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.ContinuousServo;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
@@ -13,22 +12,18 @@ import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.StartPosition;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR_kotlin;
 import org.firstinspires.ftc.teamcode.Utility.Configuration;
-import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount;
 
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.EnumMap;
-
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.DRIVE;
+import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.INTAKE;
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.LAUNCHER;
-import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.OTHER;
+import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.WOBBLE;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_OPEN_POS;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_PUSH_POS;
-import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.PowershotState.*;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_DOWN;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_STORE;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_UP;
+import static org.firstinspires.ftc.teamcode.Utility.RobotHardware.df;
 
 
 @Config
@@ -40,23 +35,19 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     private final AllianceColor allianceColor;
     private final StartPosition startPosition;
     private TrajectoryRR_kotlin trajectoryRR;
-    DecimalFormat df;
-
 
     public static boolean autoReturnToStart = false;
-    public static boolean doAdvancedTrajectory = true;
-    public static boolean pickupRings = true;
-    public boolean ringsNotPickedUpYet; // Set in Start state
-    public static boolean fullAutoTest = false;
-    private boolean center = false;
 
     public static double servoDelay = 0.3;
-    public static double scanDelay = 2.0;
-    public static double intakeDelay = 2.3;
+    public static double wobbleOuttakeDelay = 0.75;
+    public static double wobbleIntakeDelay = 0.5;
+
+    public static int wobbleDownOffset = 0;
 
     public static double launcherSpeed = 0.58;
     public static double powershotSpeed = 0.51;
-    public static double wobbleSpeed = 1.0;
+    public static double wobbleArmSpeed = 1.0;
+    public static double wobbleIntakeSpeed = 1.0;
 
     private RingDetectionAmount rings = RingDetectionAmount.ZERO;
 
@@ -66,7 +57,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         this.startPosition = startPosition;
         this.stateMachine = new Executive.StateMachine<>(opmode);
         stateMachine.update();
-        this.df = opmode.df;
     }
 
     public void init() {
@@ -78,13 +68,10 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     public void update() {
         stateMachine.update();
         Pose2d poseEstimate = opmode.mecanumDrive.getPoseEstimate();
-        opmode.telemetry.addData("Rings: ", rings.name());
-        opmode.telemetry.addData("X:                   ", df.format(poseEstimate.getX()));
-        opmode.telemetry.addData("Y:                   ", df.format(poseEstimate.getY()));
-        opmode.telemetry.addData("Heading:             ", df.format(Math.toDegrees(poseEstimate.getHeading())));
-        opmode.telemetry.addData("Shoot 1: ", RobotHardware.shoot1);
-        opmode.telemetry.addData("Shoot 2: ", RobotHardware.shoot2);
-        opmode.telemetry.addData("Shoot 3: ", RobotHardware.shoot3);
+        opmode.telemetry.addData("Rings    :", rings.name());
+        opmode.telemetry.addData("X        :", df.format(poseEstimate.getX()));
+        opmode.telemetry.addData("Y        :", df.format(poseEstimate.getY()));
+        opmode.telemetry.addData("Heading  :", df.format(Math.toDegrees(poseEstimate.getHeading())));
     }
 
     public String getCurrentState() {
@@ -92,9 +79,13 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     }
 
     /**
-     * Define Concrete State Classes
+     * Start State
+     * State that sets the robot's position to the start position.
+     * Changes the routine based on start position.
+     *
+     * Trajectory: none
+     * Next State: Initial
      */
-
     class Start extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
@@ -103,27 +94,28 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 case WALL:
                     setupInitialPosition(trajectoryRR.getSTART_WALL());
                     nextState(DRIVE, new Initial());
-                    center = false;
                     break;
                 case CENTER:
                     setupInitialPosition(trajectoryRR.getSTART_CENTER());
                     nextState(DRIVE, new Initial());
-                    center = true;
                     break;
                 default:
-                   throw new IndexOutOfBoundsException("Invalid start position.");
+                   throw new IllegalArgumentException("Invalid start position");
             }
-            // resets ring state boolean IF static pickupRings option is set.
-            ringsNotPickedUpYet = pickupRings;
         }
 
         private void setupInitialPosition(Pose2d initialPosition) {
-            opMode.imuUtil.updateNow();
-            opMode.imuUtil.setCompensatedHeading(Math.toDegrees(initialPosition.getHeading()));
-            opmode.mecanumDrive.setPoseEstimate(initialPosition);
+            opMode.mecanumDrive.setPoseEstimate(initialPosition);
         }
     }
 
+    /**
+     * Initial State
+     * State that is completely unnecessary.
+     *
+     * Trajectory: none
+     * Next State: Scan
+     */
     class Initial extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
@@ -134,13 +126,17 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void update() {
             super.update();
-            if(fullAutoTest)
-                nextState(DRIVE, new DriveTest());
-            else
-                nextState(DRIVE, new Scan());
+            nextState(DRIVE, new Scan());
         }
     }
 
+    /**
+     * Scan State
+     * State for setting everything associated with the amount of rings detected
+     *
+     * Trajectory: none
+     * Next State: WallStartToCenter / CenterStartToLeftPowershot
+     */
     class Scan extends Executive.StateBase<AutoOpmode> {
         @Override
         public void update() {
@@ -149,195 +145,307 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             if(opMode.ringDetector != null)
                 rings = opMode.ringDetector.getHeight();
 
-            if((stateTimer.seconds() > scanDelay || !rings.equals(RingDetectionAmount.ZERO)) || (opMode.initializationRingDetectionAmount != null)) {
-                trajectoryRR.setZone(rings);
-                if (doAdvancedTrajectory) {
-                    if(center)
-                        nextState(DRIVE, new B_parkCenterToPowershotLeft());
-                    else
-                        nextState(DRIVE, new B_trajStartWallToStartCenter());
-                } else {
-                    nextState(DRIVE, new ToShoot());
-                }
-            }
-        }
-    }
+            trajectoryRR.setZone(rings);
 
-    class ToShoot extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajToShoot1());
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            opMode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
-            if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new FireListener());
-                nextState(LAUNCHER, new Fire());
-            }
-        }
-    }
-
-    class PickupRings extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajPickupRings());
-            // Set it to false so it won't attempt to pick up rings again
-            ringsNotPickedUpYet = false;
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            opmode.motorUtility.setPower(Motors.INTAKE, 1f);
-            opmode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
-            if(opmode.mecanumDrive.isIdle() && stateTimer.seconds() > intakeDelay) {
-                nextState(DRIVE, new FromRingsShoot());
-                opmode.motorUtility.setPower(Motors.INTAKE, 0);
-            }
-        }
-    }
-
-    class FromRingsShoot extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajToShoot2());
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new FireListener());
-                // Start at case 3 if 1 ring is picked up, start at case 1 if 3 rings are picked up.
-                nextState(LAUNCHER, new Fire(rings.equals(RingDetectionAmount.ONE) ? 3 : 1));
-            }
-        }
-    }
-
-    class FireListener extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void update() {
-            super.update();
-            if(stateMachine.getStateReference(LAUNCHER).isDone) {
-                if(ringsNotPickedUpYet && !rings.equals(RingDetectionAmount.ZERO))
-                    nextState(DRIVE, new PickupRings());
-                else
-                    nextState(DRIVE, new Park());
-                stateMachine.removeStateType(LAUNCHER);
-            }
-        }
-    }
-
-    class Park extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajToPark());
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            if(opmode.mecanumDrive.isIdle()) {
-                if (autoReturnToStart) {
-                    nextState(DRIVE, new ReturnToStart());
-                } else {
-                    nextState(DRIVE, new Stop());
-                }
-            }
-        }
-    }
-
-    class Fire extends Executive.StateBase<AutoOpmode> {
-        int index;
-        boolean doneInitialOpen = false;
-        boolean finished = false;
-
-        public Fire() {
-            this(1);
-        }
-
-        public Fire(int startIndex) {
-            this.index = startIndex;
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            switch(index) {
-                case 0: index++;
+            switch (startPosition) {
+                case WALL:
+                    stateMachine.changeState(DRIVE, new WallStartToCenter());
                     break;
-                case 1:
-                case 2:
-                case 3:
-                    opMode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
-                    if(opMode.motorUtility.getVelocity(Motors.LAUNCHER) > (launcherSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95) && !doneInitialOpen) {
-                        opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
-                        doneInitialOpen = true;
-                        stateTimer.reset();
-                    } else if(opMode.motorUtility.getVelocity(Motors.LAUNCHER) > (launcherSpeed * Configuration.LAUNCHER_THEORETICAL_MAX * 0.95) && stateTimer.seconds() > servoDelay && !finished) {
-                        opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_PUSH_POS);
-                        finished = true;
-                        stateTimer.reset();
-                    } else if(finished && stateTimer.seconds() > servoDelay) {
-                        index++;
-                        doneInitialOpen = false;
-                        finished = false;
-                        stateTimer.reset();
-                    }
-                    break;
-                default:
-                    opMode.motorUtility.setPower(Motors.LAUNCHER, 0);
-                    opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
-                    isDone = true;
+                case CENTER:
+                    stateMachine.changeState(DRIVE, new CenterStartToLeftPowershot());
             }
         }
     }
 
-    class DriveTest extends Executive.StateBase<AutoOpmode> {
-        ArrayList<Trajectory> list = new ArrayList<>();
-        int index = 0;
-
+    /**
+     * WallStartToCenter State
+     * State that drives from the WALL_START start position, to the CENTER_START start position.
+     *
+     * Trajectory: TrajStartWallToStartCenter
+     * Next State: CenterStartToLeftPowershot
+     */
+    class WallStartToCenter extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            trajectoryRR.setZone(RingDetectionAmount.FOUR);
-            list.add(0, trajectoryRR.getTrajStartWallToStartCenter());
-            list.add(1, trajectoryRR.getTrajPowershot_clockwise());
-            list.add(2, trajectoryRR.getTrajPickupRingsFromZone());
-            list.add(3, trajectoryRR.getTrajToShoot2());
-            list.add(4, trajectoryRR.getTrajShootToWallWobblePickup());
-            list.add(5, trajectoryRR.getTrajClaimWobbleToZone());
-            list.add(6, trajectoryRR.getTrajParkAfterWobbleDropoff());
-            opmode.mecanumDrive.followTrajectoryAsync(list.get(index));
-            index++;
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajStartWallToStartCenter());
         }
 
         @Override
         public void update() {
             super.update();
-            if(opmode.mecanumDrive.isIdle() && opmode.primary.A()) {
-                if(index < list.size()) {
-                    opmode.mecanumDrive.followTrajectoryAsync(list.get(index));
-                    index++;
-                } else {
-                    if (autoReturnToStart) {
-                        nextState(DRIVE, new ReturnToStart());
-                    } else {
-                        nextState(DRIVE, new Stop());
-                    }
-                }
+            if(opMode.mecanumDrive.isIdle()) {
+                nextState(DRIVE, new CenterStartToLeftPowershot());
             }
+        }
+    }
+
+    /**
+     * CenterStartToLeftPowershot State
+     * State that drives from the CENTER_START start position, to the left powershot.
+     * The launcher winds up while driving and fires when the robot has arrived.
+     *
+     * Trajectory: TrajParkCenterToPowershotLeft
+     * Next State: LeftPowershotToCenterPowershot
+     */
+    class CenterStartToLeftPowershot extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajParkCenterToPowershotLeft());
+            nextState(LAUNCHER, new Launch_windUp(powershotSpeed));
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opMode.mecanumDrive.isIdle() && !isDone) {
+                isDone = true;
+                nextState(LAUNCHER, new Launch_fire(powershotSpeed));
+            }
+
+            if(isDone && stateMachine.getStateReference(LAUNCHER).isDone)
+                nextState(DRIVE, new LeftPowershotToCenterPowershot());
+        }
+    }
+
+    /**
+     * LeftPowershotToCenterPowershot State
+     * State that drives from the left powershot to the center powershot.
+     * The launcher winds up while driving and fires when the robot has arrived.
+     *
+     * Trajectory: TrajPowershotLeftToPowershotCenter
+     * Next State: CenterPowershotToRightPowershot
+     */
+    class LeftPowershotToCenterPowershot extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajPowershotLeftToPowershotCenter());
+        }
+
+       @Override
+        public void update() {
+            super.update();
+            if(opMode.mecanumDrive.isIdle() && !isDone) {
+                isDone = true;
+                nextState(LAUNCHER, new Launch_fire(powershotSpeed));
+            }
+            if(isDone && stateMachine.getStateReference(LAUNCHER).isDone) {
+                nextState(DRIVE, new CenterPowershotToRightPowershot());
+            }
+        }
+    }
+
+    /**
+     * CenterPowershotToRightPowershot State
+     * State that drives from the center powershot to the right powershot.
+     * The launcher winds up while driving and fires when the robot has arrived.
+     *
+     * Trajectory: TrajPowershotCenterPowershotRight
+     * Next State: RightPowershotToWobbleDropZone
+     */
+    class CenterPowershotToRightPowershot extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajPowershotCenterPowershotRight());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opMode.mecanumDrive.isIdle() && !isDone) {
+                isDone = true;
+                nextState(LAUNCHER, new Launch_fire(powershotSpeed));
+            }
+            if(isDone && stateMachine.getStateReference(LAUNCHER).isDone) {
+                nextState(LAUNCHER, new StopMotors(Motors.LAUNCHER));
+                nextState(DRIVE, new RightPowershotToWobbleDropZone());
+            }
+        }
+    }
+
+    /**
+     * RightPowershotToWobbleDropZone State
+     * State that drives from the right powershot to the wobble zone set in the Scan state.
+     * Drops the wobble goal once it has arrived to the wobble zone.
+     *
+     * Trajectory: TrajPowershotRightToWobbleDropOff
+     * Next State: WobbleDropZoneToWobblePickupAlign
+     */
+    class RightPowershotToWobbleDropZone extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajPowershotRightToWobbleDropOff());
+            nextState(WOBBLE, new WobblePosition(WOBBLE_DOWN + wobbleDownOffset));
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opMode.mecanumDrive.isBusy()) return;
+            if(!isDone && stateMachine.getStateReference(WOBBLE).isDone) {
+                nextState(INTAKE, new WobbleIntake(-wobbleIntakeSpeed));
+                isDone = true;
+                timer.reset();
+            }
+
+            if(isDone && timer.seconds() > wobbleOuttakeDelay) {
+                nextState(WOBBLE, new WobblePosition(WOBBLE_UP));
+                nextState(DRIVE, new WobbleDropZoneToWobblePickupAlign());
+            }
+        }
+    }
+
+    /**
+     * WobbleDropZoneToWobblePickupAlign State
+     * State that drives from the wobble zone set in the Scan state to the alignment location for
+     * the second wobble goal. Lowers the wobble arm.
+     *
+     * Trajectory: TrajWobbleDropoffToWobblePickupAlign
+     * Next State: WobblePickupAlignToWobblePickup
+     */
+    class WobbleDropZoneToWobblePickupAlign extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobbleDropoffToWobblePickupAlign());
+            nextState(WOBBLE, new WobblePosition(WOBBLE_DOWN));
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opMode.mecanumDrive.isIdle())
+                nextState(DRIVE, new WobblePickupAlignToWobblePickup());
+        }
+    }
+
+    /**
+     * WobblePickupAlignToWobblePickup State
+     * State that drives from the alignment location for the second wobble goal to the pickup location.
+     * Grabs the wobble goal and raises the wobble arm.
+     *
+     * Trajectory: TrajWobbleAlignToWobblePickup
+     * Next State: WobblePickupToWobbleDropZoneAlign
+     */
+    //ToDo Use color sensor to detect whether a wobble goal has been intaked or not
+    class WobblePickupAlignToWobblePickup extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            nextState(INTAKE, new WobbleIntake(wobbleIntakeSpeed));
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobbleAlignToWobblePickup());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opMode.mecanumDrive.isBusy()) return;
+
+            if(!isDone) {
+                timer.reset();
+                isDone = true;
+            }
+
+            if(timer.seconds() > wobbleIntakeDelay) {
+                nextState(INTAKE, new WobbleIntake(0));
+                nextState(WOBBLE, new WobblePosition(WOBBLE_UP));
+                nextState(DRIVE, new WobblePickupToWobbleDropZoneAlign());
+            }
+        }
+    }
+
+    /**
+     * WobblePickupToWobbleDropZoneAlign State
+     * State that drives from the second wobble goal pickup location to the wobble zone alignment.
+     *
+     * Trajectory: TrajWobblePickupToDropoffAlign
+     * Next State: WobbleDropZoneAlignToWobbleDropZone
+     */
+    //ToDo Lower wobble arm?
+    class WobblePickupToWobbleDropZoneAlign extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobblePickupToDropoffAlign());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opMode.mecanumDrive.isIdle())
+                nextState(DRIVE, new WobbleDropZoneAlignToWobbleDropZone());
+        }
+    }
+
+    /**
+     * WobbleDropZoneAlignToWobbleDropZone State
+     * State that drives from the wobble zone alignment to the wobble zone.
+     * Drops the wobble goal.
+     *
+     * Trajectory: TrajWobbleAlignToSecondDropoff
+     * Next State: WobbleDropZoneToPark
+     */
+    class WobbleDropZoneAlignToWobbleDropZone extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobbleAlignToSecondDropoff());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opMode.mecanumDrive.isBusy()) return;
+            if(!isDone) {
+                nextState(INTAKE, new WobbleIntake(-wobbleIntakeSpeed));
+                isDone = true;
+                timer.reset();
+            }
+
+            if(timer.seconds() > wobbleOuttakeDelay) {
+                nextState(INTAKE, new WobbleIntake(0));
+                nextState(WOBBLE, new WobblePosition(WOBBLE_STORE));
+                nextState(DRIVE, new WobbleDropZoneToPark());
+            }
+        }
+    }
+
+    /**
+     * WobbleDropZoneToPark State
+     * State that drives from the wobble zone to the park position.
+     *
+     * Trajectory: TrajSecondWobbleDropoffToPark
+     * Next State: ReturnToStart / Stop
+     */
+    class WobbleDropZoneToPark extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajSecondWobbleDropoffToPark());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opMode.mecanumDrive.isIdle())
+                nextState(DRIVE, autoReturnToStart ? new ReturnToStart(startPosition.equals(StartPosition.CENTER) ?
+                        trajectoryRR.getSTART_CENTER() : trajectoryRR.getSTART_WALL()) : new Stop());
         }
     }
 
     static class Stop extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            for (Executive.StateMachine.StateType type : Executive.StateMachine.StateType.values())
+                stateMachine.removeStateByType(type);
+            opMode.stop();
+        }
+
         @Override
         public void update() {
             super.update();
@@ -345,32 +453,25 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         }
     }
 
-    class ReturnToStart extends Executive.StateBase<AutoOpmode> {
-        double delay = 0;
-        boolean isSetToDrive = false;
-        Trajectory traj_home;
+    static class ReturnToStart extends Executive.StateBase<AutoOpmode> {
+        private final double delay;
+        private Trajectory homeTrajectory;
+        private final Pose2d endPosition;
 
-        ReturnToStart() {}
-
-        ReturnToStart(double delay) {
+        ReturnToStart(Pose2d endPosition, double delay) {
+            this.endPosition = endPosition;
             this.delay = delay;
+        }
+
+        ReturnToStart(Pose2d endPosition) {
+            this(endPosition, 0);
         }
 
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            double wallY = -18.0;
-            double resetHeading = Math.toRadians(180.0);
-            Pose2d testEnd = opmode.mecanumDrive.getPoseEstimate();
-            Pose2d startWall = new Pose2d(trajectoryRR.getSTART_CENTER().vec(),trajectoryRR.getSTART_CENTER().getHeading());
-            Pose2d goalTaper = new Pose2d(testEnd.getX(),wallY,resetHeading);
-            Pose2d startTaper = new Pose2d(startWall.getX() + 20.0,wallY,resetHeading);
-
-            traj_home = opmode.mecanumDrive.trajectoryBuilder(testEnd,Math.toRadians(180.0))
-//                    .splineToSplineHeading(goalTaper,Math.toRadians(180.0))
-//                    .splineToSplineHeading(startTaper,Math.toRadians(180.0))
-//                    .splineToLinearHeading(startWall,Math.toRadians(180.0))
-                    .lineToLinearHeading(startWall)
+            homeTrajectory = opMode.mecanumDrive.trajectoryBuilder(opMode.mecanumDrive.getPoseEstimate(), Math.toRadians(180.0))
+                    .lineToLinearHeading(endPosition)
                     .build();
         }
 
@@ -378,590 +479,40 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
 
-            if(stateTimer.seconds() > delay && !isSetToDrive) {
-                if(delay >= 0 || opmode.primary.AOnce()) {
-                    isSetToDrive = true;
-                    opmode.mecanumDrive.followTrajectoryAsync(traj_home);
+            if(timer.seconds() > delay && !isDone) {
+                if(delay >= 0 || opMode.primary.AOnce()) {
+                    isDone = true;
+                    opMode.mecanumDrive.followTrajectoryAsync(homeTrajectory);
                 }
             }
 
-            if(opmode.mecanumDrive.isIdle() && isSetToDrive) {
-                stateMachine.removeStateType(LAUNCHER);
+            if(opMode.mecanumDrive.isIdle() && isDone) {
                 nextState(DRIVE, new Stop());
             }
         }
     }
 
-  /*
-    Setup new, full moving powershot routine
+    static class StopMotors extends  Executive.StateBase<AutoOpmode> {
+        private final Motors[] motors;
 
-    trajStartWallToStartCenter
-    trajPowershot_clockwise
-    trajPickupRingsFromZone
-    trajToShoot2
-    trajShootToWallWobblePickup
-    trajClaimWobbleToZone
-    trajParkAfterWobbleDropoff
-
-   */
-
-    class B_trajStartWallToStartCenter extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajStartWallToStartCenter());
+        StopMotors(Motors... motors) {
+            this.motors = motors;
         }
-
-        @Override
-        public void update() {
-            super.update();
-            if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new B_parkCenterToPowershotLeft());
-            }
-        }
-    }
-
-    enum PowershotState { WIND_UP, SHOOT1, SHOOT2, SHOOT3, DROP_GOAL}
-
-    class B_trajPowershot_clockwise extends Executive.StateBase<AutoOpmode> {
-        PowershotState powershotState;
-        EnumMap<PowershotState,Double> powershotYPosition = new EnumMap<>(PowershotState.class);
 
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            powershotState = PowershotState.WIND_UP;
-            powershotYPosition.put(SHOOT1,-2.0);
-            powershotYPosition.put(SHOOT2,-10.0);
-            powershotYPosition.put(SHOOT3,-16.0);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajPowershot_clockwise());
-        }
-
-        @Override
-        public void update() {
-            Pose2d pose = opmode.mecanumDrive.getPoseEstimate();
-            super.update();
-            switch (powershotState) {
-                case WIND_UP:
-                    nextState(LAUNCHER, new Launch_windUp(powershotSpeed));
-                    if (pose.getX() > -12.0) {
-                        powershotState = SHOOT1;
-                    }
-                    break;
-                case SHOOT1:
-                    if (pose.getY() < powershotYPosition.get(SHOOT1)) {
-                        opmode.telemetry.addData("Launcher Ready:",
-                                stateMachine.getStateReference(LAUNCHER).isDone);
-                        nextState(LAUNCHER, new Launch_fire(powershotSpeed));
-                        powershotState = SHOOT2;
-                    }
-                    break;
-                case SHOOT2:
-                    if (pose.getY() < powershotYPosition.get(SHOOT2)) {
-                        opmode.telemetry.addData("Launcher Ready:",
-                                stateMachine.getStateReference(LAUNCHER).isDone);
-                        nextState(LAUNCHER, new Launch_fire(powershotSpeed));
-                        powershotState = SHOOT3;
-                    }
-                    break;
-                case SHOOT3:
-                    if (pose.getY() < powershotYPosition.get(SHOOT3)) {
-                        opmode.telemetry.addData("Launcher Ready:",
-                                stateMachine.getStateReference(LAUNCHER).isDone);
-                        nextState(LAUNCHER, new Launch_fire(powershotSpeed));
-                        powershotState = DROP_GOAL;
-                    }
-                    break;
-                case DROP_GOAL:
-                    break;
-                default:
-            }
-            if(opmode.mecanumDrive.isIdle()) {
-                nextState(OTHER, new WobblePosition(WOBBLE_DOWN));
-                nextState(DRIVE, new B_DropoffWobbleA());
-            }
+            for(Motors motor : motors)
+                opMode.motorUtility.setPower(motor, 0);
         }
     }
 
     /*
-    Split trajectory powershot clockwise into four, for 3 stationary shots.  Needs new states.
-    Makes powershot_clockwise obsolete
-       Replaced by:--------
-        traj_parkCenterToPowershotLeft
-        traj_PowershotLeftToPowershotCenter
-        traj_PowershotCenterPowershotRight
-        traj_PowershotRightToWobbleDropoff
-     */
-
-
-    class B_parkCenterToPowershotLeft extends Executive.StateBase<AutoOpmode> {
-        boolean arrived = false;
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTraj_parkCenterToPowershotLeft());
-            nextState(LAUNCHER, new Launch_windUp(powershotSpeed));
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            if(opmode.mecanumDrive.isIdle() && !arrived) {
-                arrived = true;
-                nextState(LAUNCHER, new Launch_fire(powershotSpeed));
-            }
-            if(arrived && stateMachine.getStateReference(LAUNCHER).isDone) {
-                RobotHardware.shoot1 = opMode.mecanumDrive.getPoseEstimate();
-                nextState(DRIVE, new B_PowershotLeftToPowershotCenter());
-            }
-        }
-    }
-
-   class B_PowershotLeftToPowershotCenter extends Executive.StateBase<AutoOpmode> {
-        boolean arrived = false;
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTraj_PowershotLeftToPowershotCenter());
-        }
-
-       @Override
-        public void update() {
-            super.update();
-            if(opmode.mecanumDrive.isIdle() && !arrived) {
-                arrived = true;
-                nextState(LAUNCHER, new Launch_fire(powershotSpeed));
-            }
-            if(arrived && stateMachine.getStateReference(LAUNCHER).isDone) {
-                RobotHardware.shoot2 = opMode.mecanumDrive.getPoseEstimate();
-                nextState(DRIVE, new B_PowershotCenterPowershotRight());
-            }
-        }
-   }
-
-   class B_PowershotCenterPowershotRight extends Executive.StateBase<AutoOpmode> {
-        boolean arrived = false;
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTraj_PowershotCenterPowershotRight());
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            if(opmode.mecanumDrive.isIdle() && !arrived) {
-                arrived = true;
-                nextState(LAUNCHER, new Launch_fire(powershotSpeed));
-            }
-            if(arrived && stateMachine.getStateReference(LAUNCHER).isDone) {
-                RobotHardware.shoot3 = opMode.mecanumDrive.getPoseEstimate();
-                nextState(DRIVE, new B_PowershotRightToWobbleDropoff());
-            }
-        }
-    }
-
-
-   /* New States 2/6/2021
-   // New Trajectories
-    modified traj_PowershotRightToWobbleDropoff
-   trajWobbleDropoffToWobblePickupAlign
-   trajWobbleAlignToWobblePickup
-   trajWobblePickupToDropoffAlign
-   trajWobbleAlignToSecondDropoff
-   trajSecondWobbleDropoffToPark
-   trajSecondWobbleDropoffToRingPickupAlign
-   trajRingAlignToRingGrab
-   trajRingGrabToShootHighGoal
-   trajFromShootHighGoalToPark
+    *   launchSpeed (percent) and launchVelocity_tps (ticks per second) are arguments of the
+    *   constructor, so this mode works with powershots and high goal shots.
+    *   However, the feedback that shows we're ready to shoot is to support moving powershots.
     */
-
-
-    class B_PowershotRightToWobbleDropoff extends Executive.StateBase<AutoOpmode> {
-
-        private boolean changedState = false;
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTraj_PowershotRightToWobbleDropoff());
-            nextState(OTHER, new WobblePosition(WOBBLE_DOWN));
-            stateMachine.removeStateType(LAUNCHER);
-            try {
-                opMode.motorUtility.setPower(Motors.LAUNCHER, 0);
-            } catch (Exception ignore) {}
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            if(opmode.mecanumDrive.isIdle()) {
-                if(!changedState) {
-                    nextState(OTHER, new WobbleIntake(-1.0));
-                    changedState = true;
-                    stateTimer.reset();
-                }
-
-                if(changedState && stateTimer.seconds() > 0.75) {
-                    nextState(DRIVE, new C_WobbleDropoffToWobblePickupAlign());
-                    nextState(OTHER, new WobblePosition(WOBBLE_UP));
-                }
-            }
-        }
-   }
-
-    /*
-    End new split states from powershot
-    */
-
-   /* New reworked states */
-
-    class C_WobbleDropoffToWobblePickupAlign extends Executive.StateBase<AutoOpmode> {
-        boolean changedState = false;
-
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobbleDropoffToWobblePickupAlign());
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            if(opmode.mecanumDrive.isIdle() ) {
-                if(!changedState) {
-                    nextState(OTHER, new WobblePosition(WOBBLE_DOWN));
-                    changedState = true;
-                }
-                if(changedState && stateMachine.getStateReference(OTHER).isDone) {
-                    nextState(DRIVE, new C_WobbleAlignToWobblePickup());
-                }
-            }
-        }
-    }
-
-    class C_WobbleAlignToWobblePickup extends Executive.StateBase<AutoOpmode> {
-        private boolean bool = false;
-
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            nextState(OTHER, new WobbleIntake(1.0));
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobbleAlignToWobblePickup());
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            if(opmode.mecanumDrive.isIdle()) {
-                if(!bool) {
-                    stateTimer.reset();
-                    bool = true;
-                }
-
-                if(bool && stateTimer.seconds() > 0.5) {
-                    opMode.servoUtility.setPower(ContinuousServo.WOBBLE_LEFT, 0);
-                    opMode.servoUtility.setPower(ContinuousServo.WOBBLE_RIGHT, 0);
-                    nextState(OTHER, new WobblePosition(WOBBLE_UP));
-                    nextState(DRIVE, new C_WobblePickupToDropoffAlign());
-                }
-            }
-        }
-    }
-
-    class C_WobblePickupToDropoffAlign extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobblePickupToDropoffAlign());
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new C_WobbleAlignToSecondDropoff());
-            }
-        }
-    }
-
-    class C_WobbleAlignToSecondDropoff extends Executive.StateBase<AutoOpmode> {
-        private boolean changedState = false;
-
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobbleAlignToSecondDropoff());
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            if(opmode.mecanumDrive.isIdle()) {
-                if(!changedState) {
-                    nextState(OTHER, new WobbleIntake(-1.0));
-                    changedState = true;
-                    stateTimer.reset();
-                }
-
-                if(changedState && stateTimer.seconds() > 1.0) {
-                    opMode.servoUtility.setPower(ContinuousServo.WOBBLE_LEFT, 0);
-                    opMode.servoUtility.setPower(ContinuousServo.WOBBLE_RIGHT, 0);
-                    nextState(OTHER, new WobblePosition(WOBBLE_STORE));
-                    nextState(DRIVE, new C_SecondWobbleDropoffToPark());
-                }
-            }
-        }
-    }
-
-
-    // An END STATE after Second WobbleDropoff
-    class C_SecondWobbleDropoffToPark extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajSecondWobbleDropoffToPark());
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            if(opmode.mecanumDrive.isIdle()) {
-                stateMachine.removeStateType(LAUNCHER);
-                stateMachine.removeStateType(OTHER);
-                nextState(DRIVE, new Stop());
-            }
-        }
-    }
-
-
-    class C_SecondWobbleDropoffToRingPickupAlign extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajSecondWobbleDropoffToRingPickupAlign());
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new C_RingAlignToRingGrab());
-            }
-        }
-    }
-
-
-    class C_RingAlignToRingGrab extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajRingAlignToRingGrab());
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new C_RingGrabToShootHighGoal());
-            }
-        }
-    }
-
-
-
-    class C_RingGrabToShootHighGoal extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajRingGrabToShootHighGoal());
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new C_FromShootHighGoalToPark());
-            }
-        }
-    }
-
-
-    class C_FromShootHighGoalToPark extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajFromShootHighGoalToPark());
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            if(opmode.mecanumDrive.isIdle()) {
-                stateMachine.removeStateType(LAUNCHER);
-                stateMachine.removeStateType(OTHER);
-                nextState(DRIVE, new Stop());
-            }
-        }
-    }
-
-
-
-    /* Old states */
-
-    class B_DropoffWobbleA extends Executive.StateBase<AutoOpmode> {
-        boolean reset = false;
-
-        @Override
-        public void update() {
-            super.update();
-            if(stateMachine.getStateReference(OTHER).isDone) {
-                nextState(OTHER, new WobbleIntake(-1.0));
-                stateTimer.reset();
-                reset = true;
-            }
-
-            if(stateTimer.seconds() > 1.0 && reset) {
-                nextState(OTHER, new WobblePosition(WOBBLE_UP));
-                nextState(DRIVE, new B_trajPickupRingsFromZone());
-            }
-        }
-    }
-
-    class B_trajPickupRingsFromZone extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajPickupRingsFromZone());
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            opmode.motorUtility.setPower(Motors.INTAKE, 1f);
-            opmode.motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
-            if(opmode.mecanumDrive.isIdle() && stateTimer.seconds() > intakeDelay) {
-                opmode.motorUtility.setPower(Motors.INTAKE, 0);
-                nextState(DRIVE, new B_trajToShoot2());
-            }
-        }
-    }
-
-    class B_trajToShoot2 extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajToShoot2());
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new B_trajShootToWallWobblePickup());
-            }
-        }
-    }
-
-    class B_trajShootToWallWobblePickup extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajShootToWallWobblePickup());
-            nextState(OTHER, new WobblePosition(WOBBLE_DOWN));
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            if(opmode.mecanumDrive.isIdle() & stateMachine.getStateReference(OTHER).isDone) {
-                nextState(DRIVE, new B_PickupWobble());
-            }
-        }
-    }
-
-    class B_PickupWobble extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            nextState(OTHER, new WobbleIntake(1.0));
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            if(stateTimer.seconds() > 1.5) {
-                nextState(DRIVE, new B_trajClaimWobbleToZone());
-            } else if(stateTimer.seconds() > 1.0) {
-                nextState(OTHER, new WobblePosition(WOBBLE_UP));
-            }
-        }
-    }
-    
-    class B_trajClaimWobbleToZone extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajClaimWobbleToZone());
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            if(stateMachine.getStateReference(OTHER).isDone)
-                nextState(OTHER, new WobbleIntake(0));
-
-            if(opmode.mecanumDrive.isIdle()) {
-                nextState(DRIVE, new B_DropoffWobbleB());
-            }
-        }
-    }
-
-    class B_DropoffWobbleB extends Executive.StateBase<AutoOpmode> {
-
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            nextState(OTHER, new WobbleIntake(-1.0));
-        }
-
-        @Override
-        public void update() {
-            super.update();
-                if(stateTimer.seconds() > 1.0) {
-                    nextState(DRIVE, new B_trajParkAfterWobbleDropoff());
-                    opMode.servoUtility.setPower(ContinuousServo.WOBBLE_LEFT, 0);
-                    opMode.servoUtility.setPower(ContinuousServo.WOBBLE_RIGHT, 0);
-                    stateMachine.removeStateType(OTHER);
-                }
-        }
-    }
-
-    class B_trajParkAfterWobbleDropoff extends Executive.StateBase<AutoOpmode> {
-        @Override
-        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
-            super.init(stateMachine);
-            opmode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajParkAfterWobbleDropoff());
-        }
-
-        @Override
-        public void update() {
-            super.update();
-            stateMachine.removeStateType(LAUNCHER);
-            stateMachine.removeStateType(OTHER);
-            if (autoReturnToStart) {
-                nextState(DRIVE, new ReturnToStart());
-            } else {
-                nextState(DRIVE, new Stop());
-            }
-        }
-    }
-
-   /*
-   *    launchSpeed (percent) and launchVelocity_tps (ticks per second) are arguments of the
-   *    constructor, so this mode works with powershots and high goal shots.
-   *    However, the feedback that shows we're ready to shoot is to support moving powershots.
-    */
-   static class Launch_windUp extends Executive.StateBase<AutoOpmode> {
+    static class Launch_windUp extends Executive.StateBase<AutoOpmode> {
         double launchSpeed;
         double launchVelocity_tps; // encoder ticks per second
 
@@ -977,18 +528,17 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             // If velocity is high enough, and servoDelay elapsed, then isDone = true
             opMode.motorUtility.setPower(Motors.LAUNCHER, this.launchSpeed);
             opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
-            isDone = opMode.motorUtility.getVelocity(Motors.LAUNCHER) > this.launchVelocity_tps && stateTimer.seconds() > servoDelay;
+            isDone = opMode.motorUtility.getVelocity(Motors.LAUNCHER) > this.launchVelocity_tps && timer.seconds() > servoDelay;
         }
     }
 
     /*
      * Launch_fire
      */
-    class Launch_fire extends Executive.StateBase<AutoOpmode> {
+    static class Launch_fire extends Executive.StateBase<AutoOpmode> {
         double launchSpeed;
         double launchVelocity_tps; // encoder ticks per second
         boolean servoPushed = false;
-        ElapsedTime servoTimer = new ElapsedTime();
 
         Launch_fire(double launchSpeed) {
             this.launchSpeed = launchSpeed;
@@ -1003,10 +553,10 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 if (opMode.motorUtility.getVelocity(Motors.LAUNCHER) > this.launchVelocity_tps) {
                     opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_PUSH_POS);
                     servoPushed = true;
-                    servoTimer.reset();
+                    timer.reset();
                 }
             } else {
-                if (servoTimer.seconds() > servoDelay) {
+                if (timer.seconds() > servoDelay) {
                     //isDone = true; // This indicates we've shot, but not that we're ready to shoot.
                     nextState(LAUNCHER, new Launch_windUp(this.launchSpeed));
                 }
@@ -1024,7 +574,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void update() {
             super.update();
-            isDone = opMode.motorUtility.goToPosition(Motors.WOBBLE_ARM, encoderTicks, wobbleSpeed);
+            isDone = opMode.motorUtility.goToPosition(Motors.WOBBLE_ARM, encoderTicks, wobbleArmSpeed);
             if(isDone)
                 opMode.motorUtility.setPower(Motors.WOBBLE_ARM, 0);
         }
@@ -1043,13 +593,5 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             opMode.servoUtility.setPower(ContinuousServo.WOBBLE_LEFT, power);
             opMode.servoUtility.setPower(ContinuousServo.WOBBLE_RIGHT, power);
         }
-    }
-
-    public double getDriveScale(double seconds) {
-        double driveScale;
-        double speedDivider = 0.75;
-        driveScale = seconds / speedDivider;
-        driveScale = Math.min(driveScale, 1.0);
-        return driveScale;
     }
 }

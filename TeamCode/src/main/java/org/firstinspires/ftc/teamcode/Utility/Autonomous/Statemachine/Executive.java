@@ -4,7 +4,7 @@ import android.util.Log;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
+import org.firstinspires.ftc.teamcode.Utility.Math.ElapsedTimer;
 import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 
 import java.util.HashMap;
@@ -31,7 +31,7 @@ public class Executive {
      */
     static public class StateMachine <T_opmode extends RobotHardware> {
 
-        private Map<StateType, StateBase> stateMap = new HashMap<>();
+        private final Map<StateType, StateBase<T_opmode>> stateMap = new HashMap<>();
         T_opmode opMode;
 
         /**
@@ -42,24 +42,20 @@ public class Executive {
         public enum StateType {
             DRIVE,
             LAUNCHER,
-            OTHER
+            INTAKE,
+            WOBBLE
         }
 
         public StateMachine(T_opmode opMode) {
             this.opMode = opMode;
         }
 
-        public void changeState(boolean isActive, StateType stateType, StateBase<T_opmode> state) {
-            if (!isActive) return;
+        public void changeState(StateType stateType, StateBase<T_opmode> state) {
             stateMap.put(stateType, state);
             state.init(this);
         }
 
-        public void changeState(StateType stateType, StateBase<T_opmode> state) {
-            changeState(true, stateType, state);
-        }
-
-        public void removeStateType(StateType stateType) {
+        public void removeStateByType(StateType stateType) {
             stateMap.remove(stateType);
         }
 
@@ -76,47 +72,40 @@ public class Executive {
 
         /**
          * Allows a StateBase to access a reference to another running state, primarily for
-         * reading the 'arrived' property.
-         * @param stateType
-         * @return
+         * reading the 'isDone' property.
+         * @param stateType The StateType of the state you want a reference to
+         * @return A reference to the state
          */
-        public StateBase getStateReference(StateType stateType) {
+        public StateBase<T_opmode> getStateReference(StateType stateType) {
             return stateMap.get(stateType);
         }
 
         // Format state to only contain the class name.
         public String getCurrentStates(StateType stateType) {
-            StateBase state = stateMap.get(stateType);
-            String stateString;
+            StateBase<T_opmode> state = stateMap.get(stateType);
             try {
-                String stateName = state.getClass().getSimpleName();
-                if (state.getIteration()  == -1) {
-                    stateString = stateName;
-                } else {
-                    stateString = stateName + ":" + state.getIteration();
-                }
-                return stateString + state.getAuxData();
+                return state.getClass().getSimpleName();
             } catch (Exception e){
                 return "";
             }
         }
 
+        /**
+         * A method supplies
+         * @return a String containing all of the StateTypes and the States associated with them
+         */
         public String getCurrentStates() {
-            String stateString = "";
-            Set<StateType> stateTypeSet = stateMap.keySet();
-            StateType[] stateTypeKeyArray = stateTypeSet.toArray(new StateType[stateTypeSet.size()]);
-            for (StateType type : stateTypeKeyArray) {
+            StringBuilder stateString = new StringBuilder();
+            for (StateType type : stateMap.keySet()) {
                 String stateElement = getCurrentStates(type);
-                stateString += stateElement + "  ";
+                stateString.append(stateElement).append("\n");
             }
-            return stateString;
+            return stateString.toString();
         }
 
         public void init() {
-            Set<StateType> stateTypeSet = stateMap.keySet();
-            StateType[] stateTypeKeyArray = stateTypeSet.toArray(new StateType[stateTypeSet.size()]);
-            for (StateType type : stateTypeKeyArray) {
-                StateBase state = stateMap.get(type);
+            for (StateType type : stateMap.keySet()) {
+                StateBase<T_opmode> state = stateMap.get(type);
                 if(state != null) {
                     state.init(this);
                 }
@@ -124,80 +113,67 @@ public class Executive {
         }
 
         /**
-         * Check if state is initialized, and throw exception if not.
-         * Then, if nextStates has values, StateMachine.add() them and clear new states.
-         * Then, if state.isDeleteRequested(), StateMachine.delete(state)
-         * otherwise, run state.update()
+         * Removes states if a delete has been requested.
+         * Runs the update function for any states that are not null or isDeleteRequested and has been initialized
          */
         public void update() {
-            Set<StateType> stateTypeSet = stateMap.keySet();
-            StateType[] stateTypeKeyArray = stateTypeSet.toArray(new StateType[stateTypeSet.size()]);
-            for (StateType type : stateTypeKeyArray) {
-                StateBase state = stateMap.get(type);
-                if(state != null) {
-                    if (!state.isInitialized()) {
-                        throw new RuntimeException("ERROR: state called in StateMachine update() was never initialized");
-                    }
-                    // Delete or update state
-                    if (!state.isDeleteRequested()) {
-                        state.update();
-                    }
-                } else {
-                    Log.w("Error", "Statemap null key");
+            for (StateType type : stateMap.keySet()) {
+                StateBase<T_opmode> state = stateMap.get(type);
+
+                if(state == null) {
+                    Log.wtf(this.getClass().getSimpleName(), "State in the stateMap is null");
+                    continue;
                 }
+
+                if (!state.isInitialized()) {
+                    Log.wtf(this.getClass().getSimpleName(), state.getClass().getSimpleName() + " State has not been initialized");
+                    continue;
+                }
+
+                if (!state.isDeleteRequested())
+                    state.update();
             }
             clearDeletedStates();
         }
 
-
+        /**
+         * Changes 'initialized' to false, preventing it from being updated until
+         */
         public void reset() {
-            Set<StateType> stateTypeSet = stateMap.keySet();
-            StateType[] stateTypeKeyArray = stateTypeSet.toArray(new StateType[stateTypeSet.size()]);
-            for (StateType type : stateTypeKeyArray) {
-                StateBase state = stateMap.get(type);
+            for (StateType type : stateMap.keySet()) {
+                StateBase<T_opmode> state = stateMap.get(type);
                 state.reset();
             }
         }
-
-
     }
 
-
     /**
-     * State base class.
+     * Base class for all states, allowing for optional implementation of its methods
+     * @param <T_opmode> Reference to the OpMode within the state. The generic allows it to accept
+     *                  any instance of RobotHardware, allowing the methods associated with that
+     *                  specific opmode, rather than being limited to only RobotHardware.
      */
-    // The class is abstract, but the internal methods are not abstract so that they can be optionally implemented
-    static public abstract class StateBase <T_opmode extends RobotHardware> {
+    public static abstract class StateBase<T_opmode extends RobotHardware> {
 
-        StateMachine<T_opmode> stateMachine; // Reference to outer state machine, for modifying states.
-        protected T_opmode opMode;
-        protected ElapsedTime stateTimer; // Time how long state has been active
-        ElapsedTime statePeriod; // Time how long since state has been executed.
+        StateMachine<T_opmode> stateMachine;    // Reference to StateMachine, for modifying states.
+        protected T_opmode opMode;              // OpMode reference
+        protected ElapsedTime stateTimer;       // Amount of time the state has been active
+        protected ElapsedTime statePeriod;      // Amount of time since the state has been executed.
+        ElapsedTime timer;
         double lastStatePeriod = -1;
         public boolean isDone = false;
 
         private boolean initialized = false;
         private boolean deleteRequested = false;
 
-
-        public StateBase() {
-            this.iteration = -1;
-            // Defining default constructor
-            // However, we NEED the state machine reference.
-            // Handled by allowing init to take a stateMachine argument.
-        }
-
-        StateBase(int iteration) {
-            this.iteration = iteration;
-        }
-
-
         public void init(StateMachine<T_opmode> stateMachine) {
             this.stateMachine = stateMachine;
             this.opMode = stateMachine.opMode;
             stateTimer = new ElapsedTime();
             statePeriod = new ElapsedTime();
+            timer = new ElapsedTime();
             initialized = true;
+            timer.reset();
             stateTimer.reset();
             statePeriod.reset();
         }
@@ -207,34 +183,8 @@ public class Executive {
             statePeriod.reset();
         }
 
-        protected void nextState(StateMachine.StateType stateType, StateBase state, boolean isActive) {
-            stateMachine.changeState(isActive, stateType, state);
-        }
-
-        protected void nextState(StateMachine.StateType stateType, StateBase state) {
-            nextState(stateType, state, true);
-        }
-
-        final private int iteration;
-        public int getIteration() {
-            return iteration;
-        }
-
-        public boolean driveTo(MecanumNavigation.Navigation2D waypoint, double driveSpeed) {
-            return opMode.autoDrive.driveToPositionTranslateOnly(waypoint, driveSpeed);
-//            return opMode.positionController.driveTo(waypoint, driveSpeed);  // New positioning system
-        }
-
-        public boolean driveTo(MecanumNavigation.Navigation2D waypoint, double driveSpeed, double minRate, double tolerance) {
-            return opMode.autoDrive.driveToPositionTranslateOnly(waypoint, driveSpeed, minRate, tolerance);
-        }
-
-        public boolean driveTo(MecanumNavigation.Navigation2D waypoint, double driveSpeed, double tolerance) {
-            return opMode.autoDrive.driveToPositionTranslateOnly(waypoint, driveSpeed, 0.05, tolerance);
-        }
-
-        public String getAuxData() {
-            return "";
+        protected void nextState(StateMachine.StateType stateType, StateBase<T_opmode> state) {
+            stateMachine.changeState(stateType, state);
         }
 
         public void reset() {
