@@ -20,7 +20,6 @@ import java.util.List;
 public class Diagnostic extends Manual {
 
     List<TelemetryLog> telemetryLogList = new ArrayList<>();
-    EnumMap<Motors,Integer> motorEncoderMap = new EnumMap<Motors, Integer>(Motors.class);
 
     @Override
     public void init() {
@@ -43,12 +42,7 @@ public class Diagnostic extends Manual {
     public void loop() {
         super.loop();
 
-
-        // Add latest position to the log
-        for (Motors motor : Motors.values()) {
-            motorEncoderMap.put(motor, motorUtility.getEncoderValue(motor));
-        }
-        telemetryLogList.add(new TelemetryLog(getTime(),mecanumDrive.getPoseEstimate(), motorEncoderMap));
+        telemetryLogList.add(new TelemetryLog(this));
 
         for (MotorTypes type : MotorTypes.values()) {
             telemetry.addLine(type.name());
@@ -77,5 +71,4 @@ public class Diagnostic extends Manual {
         File logFile = LoggingUtil.getLogFile("debugLogFile.csv");
         LoggingUtil.saveTelemetryLogListToFile(logFile, telemetryLogList);
     }
-
 }

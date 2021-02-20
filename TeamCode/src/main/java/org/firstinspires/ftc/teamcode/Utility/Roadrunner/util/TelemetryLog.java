@@ -3,7 +3,9 @@ package org.firstinspires.ftc.teamcode.Utility.Roadrunner.util;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.HardwareTypes.ColorSensor;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
+import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 
 import java.io.Serializable;
 import java.util.EnumMap;
@@ -14,6 +16,11 @@ public class TelemetryLog implements Serializable {
     private double x;
     private double y;
     private double heading;
+    private double current_intake;
+    private int encoder_launcher;
+    private double range_wall;
+    private double range_back;
+    private double range_wobble;
     private int encoder_frontLeft;
     private int encoder_frontRight;
     private int encoder_backLeft;
@@ -29,6 +36,21 @@ public class TelemetryLog implements Serializable {
             put(Motors.BACK_RIGHT,0);
             put(Motors.BACK_LEFT,0);
         }});
+    }
+
+    public TelemetryLog(RobotHardware robotHardware) {
+        Pose2d poseEstimate = robotHardware.mecanumDrive.getPoseEstimate();
+        this.time = robotHardware.getTime();
+        this.x = poseEstimate.getX();
+        this.y = poseEstimate.getY();
+        this.heading = Math.toDegrees(poseEstimate.getHeading());
+        this.encoder_frontRight = robotHardware.motorUtility.getEncoderValue(Motors.FRONT_RIGHT);
+        this.encoder_frontLeft = robotHardware.motorUtility.getEncoderValue(Motors.FRONT_LEFT);
+        this.encoder_backRight = robotHardware.motorUtility.getEncoderValue(Motors.BACK_RIGHT);
+        this.encoder_backLeft = robotHardware.motorUtility.getEncoderValue(Motors.BACK_LEFT);
+        this.encoder_launcher = robotHardware.motorUtility.getEncoderValue(Motors.LAUNCHER);
+        this.range_wobble = robotHardware.getDistance(robotHardware.getColorSensor(ColorSensor.WOBBLE_SENSOR));
+        this.current_intake = robotHardware.motorUtility.getCurrent(Motors.INTAKE);
     }
 
     public TelemetryLog(double time, Pose2d pose, EnumMap<Motors, Integer> motorEncoders) {
@@ -74,6 +96,25 @@ public class TelemetryLog implements Serializable {
         this.encoder_backRight = encoder_backRight;
     }
 
+    public void setCurrent_intake(double current_intake) {
+        this.current_intake = current_intake;
+    }
+
+    public void setEncoder_launcher(int encoder_launcher) {
+        this.encoder_launcher = encoder_launcher;
+    }
+
+    public void setRange_wall(double range_wall) {
+        this.range_wall = range_wall;
+    }
+
+    public void setRange_back(double range_back) {
+        this.range_back = range_back;
+    }
+
+    public void setRange_wobble(double range_wobble) {
+        this.range_wobble = range_wobble;
+    }
 
     public double getTime() {
         return time;
@@ -107,4 +148,23 @@ public class TelemetryLog implements Serializable {
         return encoder_backRight;
     }
 
+    public double getCurrent_intake() {
+        return current_intake;
+    }
+
+    public int getEncoder_launcher() {
+        return encoder_launcher;
+    }
+
+    public double getRange_wall() {
+        return range_wall;
+    }
+
+    public double getRange_back() {
+        return range_back;
+    }
+
+    public double getRange_wobble() {
+        return range_wobble;
+    }
 }

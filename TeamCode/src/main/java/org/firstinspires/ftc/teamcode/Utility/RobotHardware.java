@@ -17,6 +17,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.AutoDrive;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.Mecanum;
@@ -46,8 +47,8 @@ public class RobotHardware extends OpMode {
     public final MotorUtility motorUtility = new MotorUtility();
     public final ServoUtility servoUtility = new ServoUtility();
 
-    public DecimalFormat df = new DecimalFormat("0.00");
-    public DecimalFormat df_precise = new DecimalFormat("0.0000");
+    public static DecimalFormat df = new DecimalFormat("0.00");
+    public static DecimalFormat df_precise = new DecimalFormat("0.0000");
 
     public IMUUtilities imuUtil;
 
@@ -68,9 +69,6 @@ public class RobotHardware extends OpMode {
     public SampleMecanumDrive mecanumDrive;
 
     public static Pose2d lastPosition = new Pose2d(0,0,0);
-    public static Pose2d shoot1;
-    public static Pose2d shoot2;
-    public static Pose2d shoot3;
     public static int lastWobblePosition = 0;
 
 
@@ -110,8 +108,14 @@ public class RobotHardware extends OpMode {
 
         public double getVelocity(Motors motor) {
             getMotor(motor);
-            if (m == null) return 0;
+            if (m == null) return -1;
             return m.getVelocity();
+        }
+
+        public double getCurrent(Motors motor) {
+            getMotor(motor);
+            if (m == null) return -1;
+            return m.getCurrent(CurrentUnit.AMPS);
         }
 
         public void stopAllMotors() {

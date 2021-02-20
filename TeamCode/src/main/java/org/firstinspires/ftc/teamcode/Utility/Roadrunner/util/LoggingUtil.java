@@ -83,11 +83,7 @@ public class LoggingUtil {
                     .build();
             sbc.write(telemetryLogs);
             fw.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (CsvRequiredFieldEmptyException e) {
-            e.printStackTrace();
-        } catch (CsvDataTypeMismatchException e) {
+        } catch (IOException | CsvRequiredFieldEmptyException | CsvDataTypeMismatchException e) {
             e.printStackTrace();
         }
     }
