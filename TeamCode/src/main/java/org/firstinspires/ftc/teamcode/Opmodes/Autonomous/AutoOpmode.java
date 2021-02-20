@@ -6,7 +6,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import org.firstinspires.ftc.teamcode.HardwareTypes.IMU;
 import org.firstinspires.ftc.teamcode.Utility.*;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
-import org.firstinspires.ftc.teamcode.Utility.Autonomous.BehaviorSandBox;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.StartPosition;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext;
@@ -58,17 +57,11 @@ public class AutoOpmode extends RobotHardware {
         }
     }
 
-    @Autonomous(name="Sandbox", group="E")
-    public static class Sandbox extends AutoOpmode {}
-
     @Override
     public void init() {
         super.init();
         imuUtil = new IMUUtilities(this, IMU.IMU1.getName());
-        if(robotColor == null && robotStartPos == null)
-            robotStateContext = new BehaviorSandBox(AutoOpmode.this, AllianceColor.RED, StartPosition.CENTER);
-        else
-            robotStateContext = new RobotStateContext(this, robotColor, robotStartPos);
+        robotStateContext = new RobotStateContext(this, robotColor, robotStartPos);
         new Thread(() -> loadVision(false)).start();
         mecanumDrive = new SampleMecanumDrive(hardwareMap);
         mecanumDrive.setPoseEstimate(new Pose2d(0, 0, 0));
