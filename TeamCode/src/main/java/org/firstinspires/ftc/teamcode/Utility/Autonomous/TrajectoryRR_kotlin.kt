@@ -531,8 +531,8 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
         fun getNearestCornerPose2d(pose: Pose2d): Pose2d {
             val flipOffset = Pose2d(0.75,0.0,180.0.toRadians)
             val corners = ArrayList<Pose2d>()
-            corners.add(Pose2d(-61.5, -61.0, (0.0).toRadians))
-            corners.add(Pose2d( 60.75, -61.0, (0.0).toRadians))
+            corners.add(Pose2d(-63.5, -62.0, (0.0).toRadians)) // measured with short drive
+            corners.add(Pose2d( 60.75, -61.0, (0.0).toRadians)) // unchanged, working
             corners.add(Pose2d(-61.5, 61.0, (0.0).toRadians))
             corners.add(Pose2d( 60.75, 61.0, (0.0).toRadians))
 
