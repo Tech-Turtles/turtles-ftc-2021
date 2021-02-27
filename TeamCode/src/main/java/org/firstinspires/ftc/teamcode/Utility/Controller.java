@@ -14,6 +14,8 @@ public class Controller {
     private int x, y, a, b, start;
     private int left_bumper, right_bumper;
     private int right_stick_button, left_stick_button;
+    private int left_triggerAcc, right_triggerAcc;
+    private double deadzone = 0.3;
 
     public double left_stick_x, right_stick_x, left_stick_y, right_stick_y;
     public double left_trigger, right_trigger;
@@ -32,6 +34,16 @@ public class Controller {
             ++left_stick_button;
         } else {
             left_stick_button = 0;
+        }
+        if (gamepad.right_trigger > deadzone) {
+            ++right_triggerAcc;
+        } else {
+            right_triggerAcc = 0;
+        }
+        if (gamepad.left_trigger > deadzone) {
+            ++left_triggerAcc;
+        } else {
+            left_triggerAcc = 0;
         }
         if (gamepad.x) {
             ++x;
@@ -171,6 +183,14 @@ public class Controller {
 
     public boolean leftStickButtonOnce() {
         return 1 == left_stick_button;
+    }
+
+    public boolean rightTriggerOnce() {
+        return 1 == right_triggerAcc;
+    }
+
+    public boolean leftTriggerOnce() {
+        return 1 == left_triggerAcc;
     }
 
     public boolean XOnce() {

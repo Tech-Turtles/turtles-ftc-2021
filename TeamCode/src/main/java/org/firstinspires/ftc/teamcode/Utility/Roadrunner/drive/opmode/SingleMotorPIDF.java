@@ -16,7 +16,6 @@ import org.firstinspires.ftc.teamcode.Utility.Configuration;
 
 @Config
 @TeleOp(name="SingleMotorPIDFTest")
-@Disabled
 public class SingleMotorPIDF extends LinearOpMode {
     public static double delay = 5.0; // sec
     public static double launchSpeed = 0.56;

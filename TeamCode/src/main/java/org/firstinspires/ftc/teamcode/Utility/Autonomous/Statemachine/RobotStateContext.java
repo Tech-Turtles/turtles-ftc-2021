@@ -23,6 +23,8 @@ import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_PUSH_P
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_DOWN;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_STORE;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_UP;
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.highGoalSpeed;
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.intakePower;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.powerShotSpeed;
 import static org.firstinspires.ftc.teamcode.Utility.RobotHardware.df;
 
@@ -151,7 +153,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
 
             switch (startPosition) {
                 case WALL:
-                    stateMachine.changeState(DRIVE, new WallStartToCenter());
+                    stateMachine.changeState(DRIVE, new WallStartToCenterStart());
                     break;
                 case CENTER:
                     stateMachine.changeState(DRIVE, new CenterStartToLeftPowershot());
@@ -166,7 +168,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * Trajectory: TrajStartWallToStartCenter
      * Next State: CenterStartToLeftPowershot
      */
-    class WallStartToCenter extends Executive.StateBase<AutoOpmode> {
+    class WallStartToCenterStart extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
@@ -269,6 +271,167 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     }
 
     /**
+     * CenterStartToHighGoal State
+     * State that drives from the CENTER_START start position to the high goal position.
+     *
+     *
+     * Trajectory:
+     * Next State: HighGoalToWobbleDropZone / HighGoalToRingAlignment
+     */
+    class CenterStartToHighGoal extends Executive.StateBase<AutoOpmode> {
+        private int index = 0;
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajCenterStartToHighGoal());
+            nextState(LAUNCHER, new Launch_windUp(highGoalSpeed));
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opMode.mecanumDrive.isIdle() && !isDone) {
+                isDone = true;
+                nextState(LAUNCHER, new Launch_fire(highGoalSpeed));
+                index++;
+            }
+
+            if(stateMachine.getStateReference(LAUNCHER).isDone)
+                isDone = false;
+
+            if(index == 3 && opMode.mecanumDrive.isIdle() && stateMachine.getStateReference(LAUNCHER).isDone) {
+                nextState(LAUNCHER, new StopMotors(Motors.LAUNCHER));
+                switch (rings) {
+                    case ZERO:
+                        nextState(DRIVE, new HighGoalToWobbleDropZone());
+                        break;
+                    case ONE:
+                    case FOUR:
+                        nextState(DRIVE, new HighGoalToRingAlignment());
+                }
+            }
+        }
+    }
+
+    /**
+     * HighGoalToRingAlignment State
+     * State that drives from the high goal position to the ring alignment position.
+     *
+     *
+     * Trajectory:
+     * Next State: RingAlignmentToRingPickup
+     */
+    class HighGoalToRingAlignment extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode>stateMachine) {
+            super.init(stateMachine);
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajHighGoalToRingAlign());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opMode.mecanumDrive.isIdle())
+                nextState(DRIVE, new RingAlignmentToRingPickup());
+        }
+    }
+
+    /**
+     * RingAlignmentToRingPickup State
+     * State that drives from the ring alignment position to the ring pickup position.
+     *
+     *
+     * Trajectory:
+     * Next State:
+     */
+    class RingAlignmentToRingPickup extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajRingAlignToRingGrab());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            opMode.motorUtility.setPower(Motors.INTAKE, intakePower);
+            if(opMode.mecanumDrive.isIdle())
+                nextState(DRIVE, new RingPickupToHighGoal());
+        }
+    }
+
+    /**
+     * RingAlignmentToRingPickup State
+     * State that drives from the ring alignment position to the ring pickup position.
+     *
+     *
+     * Trajectory:
+     * Next State:
+     */
+    class RingPickupToHighGoal extends Executive.StateBase<AutoOpmode> {
+        private int index = 0;
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajRingGrabToShootHighGoal());
+            nextState(LAUNCHER, new Launch_windUp(highGoalSpeed));
+            index = rings.equals(RingDetectionAmount.ONE) ? 2 : index;
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opMode.mecanumDrive.isIdle() && !isDone) {
+                isDone = true;
+                nextState(LAUNCHER, new Launch_fire(highGoalSpeed));
+                opMode.motorUtility.setPower(Motors.INTAKE, 0);
+                index++;
+            }
+
+            if(stateMachine.getStateReference(LAUNCHER).isDone)
+                isDone = false;
+
+            if(index == 3 && opMode.mecanumDrive.isIdle() && stateMachine.getStateReference(LAUNCHER).isDone) {
+                nextState(LAUNCHER, new StopMotors(Motors.LAUNCHER));
+                nextState(DRIVE, new HighGoalToWobbleDropZone());
+            }
+        }
+    }
+
+    /**
+     * HighGoalToWobbleDropZone State
+     * State that drives from the high goal position to the wobble drop zone position.
+     *
+     *
+     * Trajectory:
+     * Next State:
+     */
+    class HighGoalToWobbleDropZone extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajHighGoalToWobbleDropoffDeep());
+            nextState(WOBBLE, new WobblePosition(WOBBLE_DOWN + wobbleDownOffset));
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opMode.mecanumDrive.isBusy()) return;
+            if(!isDone && stateMachine.getStateReference(WOBBLE).isDone) {
+                nextState(INTAKE, new WobbleIntake(-wobbleIntakeSpeed));
+                isDone = true;
+                timer.reset();
+            }
+
+            if(isDone && timer.seconds() > wobbleOuttakeDelay) {
+                nextState(WOBBLE, new WobblePosition(WOBBLE_UP));
+                nextState(DRIVE, new WobbleDropZoneToWobblePickupAlign());
+            }
+        }
+    }
+
+    /**
      * RightPowershotToWobbleDropZone State
      * State that drives from the right powershot to the wobble zone set in the Scan state.
      * Drops the wobble goal once it has arrived to the wobble zone.
@@ -314,13 +477,17 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
             opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobbleDropoffToWobblePickupAlign());
-            nextState(WOBBLE, new WobblePosition(WOBBLE_DOWN));
         }
 
         @Override
         public void update() {
             super.update();
-            if(opMode.mecanumDrive.isIdle())
+            if(timer.seconds() > 1.0 && !isDone) {
+                nextState(WOBBLE, new WobblePosition(WOBBLE_DOWN));
+                isDone = true;
+            }
+
+            if(opMode.mecanumDrive.isIdle() && stateMachine.getStateReference(WOBBLE).isDone)
                 nextState(DRIVE, new WobblePickupAlignToWobblePickup());
         }
     }

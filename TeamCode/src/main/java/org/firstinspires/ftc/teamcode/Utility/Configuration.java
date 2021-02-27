@@ -19,9 +19,10 @@ public class Configuration {
     public static int WOBBLE_UP = 977;
     public static int WOBBLE_DOWN = 3110;
 
-    public static double highGoalSpeed = 0.56;
-    public static double powerShotSpeed = 0.51;
+    public static double highGoalSpeed = 0.54;
+    public static double powerShotSpeed = 0.50;
     public static double wobblePower = 1.0;
+    public static double intakePower = 1.0;
 
     /*
         PowerSpeed is meant to be the speed given to the motor, from [-1,1]

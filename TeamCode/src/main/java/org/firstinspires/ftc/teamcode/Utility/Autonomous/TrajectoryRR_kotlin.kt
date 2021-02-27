@@ -61,7 +61,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
 
 
     var SHOOT_HIGHGOAL = Pose2d(-2.0,  -42.0 + 2.0,Math.toRadians(180.0 - 0.0))
-    var POWERSHOT_LEFT  = Pose2d(-4.0,  -6.5,Math.toRadians(180.0 - 0.0))
+    var POWERSHOT_LEFT  = Pose2d(-4.0,  -6.5 + spacing_powershot,Math.toRadians(180.0 - 0.0))
     var POWERSHOT_CENTER = POWERSHOT_LEFT.plus(Pose2d(0.0, -1.0 * spacing_powershot - 1.5, 0.0))
     var POWERSHOT_RIGHT = POWERSHOT_LEFT.plus(Pose2d(0.0,-2.0 * spacing_powershot - 1.5, 0.0))
 

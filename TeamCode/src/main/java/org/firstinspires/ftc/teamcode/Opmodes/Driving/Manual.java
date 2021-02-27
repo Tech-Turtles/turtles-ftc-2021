@@ -5,10 +5,8 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.HardwareTypes.ColorSensor;
 import org.firstinspires.ftc.teamcode.HardwareTypes.ContinuousServo;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
@@ -34,8 +32,9 @@ public class Manual extends RobotHardware {
     public static double rotationSpeed = 1.0;
     public static boolean powershotMode = false;
     public static double manualWobblePower = 0.5;
+    public static double intakeSpeed = 0;
 
-    private DistanceSensor leftRange, backRange;
+//    private DistanceSensor leftRange, backRange;
 
     private WobbleStates wobbleState = WobbleStates.MANUAL;
     private boolean wobbleArrived = false;
@@ -75,9 +74,9 @@ public class Manual extends RobotHardware {
         mecanumDrive = new SampleMecanumDrive(hardwareMap);
         mecanumDrive.setPoseEstimate(lastPosition == null ? new TrajectoryRR_kotlin(mecanumDrive).getSTART_CENTER() : lastPosition);
         trajectoryRR = new TrajectoryRR_kotlin(this.mecanumDrive);
-
-        leftRange = hardwareMap.get(DistanceSensor.class, "leftDistance");
-        backRange = hardwareMap.get(DistanceSensor.class, "backDistance");
+//
+//        leftRange = hardwareMap.get(DistanceSensor.class, "leftDistance");
+//        backRange = hardwareMap.get(DistanceSensor.class, "backDistance");
     }
 
     @Override
@@ -181,13 +180,17 @@ public class Manual extends RobotHardware {
         }
     }
 
+    boolean autoRunForward = false;
     void intakeControls() {
-        if (primary.right_trigger > deadzone) {
-            motorUtility.setPower(Motors.INTAKE, 1f);
-        } else if (primary.left_trigger > deadzone) {
-            motorUtility.setPower(Motors.INTAKE, -1f);
+        if (primary.rightTriggerOnce()) {
+            autoRunForward = !autoRunForward;
+        }
+
+        if(primary.left_trigger > deadzone) {
+            autoRunForward = false;
+            motorUtility.setPower(Motors.INTAKE, -intakePower);
         } else {
-            motorUtility.setPower(Motors.INTAKE, 0f);
+            motorUtility.setPower(Motors.INTAKE, autoRunForward ? intakePower : 0);
         }
     }
 
@@ -305,6 +308,9 @@ public class Manual extends RobotHardware {
         telemetry.addData("Precision mode:      ", df.format(precisionMode));
         telemetry.addData("Launcher speed:      ", df.format(highGoalSpeed));
         telemetry.addData("Powershot mode:      ", powershotMode);
+        telemetry.addData("X:                   ", df.format(poseEstimate.getX()));
+        telemetry.addData("Y:                   ", df.format(poseEstimate.getY()));
+        telemetry.addData("Heading:             ", df.format(Math.toDegrees(poseEstimate.getHeading())));
         if(packet != null) {
             packet.addLine("--MANUAL--");
             packet.put("Precision mode:      ", df.format(precisionMode));
@@ -315,8 +321,8 @@ public class Manual extends RobotHardware {
             packet.put("X:                   ", df.format(poseEstimate.getX()));
             packet.put("Y:                   ", df.format(poseEstimate.getY()));
             packet.put("Heading:             ", df.format(Math.toDegrees(poseEstimate.getHeading())));
-            packet.put("leftDistance range   ", df_precise.format(leftRange.getDistance(DistanceUnit.INCH)));
-            packet.put("backDistance range   ", df_precise.format(backRange.getDistance(DistanceUnit.INCH)));
+//            packet.put("leftDistance range   ", df_precise.format(leftRange.getDistance(DistanceUnit.INCH)));
+//            packet.put("backDistance range   ", df_precise.format(backRange.getDistance(DistanceUnit.INCH)));
             try {
                 packet.put("Wobble Distance: ", df.format(getDistance(getColorSensor(ColorSensor.WOBBLE_SENSOR))));
             } catch (NullPointerException ignore) {}
@@ -443,6 +449,7 @@ public class Manual extends RobotHardware {
         double launchSpeed;
         double launchVelocity_tps; // encoder ticks per second
         boolean servoPushed = false;
+        double manualServoDelay = 0.4;
         ElapsedTime servoTimer = new ElapsedTime();
 
         Launch_fire(double launchSpeed) {
@@ -461,7 +468,7 @@ public class Manual extends RobotHardware {
                     servoTimer.reset();
                 }
             } else {
-                if (servoTimer.seconds() > servoDelay) {
+                if (servoTimer.seconds() > manualServoDelay) {
                     //isDone = true; // This indicates we've shot, but not that we're ready to shoot.
                     nextState(LAUNCHER, new Launch_windUp(this.launchSpeed));
                 }
