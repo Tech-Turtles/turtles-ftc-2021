@@ -32,6 +32,7 @@ public class Manual extends RobotHardware {
     public static double rotationSpeed = 1.0;
     public static boolean powershotMode = false;
     public static double manualWobblePower = 0.5;
+    public static double launcherSpeed = highGoalSpeed;
 
 //    private DistanceSensor leftRange, backRange;
 
@@ -252,7 +253,7 @@ public class Manual extends RobotHardware {
 
         if (secondary.AOnce() && !secondary.start()) {
             powershotMode = !powershotMode;
-            highGoalSpeed = powershotMode ? powerShotSpeed : highGoalSpeed;
+            launcherSpeed = powershotMode ? powerShotSpeed : highGoalSpeed;
         }
     }
 
