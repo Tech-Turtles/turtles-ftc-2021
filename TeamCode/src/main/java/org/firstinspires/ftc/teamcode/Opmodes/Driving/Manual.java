@@ -32,7 +32,6 @@ public class Manual extends RobotHardware {
     public static double rotationSpeed = 1.0;
     public static boolean powershotMode = false;
     public static double manualWobblePower = 0.5;
-    public static double intakeSpeed = 0;
 
 //    private DistanceSensor leftRange, backRange;
 
@@ -183,7 +182,7 @@ public class Manual extends RobotHardware {
     boolean autoRunForward = false;
     void intakeControls() {
         if (primary.rightTriggerOnce()) {
-            autoRunForward = !autoRunForward;
+            autoRunForward = true;
         }
 
         if(primary.left_trigger > deadzone) {
