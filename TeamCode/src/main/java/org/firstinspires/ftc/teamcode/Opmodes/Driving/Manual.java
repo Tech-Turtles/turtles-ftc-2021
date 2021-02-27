@@ -92,12 +92,15 @@ public class Manual extends RobotHardware {
         //launcherControls(); // In LaunchArm_Manual
 
         /*  Exit auto operation if driver inputs are used.
-        if(isDrivetrainManualInputActive() && stateMachine.getCurrentStates(DRIVE) != "Drive_Manual") {
+        if(isDrivetrainManualInputActive() && !stateMachine.getCurrentStates(DRIVE).equals("Drive_Manual")) {
             stopAutoDriving();
             stateMachine.changeState(DRIVE, new Drive_Manual());
             stateMachine.changeState(LAUNCHER, new LaunchArm_Manual());
         }
         */
+        if(secondary.right_trigger > 0.3 && !stateMachine.getCurrentStates(LAUNCHER).equals("LaunchArm_Manual")) {
+            stateMachine.changeState(LAUNCHER, new LaunchArm_Manual());
+        }
     }
 
     /*
@@ -393,8 +396,8 @@ public class Manual extends RobotHardware {
 
             if(isDrivetrainManualInputActive()) { // Return manual control
                 stopAutoDriving();
-                stateMachine.changeState(DRIVE, new Drive_Manual());
                 stateMachine.changeState(LAUNCHER, new LaunchArm_Manual());
+                stateMachine.changeState(DRIVE, new Drive_Manual());
             }
             if(opMode.mecanumDrive.isIdle() && !arrived) {
                 arrived = true;
