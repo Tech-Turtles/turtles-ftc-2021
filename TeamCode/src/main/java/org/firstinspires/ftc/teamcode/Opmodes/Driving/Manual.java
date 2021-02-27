@@ -171,8 +171,15 @@ public class Manual extends RobotHardware {
 
     void drivetrainUtilityControls() {
         if(!primary.leftBumper()) {
-            if (primary.YOnce()) {
-                mecanumDrive.clearEstimatedPose();
+//            if (primary.YOnce()) {
+//                mecanumDrive.clearEstimatedPose();
+//            }
+
+            if(primary.YOnce()) { // set pose to nearest corner
+                mecanumDrive.setPoseEstimate(
+                        TrajectoryRR_kotlin.getNearestCornerPose2d(
+                                mecanumDrive.getPoseEstimate())
+                );
             }
 
             if (primary.AOnce() && !primary.start()) {
@@ -253,30 +260,22 @@ public class Manual extends RobotHardware {
     void chordedControls() {
         if(primary.leftBumper()) {
 
-            if(primary.dpadDownOnce())  // Drive to auto start position
-                stateMachine.changeState(DRIVE, new Drive_ToPose(trajectoryRR.getSTART_CENTER()));
-
-            if (primary.AOnce()) // Set pose to parked center (auto start position)
-                mecanumDrive.setPoseEstimate(trajectoryRR.getSTART_CENTER());
-
-            if (primary.dpadRightOnce()) // Goto Save Location
-                stateMachine.changeState(DRIVE, new Drive_ToPose(saveLocation));
-
-            if (primary.BOnce()) // Save Location
-                saveLocation = mecanumDrive.getPoseEstimate();
-
-            if (primary.dpadUpOnce())
-                stateMachine.changeState(DRIVE, new Drive_ToPose(trajectoryRR.getSHOOT_HIGHGOAL()));
-
-
-            if(primary.YOnce()) { // set pose to nearest corner
-                mecanumDrive.setPoseEstimate(
-                        TrajectoryRR_kotlin.getNearestCornerPose2d(
-                                mecanumDrive.getPoseEstimate())
-                );
-            }
-
-            if(primary.dpadLeftOnce()) {
+//            if(primary.dpadDownOnce())  // Drive to auto start position
+//                stateMachine.changeState(DRIVE, new Drive_ToPose(trajectoryRR.getSTART_CENTER()));
+//
+//            if (primary.AOnce()) // Set pose to parked center (auto start position)
+//                mecanumDrive.setPoseEstimate(trajectoryRR.getSTART_CENTER());
+//
+//            if (primary.dpadRightOnce()) // Goto Save Location
+//                stateMachine.changeState(DRIVE, new Drive_ToPose(saveLocation));
+//
+//            if (primary.BOnce()) // Save Location
+//                saveLocation = mecanumDrive.getPoseEstimate();
+//
+//            if (primary.dpadUpOnce())
+//                stateMachine.changeState(DRIVE, new Drive_ToPose(trajectoryRR.getSHOOT_HIGHGOAL()));
+//
+            if(primary.BOnce()) {
                 // Do powershots
                 // Hopefully no problem is created from constructing all state objects
                 // before using them.
@@ -286,13 +285,13 @@ public class Manual extends RobotHardware {
                                         new Drive_moveAndShoot(trajectoryRR.getPOWERSHOT_LEFT(),
                                                 new Drive_Manual_AllStates()))));
             }
-
-            if(primary.XOnce()) {
-                // Drive test to show angle error in start position
-                stateMachine.changeState(DRIVE,
-                        new Drive_ToPose(trajectoryRR.getSTART_CENTER()
-                        .plus(new Pose2d(96,0,0))));
-            }
+//
+//            if(primary.XOnce()) {
+//                // Drive test to show angle error in start position
+//                stateMachine.changeState(DRIVE,
+//                        new Drive_ToPose(trajectoryRR.getSTART_CENTER()
+//                        .plus(new Pose2d(96,0,0))));
+//            }
 
         }
     }

@@ -635,12 +635,16 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
             val flipOffset = Pose2d(0.75,0.0,180.0.toRadians)
             val corners = ArrayList<Pose2d>()
             corners.add(Pose2d(-61.5, -61.0, (0.0).toRadians))
-            corners.add(Pose2d( 60.75, -61.0, (0.0).toRadians))
-            corners.add(Pose2d(-61.5, 61.0, (0.0).toRadians))
-            corners.add(Pose2d( 60.75, 61.0, (0.0).toRadians))
+            // TODO: re-enable other 3 corners
+//            corners.add(Pose2d( 60.75, -61.0, (0.0).toRadians))
+//            corners.add(Pose2d(-61.5, 61.0, (0.0).toRadians))
+//            corners.add(Pose2d( 60.75, 61.0, (0.0).toRadians))
 
             // Which direction, fwd 0.0 or reverse 180.0?
-            val isHeadingFwd = Math.abs(0.0.toRadians - pose.heading) < 90.0.toRadians
+            // TODO: re-enable forward orientation
+            val isHeadingFwd = false // HARDCODED
+            //val isHeadingFwd = Math.abs(0.0.toRadians - pose.heading) < 90.0.toRadians
+
             val orientationOffset =
                 if(isHeadingFwd) Pose2d(0.0,0.0,0.0)
                 else flipOffset
