@@ -96,7 +96,9 @@ public class Executive {
          */
         public String getCurrentStates() {
             StringBuilder stateString = new StringBuilder();
-            for (StateType type : stateMap.keySet()) {
+            Set<StateType> stateTypeSet = stateMap.keySet();
+            StateType[] stateTypeKeyArray = stateTypeSet.toArray(new StateType[stateTypeSet.size()]);
+            for (StateType type : stateTypeKeyArray) {
                 String stateElement = getCurrentStates(type);
                 stateString.append(stateElement).append("\n");
             }
@@ -104,7 +106,9 @@ public class Executive {
         }
 
         public void init() {
-            for (StateType type : stateMap.keySet()) {
+            Set<StateType> stateTypeSet = stateMap.keySet();
+            StateType[] stateTypeKeyArray = stateTypeSet.toArray(new StateType[stateTypeSet.size()]);
+            for (StateType type : stateTypeKeyArray) {
                 StateBase<T_opmode> state = stateMap.get(type);
                 if(state != null) {
                     state.init(this);
@@ -117,7 +121,9 @@ public class Executive {
          * Runs the update function for any states that are not null or isDeleteRequested and has been initialized
          */
         public void update() {
-            for (StateType type : stateMap.keySet()) {
+            Set<StateType> stateTypeSet = stateMap.keySet();
+            StateType[] stateTypeKeyArray = stateTypeSet.toArray(new StateType[stateTypeSet.size()]);
+            for (StateType type : stateTypeKeyArray) {
                 StateBase<T_opmode> state = stateMap.get(type);
 
                 if(state == null) {
@@ -140,7 +146,9 @@ public class Executive {
          * Changes 'initialized' to false, preventing it from being updated until
          */
         public void reset() {
-            for (StateType type : stateMap.keySet()) {
+            Set<StateType> stateTypeSet = stateMap.keySet();
+            StateType[] stateTypeKeyArray = stateTypeSet.toArray(new StateType[stateTypeSet.size()]);
+            for (StateType type : stateTypeKeyArray) {
                 StateBase<T_opmode> state = stateMap.get(type);
                 state.reset();
             }
