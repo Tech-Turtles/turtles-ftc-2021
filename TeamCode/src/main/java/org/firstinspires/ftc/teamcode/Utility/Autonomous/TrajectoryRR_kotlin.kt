@@ -471,7 +471,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
 
         // Pickup Rings
         var trajRingAlignToRingGrab: Trajectory =
-                trajectoryBuilder(trajSecondWobbleDropoffToRingPickupAlign.end(), 0.0.toRadians)
+                trajectoryBuilder(ringPickupAlign, 0.0.toRadians)
                         .lineToConstantHeading(ringPickupGrab.vec())
                         .build();
         this.trajRingAlignToRingGrab = trajRingAlignToRingGrab
@@ -479,7 +479,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
 
         // Take picked up rings to shoot
         var trajRingGrabToShootHighGoal: Trajectory =
-                trajectoryBuilder(trajRingAlignToRingGrab.end(), 0.0.toRadians)
+                trajectoryBuilder(ringPickupGrab, 0.0.toRadians)
                         .lineToConstantHeading(ringPickupAlign.vec())
                         .splineToSplineHeading(SHOOT_HIGHGOAL,0.0)
                         .build();
@@ -488,7 +488,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
 
         // After shooting into highgoal, go park
         var trajFromShootHighGoalToPark: Trajectory =
-                trajectoryBuilder(trajRingGrabToShootHighGoal.end(), 0.0.toRadians)
+                trajectoryBuilder(SHOOT_HIGHGOAL, 0.0.toRadians)
                         .lineToLinearHeading(PARK)
                         .build();
         this.trajFromShootHighGoalToPark = trajFromShootHighGoalToPark
