@@ -4,7 +4,6 @@ import android.util.Log;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.Utility.Math.ElapsedTimer;
 import org.firstinspires.ftc.teamcode.Utility.RobotHardware;
 
 import java.util.HashMap;
@@ -76,17 +75,18 @@ public class Executive {
          * @param stateType The StateType of the state you want a reference to
          * @return A reference to the state
          */
-        public StateBase<T_opmode> getStateReference(StateType stateType) {
+        public StateBase<T_opmode> getStateReferenceByType(StateType stateType) {
             return stateMap.get(stateType);
         }
 
-        // Format state to only contain the class name.
-        public String getCurrentStates(StateType stateType) {
+        public Class<?> getCurrentStateByType(StateType stateType) {
             StateBase<T_opmode> state = stateMap.get(stateType);
             try {
-                return state.getClass().getSimpleName();
-            } catch (Exception e){
-                return "";
+                return state.getClass();
+            } catch (NullPointerException ignore){
+                // This method should only be used for logging or to check the current state.
+                // Because of that, it does not matter what class is returned.
+                return this.getClass();
             }
         }
 
@@ -94,12 +94,12 @@ public class Executive {
          * A method supplies
          * @return a String containing all of the StateTypes and the States associated with them
          */
-        public String getCurrentStates() {
+        public String getCurrentStateByType() {
             StringBuilder stateString = new StringBuilder();
             Set<StateType> stateTypeSet = stateMap.keySet();
             StateType[] stateTypeKeyArray = stateTypeSet.toArray(new StateType[stateTypeSet.size()]);
             for (StateType type : stateTypeKeyArray) {
-                String stateElement = getCurrentStates(type);
+                String stateElement = getCurrentStateByType(type).getSimpleName();
                 stateString.append(stateElement).append("\n");
             }
             return stateString.toString();

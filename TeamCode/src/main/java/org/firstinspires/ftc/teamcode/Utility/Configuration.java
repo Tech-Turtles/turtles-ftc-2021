@@ -3,8 +3,6 @@ package org.firstinspires.ftc.teamcode.Utility;
 
 import com.acmerobotics.dashboard.config.Config;
 
-import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
-
 @Config
 public class Configuration {
 

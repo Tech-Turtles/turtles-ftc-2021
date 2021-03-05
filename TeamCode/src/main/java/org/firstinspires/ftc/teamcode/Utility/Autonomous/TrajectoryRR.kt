@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.Utility.Autonomous
 
-import com.acmerobotics.dashboard.config.Config
 import com.acmerobotics.roadrunner.geometry.Pose2d
 import com.acmerobotics.roadrunner.geometry.Vector2d
 import com.acmerobotics.roadrunner.trajectory.Trajectory
@@ -10,64 +9,61 @@ import org.firstinspires.ftc.teamcode.Utility.Odometry.DriveConstants
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount.*
-import kotlin.collections.ArrayList
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
 
-
-@Config
-class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
+class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
     val drive: SampleMecanumDrive = sampleMecanumDrive
 
     /*
    Offset system
     */
-    val offsetWobbleArmReach: Double = 12.0 + 4.0
-    val wobbleDropoffLateral: Double = 3.0
-    val wobblePickupLateral: Double = -3.0
-    val offsetWobbleDropoffAlign = Pose2d(-offsetWobbleArmReach - 6.0,wobbleDropoffLateral,0.0)
-    val offsetWobbleDropoffDeep = Pose2d(-offsetWobbleArmReach + 2.0,wobbleDropoffLateral,0.0)
-    val offsetWobbleDropoffShallow = Pose2d(-offsetWobbleArmReach - 2.0,wobbleDropoffLateral,0.0)
-    val wobbleDropoffRotationRadians: Double = 0.0.toRadians
+    private val offsetWobbleArmReach: Double = 12.0 + 4.0
+    private val wobbleDropoffLateral: Double = 3.0
+    private val wobblePickupLateral: Double = -3.0
+    private val offsetWobbleDropoffAlign = Pose2d(-offsetWobbleArmReach - 6.0, wobbleDropoffLateral, 0.0)
+    private val offsetWobbleDropoffDeep = Pose2d(-offsetWobbleArmReach + 2.0, wobbleDropoffLateral, 0.0)
+    private val offsetWobbleDropoffShallow = Pose2d(-offsetWobbleArmReach - 2.0, wobbleDropoffLateral, 0.0)
+    private val wobbleDropoffRotationRadians: Double = 0.0.toRadians
 
-    val offsetWobblePickupAlign = Pose2d(-offsetWobbleArmReach - 8.0,wobblePickupLateral,0.0)
-    val offsetWobblePickupGrab = Pose2d(-offsetWobbleArmReach + 3.0 + 4.0 + 3.0,wobblePickupLateral,0.0) // Drive through wobble goal
-    val wobblePickupRotationRadians: Double = (165.0).toRadians
+    private val offsetWobblePickupAlign = Pose2d(-offsetWobbleArmReach - 8.0, wobblePickupLateral, 0.0)
+    private val offsetWobblePickupGrab = Pose2d(-offsetWobbleArmReach + 3.0 + 4.0 + 3.0, wobblePickupLateral, 0.0) // Drive through wobble goal
+    private val wobblePickupRotationRadians: Double = (165.0).toRadians
 
-    val offsetRingPickupAlign = Pose2d(-14.0,-5.0,0.0)
-    val offsetRingPickupGrab = Pose2d(-7.0,-5.0,0.0)
-    val ringPickupRotationRadians: Double = (149.0).toRadians
+    private val offsetRingPickupAlign = Pose2d(-14.0, -5.0, 0.0)
+    private val offsetRingPickupGrab = Pose2d(-7.0, -5.0, 0.0)
+    private val ringPickupRotationRadians: Double = (149.0).toRadians
 
-    val spacing_powershot: Double = 7.0 // Spacing between the powershot sticks in the y axis, inches
+    private val spacingPowershot: Double = 7.0 // Spacing between the powershot sticks in the y axis, inches
 
     // old offsets
     val ringOffset: Pose2d = Pose2d(2.0, 5.0, 0.0)
-    val wobbleOffset: Pose2d = Pose2d(-12.0, 0.0, 0.0)
-    val wobblePickup: Pose2d = Pose2d(12.0, 0.0, 0.0)
+    private val wobbleOffset: Pose2d = Pose2d(-12.0, 0.0, 0.0)
+    private val wobblePickup: Pose2d = Pose2d(12.0, 0.0, 0.0)
 
     // Actual locations before offsets for robot grabber
-    var RINGS_ACTUAL = Pose2d(-24.0, -36.0,Math.toRadians(0.0))  // Needs rotation for pickup
-    var WOBBLE_PICKUP_ACTUAL = Pose2d(-48.0, -50.0,Math.toRadians(0.0)) // Needs rotation for pickup
-    var ZONE_A_CENTER = Pose2d(12.0, -60.0,Math.toRadians(0.0))
-    var ZONE_B_CENTER = Pose2d(36.0, -36.0,Math.toRadians(0.0))
-    var ZONE_C_CENTER = Pose2d(60.0, -60.0,Math.toRadians(0.0))
+    private var RINGS_ACTUAL = Pose2d(-24.0, -36.0, Math.toRadians(0.0))  // Needs rotation for pickup
+    private var WOBBLE_PICKUP_ACTUAL = Pose2d(-48.0, -50.0, Math.toRadians(0.0)) // Needs rotation for pickup
+    private var ZONE_A_CENTER = Pose2d(12.0, -60.0, Math.toRadians(0.0))
+    private var ZONE_B_CENTER = Pose2d(36.0, -36.0, Math.toRadians(0.0))
+    private var ZONE_C_CENTER = Pose2d(60.0, -60.0, Math.toRadians(0.0))
 
     // Start Positions
     // True X is -60.75, not -62.0
     //TODO Change start position and update old positions with the new value
     val START_WALL = Pose2d(-62.0, -42.0, Math.toRadians(180.0))
-    var START_CENTER = Pose2d(-62.0, -18.0, Math.toRadians(180.0+0.0))
+    var START_CENTER = Pose2d(-62.0, -18.0, Math.toRadians(180.0 + 0.0))
 
 
-    var SHOOT_HIGHGOAL = Pose2d(-2.0,  -42.0 + 2.0,Math.toRadians(180.0 - 0.0))
-    var POWERSHOT_LEFT  = Pose2d(-4.0,  -6.5 + spacing_powershot,Math.toRadians(180.0 - 0.0))
-    var POWERSHOT_CENTER = POWERSHOT_LEFT.plus(Pose2d(0.0, -1.0 * spacing_powershot - 1.5, 0.0))
-    var POWERSHOT_RIGHT = POWERSHOT_LEFT.plus(Pose2d(0.0,-2.0 * spacing_powershot - 1.5, 0.0))
+    var SHOOT_HIGHGOAL = Pose2d(-2.0, -42.0 + 2.0, Math.toRadians(180.0 - 0.0))
+    var POWERSHOT_LEFT  = Pose2d(-4.0, -6.5 + spacingPowershot, Math.toRadians(180.0 - 0.0))
+    var POWERSHOT_CENTER = POWERSHOT_LEFT.plus(Pose2d(0.0, -1.0 * spacingPowershot - 1.5, 0.0))
+    var POWERSHOT_RIGHT = POWERSHOT_LEFT.plus(Pose2d(0.0, -2.0 * spacingPowershot - 1.5, 0.0))
 
 
     // Offset added to rings
-    var RINGS = RINGS_ACTUAL .plus(Pose2d(8.0,4.0,0.0)
+    var RINGS = RINGS_ACTUAL.plus(Pose2d(8.0, 4.0, 0.0)
             .rotateFrame(-45.0.toRadians))//.plus(ringOffset)
     var SHOOT = Pose2d(-2.0, -42.0 + 2.0, Math.toRadians(180.0 - 0.0))
 
@@ -81,9 +77,9 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     var wobbleDropoffShallow: Pose2d = ZONE_CENTER_VARIABLE.plus(offsetWobbleDropoffShallow.rotateFrame(
             wobbleDropoffRotationRadians))
     var wobblePickupAlign: Pose2d = WOBBLE_PICKUP_ACTUAL.plus(offsetWobblePickupAlign.rotateFrame(
-            wobblePickupRotationRadians ))
+            wobblePickupRotationRadians))
     var wobblePickupGrab: Pose2d = WOBBLE_PICKUP_ACTUAL.plus(offsetWobblePickupGrab.rotateFrame(
-            wobblePickupRotationRadians ))
+            wobblePickupRotationRadians))
     var ringPickupAlign: Pose2d = RINGS_ACTUAL.plus(offsetRingPickupAlign.rotateFrame(ringPickupRotationRadians))
     var ringPickupGrab: Pose2d = RINGS_ACTUAL.plus(offsetRingPickupGrab.rotateFrame(ringPickupRotationRadians))
 
@@ -359,12 +355,12 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
                 when(ZONE_CENTER_VARIABLE) {
                     ZONE_A_CENTER ->
                         trajectoryBuilder(traj_PowershotCenterPowershotRight.end(), -90.0.toRadians)
-                                .splineToSplineHeading(wobbleDropoffDeep.plus(Pose2d(0.0,6.0,0.0)),Math.toRadians(-90.0))
+                                .splineToSplineHeading(wobbleDropoffDeep.plus(Pose2d(0.0, 6.0, 0.0)), Math.toRadians(-90.0))
                                 .lineToConstantHeading(wobbleDropoffDeep.vec())
                                 .build();
                     ZONE_B_CENTER ->
                         trajectoryBuilder(traj_PowershotCenterPowershotRight.end(), -50.0.toRadians)
-                                .splineToSplineHeading(wobbleDropoffAlign,0.0)
+                                .splineToSplineHeading(wobbleDropoffAlign, 0.0)
                                 .lineToConstantHeading(wobbleDropoffDeep.vec())
                                 .build();
                     else -> // Zone C
@@ -372,8 +368,8 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
                                 // SIMPLE OPTION - turns wrong way near the wall
                                 //.lineToLinearHeading(wobbleDropoffDeep)
                                 // FANCY OPTION - turns away from the wall
-                                .splineToSplineHeading(wobbleDropoffDeep.plus(Pose2d(-15.0,5.0,1.0.toRadians)), -20.0.toRadians)
-                                .splineToSplineHeading(wobbleDropoffDeep,-20.0.toRadians)
+                                .splineToSplineHeading(wobbleDropoffDeep.plus(Pose2d(-15.0, 5.0, 1.0.toRadians)), -20.0.toRadians)
+                                .splineToSplineHeading(wobbleDropoffDeep, -20.0.toRadians)
                                 .build();
                 }
         this.trajPowershotRightToWobbleDropOff = traj_PowershotRightToWobbleDropoff
@@ -410,19 +406,19 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
                 when(ZONE_CENTER_VARIABLE) {
                     ZONE_A_CENTER ->
                         trajectoryBuilder(trajWobbleAlignToWobblePickup.end(), wobblePickupRotationRadians + 180.0.toRadians)
-                                .splineToSplineHeading(wobbleDropoffAlign,Math.toRadians(-30.0))
+                                .splineToSplineHeading(wobbleDropoffAlign, Math.toRadians(-30.0))
                                 //.lineToConstantHeading(wobbleDropoffAlign.vec())
                                 .build();
                     ZONE_B_CENTER ->
                         trajectoryBuilder(trajWobbleAlignToWobblePickup.end(), wobblePickupRotationRadians + 180.0.toRadians)
                                 .lineToConstantHeading(wobblePickupAlign.vec())
-                                .splineToSplineHeading(wobbleDropoffAlign,25.0.toRadians)
+                                .splineToSplineHeading(wobbleDropoffAlign, 25.0.toRadians)
                                 //.lineToConstantHeading(wobbleDropoffDeep.vec())
                                 .build();
                     else -> // Zone C
                         trajectoryBuilder(trajWobbleAlignToWobblePickup.end(), wobblePickupRotationRadians + (180.0).toRadians)
                                 //.lineToConstantHeading(wobblePickupAlign.vec())
-                                .splineToSplineHeading(wobbleDropoffAlign,-20.0.toRadians)
+                                .splineToSplineHeading(wobbleDropoffAlign, -20.0.toRadians)
                                 .build();
                 }
         this.trajWobblePickupToDropoffAlign = trajWobblePickupToDropoffAlign
@@ -441,12 +437,12 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
                 when(ZONE_CENTER_VARIABLE) {
                     ZONE_A_CENTER ->
                         trajectoryBuilder(trajWobbleAlignToSecondDropoff.end(), 180.0.toRadians)
-                                .lineToConstantHeading( wobbleDropoffAlign.vec() )
-                                .splineToConstantHeading(PARK.vec().plus(Vector2d(0.0,12.0)),0.0.toRadians)
+                                .lineToConstantHeading(wobbleDropoffAlign.vec())
+                                .splineToConstantHeading(PARK.vec().plus(Vector2d(0.0, 12.0)), 0.0.toRadians)
                                 .build();
                     else ->
                         trajectoryBuilder(trajWobbleAlignToSecondDropoff.end(), 135.0.toRadians)
-                                .lineToConstantHeading(PARK.vec().plus(Vector2d(0.0,12.0)))
+                                .lineToConstantHeading(PARK.vec().plus(Vector2d(0.0, 12.0)))
                                 .build();
                 }
         this.trajSecondWobbleDropoffToPark = trajSecondWobbleDropoffToPark
@@ -457,8 +453,8 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
                 when(ZONE_CENTER_VARIABLE) {
                     ZONE_A_CENTER ->
                         trajectoryBuilder(trajWobbleAlignToSecondDropoff.end(), 180.0.toRadians)
-                                .lineToConstantHeading( wobbleDropoffAlign.vec().plus(Vector2d(0.0,7.0)) )
-                                .splineToSplineHeading( ringPickupAlign, 90.0.toRadians + 0.0*ringPickupRotationRadians)
+                                .lineToConstantHeading(wobbleDropoffAlign.vec().plus(Vector2d(0.0, 7.0)))
+                                .splineToSplineHeading(ringPickupAlign, 90.0.toRadians + 0.0 * ringPickupRotationRadians)
                                 //.lineToLinearHeading( ringPickupAlign)
                                 .build();
                     else ->
@@ -481,7 +477,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
         var trajRingGrabToShootHighGoal: Trajectory =
                 trajectoryBuilder(ringPickupGrab, 0.0.toRadians)
                         .lineToConstantHeading(ringPickupAlign.vec())
-                        .splineToSplineHeading(SHOOT_HIGHGOAL,0.0)
+                        .splineToSplineHeading(SHOOT_HIGHGOAL, 0.0)
                         .build();
         this.trajRingGrabToShootHighGoal = trajRingGrabToShootHighGoal
 
@@ -555,7 +551,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
         // Start Center to HighGoal shoot position
         // Calculate x position for smooth turn around rings
         val xPositionWeighted = (2.0 * RINGS_ACTUAL.x + 1.0 * SHOOT_HIGHGOAL.x) / 3.0
-        val ringLeftToHighGoal = Pose2d(xPositionWeighted, START_CENTER.y,0.0.toRadians);
+        val ringLeftToHighGoal = Pose2d(xPositionWeighted, START_CENTER.y, 0.0.toRadians);
         var trajCenterStartToHighGoal: Trajectory =
                 trajectoryBuilder(START_CENTER, 0.0.toRadians)
                         .splineTo(ringLeftToHighGoal.vec(), 0.0.toRadians)
@@ -591,13 +587,13 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
                                 //.splineToSplineHeading(wobbleDropoffDeep.plus(Pose2d(0.0,6.0,0.0)),Math.toRadians(-90.0))
                                 //.lineToConstantHeading(wobbleDropoffDeep.vec())
                                 // FANCY OPTION - turns away from the wall
-                                .splineToSplineHeading(wobbleDropoffDeep.plus(Pose2d(0.0,6.0,1.0.toRadians)),Math.toRadians(-90.0))
+                                .splineToSplineHeading(wobbleDropoffDeep.plus(Pose2d(0.0, 6.0, 1.0.toRadians)), Math.toRadians(-90.0))
                                 .lineToSplineHeading(wobbleDropoffDeep)
                                 .build();
                     ZONE_B_CENTER ->
                         trajectoryBuilder(trajRingGrabToShootHighGoal.end(), 30.0.toRadians)
                                 //.lineToLinearHeading(wobbleDropoffDeep)
-                                .splineToSplineHeading(wobbleDropoffAlign,0.0)
+                                .splineToSplineHeading(wobbleDropoffAlign, 0.0)
                                 .lineToConstantHeading(wobbleDropoffDeep.vec())
                                 .build();
                     else -> // Zone C
@@ -605,8 +601,8 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
                                 // SIMPLE OPTION - turns wrong way near the wall
                                 //.lineToLinearHeading(wobbleDropoffDeep)
                                 // FANCY OPTION - turns away from the wall
-                                .splineToSplineHeading(wobbleDropoffDeep.plus(Pose2d(-20.0,3.0,1.0.toRadians)), -20.0.toRadians)
-                                .splineToSplineHeading(wobbleDropoffDeep,0.0.toRadians)
+                                .splineToSplineHeading(wobbleDropoffDeep.plus(Pose2d(-20.0, 3.0, 1.0.toRadians)), -20.0.toRadians)
+                                .splineToSplineHeading(wobbleDropoffDeep, 0.0.toRadians)
                                 .build();
                 }
         this.trajHighGoalToWobbleDropoffDeep = trajHighGoalToWobbleDropoffDeep
@@ -632,7 +628,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
     companion object {
         @JvmStatic
         fun getNearestCornerPose2d(pose: Pose2d): Pose2d {
-            val flipOffset = Pose2d(0.75,0.0,180.0.toRadians)
+            val flipOffset = Pose2d(0.75, 0.0, 180.0.toRadians)
             val corners = ArrayList<Pose2d>()
             corners.add(Pose2d(-61.5, -61.0, (0.0).toRadians))
             // TODO: re-enable other 3 corners
@@ -646,7 +642,7 @@ class TrajectoryRR_kotlin constructor(sampleMecanumDrive: SampleMecanumDrive){
             //val isHeadingFwd = Math.abs(0.0.toRadians - pose.heading) < 90.0.toRadians
 
             val orientationOffset =
-                if(isHeadingFwd) Pose2d(0.0,0.0,0.0)
+                if(isHeadingFwd) Pose2d(0.0, 0.0, 0.0)
                 else flipOffset
 
             // Which point is the closest?

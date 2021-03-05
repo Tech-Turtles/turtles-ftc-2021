@@ -10,7 +10,7 @@ import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
 import org.firstinspires.ftc.teamcode.Opmodes.Autonomous.AutoOpmode;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.StartPosition;
-import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR_kotlin;
+import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR;
 import org.firstinspires.ftc.teamcode.Utility.Configuration;
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount;
 
@@ -37,7 +37,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     private final Executive.StateMachine<AutoOpmode> stateMachine;
     private final AllianceColor allianceColor;
     private final StartPosition startPosition;
-    private TrajectoryRR_kotlin trajectoryRR;
+    private TrajectoryRR trajectoryRR;
 
     public static boolean autoReturnToStart = false;
 
@@ -61,7 +61,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     }
 
     public void init() {
-        trajectoryRR = new TrajectoryRR_kotlin(opmode.mecanumDrive);
+        trajectoryRR = new TrajectoryRR(opmode.mecanumDrive);
         stateMachine.changeState(DRIVE, new Start());
         stateMachine.init();
     }
@@ -79,7 +79,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     }
 
     public String getCurrentState() {
-        return stateMachine.getCurrentStates();
+        return stateMachine.getCurrentStateByType();
     }
 
     /**
@@ -208,7 +208,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 nextState(LAUNCHER, new Launch_fire(powerShotSpeed));
             }
 
-            if(isDone && stateMachine.getStateReference(LAUNCHER).isDone)
+            if(isDone && stateMachine.getStateReferenceByType(LAUNCHER).isDone)
                 nextState(DRIVE, new LeftPowershotToCenterPowershot());
         }
     }
@@ -235,7 +235,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 isDone = true;
                 nextState(LAUNCHER, new Launch_fire(powerShotSpeed));
             }
-            if(isDone && stateMachine.getStateReference(LAUNCHER).isDone) {
+            if(isDone && stateMachine.getStateReferenceByType(LAUNCHER).isDone) {
                 nextState(DRIVE, new CenterPowershotToRightPowershot());
             }
         }
@@ -263,7 +263,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 isDone = true;
                 nextState(LAUNCHER, new Launch_fire(powerShotSpeed));
             }
-            if(isDone && stateMachine.getStateReference(LAUNCHER).isDone) {
+            if(isDone && stateMachine.getStateReferenceByType(LAUNCHER).isDone) {
                 nextState(LAUNCHER, new StopMotors(Motors.LAUNCHER));
                 nextState(DRIVE, new RightPowershotToWobbleDropZone());
             }
@@ -296,10 +296,10 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 index++;
             }
 
-            if(stateMachine.getStateReference(LAUNCHER).isDone)
+            if(stateMachine.getStateReferenceByType(LAUNCHER).isDone)
                 isDone = false;
 
-            if(index == 3 && opMode.mecanumDrive.isIdle() && stateMachine.getStateReference(LAUNCHER).isDone) {
+            if(index == 3 && opMode.mecanumDrive.isIdle() && stateMachine.getStateReferenceByType(LAUNCHER).isDone) {
                 nextState(LAUNCHER, new StopMotors(Motors.LAUNCHER));
                 switch (rings) {
                     case ZERO:
@@ -388,10 +388,10 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 index++;
             }
 
-            if(stateMachine.getStateReference(LAUNCHER).isDone)
+            if(stateMachine.getStateReferenceByType(LAUNCHER).isDone)
                 isDone = false;
 
-            if(index == 3 && opMode.mecanumDrive.isIdle() && stateMachine.getStateReference(LAUNCHER).isDone) {
+            if(index == 3 && opMode.mecanumDrive.isIdle() && stateMachine.getStateReferenceByType(LAUNCHER).isDone) {
                 nextState(LAUNCHER, new StopMotors(Motors.LAUNCHER));
                 nextState(DRIVE, new HighGoalToWobbleDropZone());
             }
@@ -418,7 +418,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             if(opMode.mecanumDrive.isBusy()) return;
-            if(!isDone && stateMachine.getStateReference(WOBBLE).isDone) {
+            if(!isDone && stateMachine.getStateReferenceByType(WOBBLE).isDone) {
                 nextState(INTAKE, new WobbleIntake(-wobbleIntakeSpeed));
                 isDone = true;
                 timer.reset();
@@ -451,7 +451,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             if(opMode.mecanumDrive.isBusy()) return;
-            if(!isDone && stateMachine.getStateReference(WOBBLE).isDone) {
+            if(!isDone && stateMachine.getStateReferenceByType(WOBBLE).isDone) {
                 nextState(INTAKE, new WobbleIntake(-wobbleIntakeSpeed));
                 isDone = true;
                 timer.reset();
@@ -487,7 +487,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 isDone = true;
             }
 
-            if(opMode.mecanumDrive.isIdle() && stateMachine.getStateReference(WOBBLE).isDone)
+            if(opMode.mecanumDrive.isIdle() && stateMachine.getStateReferenceByType(WOBBLE).isDone)
                 nextState(DRIVE, new WobblePickupAlignToWobblePickup());
         }
     }

@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
 import org.firstinspires.ftc.teamcode.Utility.*;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive;
-import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR_kotlin;
+import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.servoDelay;
@@ -39,7 +39,7 @@ public class Manual extends RobotHardware {
     private WobbleStates wobbleState = WobbleStates.MANUAL;
     private boolean wobbleArrived = false;
     private final Executive.StateMachine<Manual> stateMachine;
-    private TrajectoryRR_kotlin trajectoryRR;
+    private TrajectoryRR trajectoryRR;
 
     private Pose2d saveLocation = new Pose2d();
 
@@ -72,8 +72,8 @@ public class Manual extends RobotHardware {
     public void start() {
         super.start();
         mecanumDrive = new SampleMecanumDrive(hardwareMap);
-        mecanumDrive.setPoseEstimate(lastPosition == null ? new TrajectoryRR_kotlin(mecanumDrive).getSTART_CENTER() : lastPosition);
-        trajectoryRR = new TrajectoryRR_kotlin(this.mecanumDrive);
+        mecanumDrive.setPoseEstimate(lastPosition == null ? new TrajectoryRR(mecanumDrive).getSTART_CENTER() : lastPosition);
+        trajectoryRR = new TrajectoryRR(this.mecanumDrive);
 //
 //        leftRange = hardwareMap.get(DistanceSensor.class, "leftDistance");
 //        backRange = hardwareMap.get(DistanceSensor.class, "backDistance");
@@ -99,7 +99,7 @@ public class Manual extends RobotHardware {
             stateMachine.changeState(LAUNCHER, new LaunchArm_Manual());
         }
         */
-        if(secondary.right_trigger > 0.3 && !stateMachine.getCurrentStates(LAUNCHER).equals("LaunchArm_Manual")) {
+        if(secondary.right_trigger > deadzone && !stateMachine.getCurrentStateByType(LAUNCHER).equals(LaunchArm_Manual.class)) {
             stateMachine.changeState(LAUNCHER, new LaunchArm_Manual());
         }
     }
@@ -178,7 +178,7 @@ public class Manual extends RobotHardware {
 
             if(primary.YOnce()) { // set pose to nearest corner
                 mecanumDrive.setPoseEstimate(
-                        TrajectoryRR_kotlin.getNearestCornerPose2d(
+                        TrajectoryRR.getNearestCornerPose2d(
                                 mecanumDrive.getPoseEstimate())
                 );
             }
@@ -403,7 +403,7 @@ public class Manual extends RobotHardware {
                 arrived = true;
                 nextState(LAUNCHER, new Launch_fire(powerShotSpeed));
             }
-            if(arrived && stateMachine.getStateReference(LAUNCHER).isDone) {
+            if(arrived && stateMachine.getStateReferenceByType(LAUNCHER).isDone) {
                 nextState(DRIVE, nextDriveState);
             }
         }
