@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.Utility.Roadrunner.drive.opmode;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -20,14 +19,13 @@ public class SingleMotorPIDF extends LinearOpMode {
     public static double delay = 5.0; // sec
     public static double launchSpeed = 0.56;
     boolean moving = true;
-    public static PIDFCoefficients pidfCoefficients;
     private VoltageSensor batteryVoltageSensor;
     private final ElapsedTime timer = new ElapsedTime();
     DcMotorEx launcher;
-    public static double lastKp = 0;
-    public static double lastKi = 0;
-    public static double lastKd = 0;
-    public static double lastKf = 0;
+    public static double Kp = 10;
+    public static double Ki = 0;
+    public static double Kd = 0;
+    public static double Kf = 0;
 
     @Override
     public void runOpMode() {
@@ -35,14 +33,8 @@ public class SingleMotorPIDF extends LinearOpMode {
         batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        pidfCoefficients = launcher.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        lastKp = pidfCoefficients.p;
-        lastKi = pidfCoefficients.i;
-        lastKd = pidfCoefficients.d;
-        lastKf = pidfCoefficients.f;
-
-        launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
+        launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(Kp, Ki, Kd, Kf));
 
         telemetry.addLine("Ready!");
         telemetry.update();
@@ -57,6 +49,7 @@ public class SingleMotorPIDF extends LinearOpMode {
             if (timer.seconds() > delay) {
                 launcher.setPower(moving ? launchSpeed : 0);
                 moving = !moving;
+                setPIDFCoefficients(launcher, DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(Kp, Ki, Kd, Kf));
                 timer.reset();
             }
 
@@ -66,16 +59,6 @@ public class SingleMotorPIDF extends LinearOpMode {
                     "error", Configuration.LAUNCHER_THEORETICAL_MAX * launchSpeed - launcher.getVelocity()
             );
             telemetry.addData("voltage", batteryVoltageSensor.getVoltage());
-
-            if (lastKp != pidfCoefficients.p || lastKd != pidfCoefficients.d
-                    || lastKi != pidfCoefficients.i || lastKf != pidfCoefficients.f) {
-                setPIDFCoefficients(launcher, DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
-
-                lastKp = pidfCoefficients.p;
-                lastKi = pidfCoefficients.i;
-                lastKd = pidfCoefficients.d;
-                lastKf = pidfCoefficients.f;
-            }
 
             telemetry.update();
         }
