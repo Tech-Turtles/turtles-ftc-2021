@@ -10,22 +10,10 @@ import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
-import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
-import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR_kotlin;
+import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR;
 import org.firstinspires.ftc.teamcode.Utility.Roadrunner.util.TelemetryLog;
-import org.firstinspires.ftc.teamcode.Utility.Vision.Old.AveragingPipeline;
-import org.firstinspires.ftc.teamcode.Utility.Vision.Old.SkystoneDetector;
 import org.junit.Before;
 import org.junit.Test;
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.Point;
-import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
-import org.opencv.core.Size;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -33,14 +21,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.firstinspires.ftc.teamcode.Utility.Vision.Old.TernarySkystonePipeline.NormalizedRectangle;
 
 public class FileWriteTest {
 
@@ -57,7 +43,7 @@ public class FileWriteTest {
 
     @Test
     public void cornerTest() {
-        System.out.println(TrajectoryRR_kotlin.getNearestCornerPose2d(new Pose2d(-60.0, 82.0, Math.toRadians(-100.0))));
+        System.out.println(TrajectoryRR.getNearestCornerPose2d(new Pose2d(-60.0, 82.0, Math.toRadians(-100.0))));
 }
 
     @Test
