@@ -45,9 +45,34 @@ public class ListMath
             ret += v.get(i);
         }
 
-        ret /= size - steps;
+        //ret /= size - steps;
+        ret /= steps;
 
         return ret;
+    }
+
+    // Get the standard deviation of entire List
+    static public double standardDeviation(List<Double> v) {
+        int size = v.size();
+        double mean = average(v);
+        double acc = 0.0;
+        for (int i = 0; i < size; ++i) {
+            acc += Math.pow(v.get(i) - mean,2);
+        }
+        double variance = acc / size;
+        return Math.sqrt(variance);
+    }
+
+    // Get the standard deviation of some past number of steps
+    static public double standardDeviation(List<Double> v, int steps) {
+        int size = v.size();
+        double mean = average(v,steps);
+        double acc = 0.0;
+        for (int i = size-steps; i < size; ++i) {
+            acc += Math.pow(v.get(i) - mean,2);
+        }
+        double variance = acc / size;
+        return Math.sqrt(variance);
     }
 
     // Get the span of the List, i.e. lastValue - firstValue.
@@ -63,13 +88,21 @@ public class ListMath
     }
 
     public static void addRemove3(List<Double> v, double value) {
-
         v.add(value);
         while (v.size() > 3)
         {
             v.remove(v.get(0));
         }
     }
+
+    public static void addRemoveN(List<Double> v, double value, double  maxSize) {
+        v.add(value);
+        while (v.size() > maxSize)
+        {
+            v.remove(v.get(0));
+        }
+    }
+
 
     // Derivative
     // x is the independent variable, y is dependent. Returns derivative for unequally spaced points. xest is the x value at which to evaluate the derivative.

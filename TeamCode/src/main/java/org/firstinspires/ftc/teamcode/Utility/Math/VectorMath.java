@@ -44,7 +44,7 @@ public class VectorMath
             ret += v.get(i);
         }
 
-        ret /= size - steps;
+        ret /= steps;
 
         return ret;
     }
