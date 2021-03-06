@@ -37,6 +37,9 @@ public class ListMath
     static public double average(List<Double> v, int steps)
     {
         int size = v.size();
+        if (steps > size) {
+            steps = size;
+        }
         int start = size - steps;
 
         double ret = 0.0;
@@ -66,12 +69,15 @@ public class ListMath
     // Get the standard deviation of some past number of steps
     static public double standardDeviation(List<Double> v, int steps) {
         int size = v.size();
+        if (steps > size) {
+            steps = size;
+        }
         double mean = average(v,steps);
         double acc = 0.0;
         for (int i = size-steps; i < size; ++i) {
             acc += Math.pow(v.get(i) - mean,2);
         }
-        double variance = acc / size;
+        double variance = acc / steps;
         return Math.sqrt(variance);
     }
 

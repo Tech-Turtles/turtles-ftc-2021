@@ -52,12 +52,14 @@ public class ListStatisticsTest {
         System.out.println("Mean, size -1: " + ListMath.average(list,list.size()-1));
         System.out.println("Mean, 1: " + ListMath.average(list,1));
         System.out.println("Mean, 0: " + ListMath.average(list,0));
+        System.out.println("Mean, 10: " + ListMath.average(list,10));
         System.out.println("StdDev: " + ListMath.standardDeviation(list));
         // should just be size, but -1 offset in there somewhere
         System.out.println("StdDev, size: " + ListMath.standardDeviation(list,list.size()));
         System.out.println("StdDev, size -1: " + ListMath.standardDeviation(list,list.size()-1));
         System.out.println("StdDev, 1: " + ListMath.standardDeviation(list,1));
         System.out.println("StdDev, 0: " + ListMath.standardDeviation(list,0));
+        System.out.println("StdDev, 10: " + ListMath.standardDeviation(list,10));
 
     }
 
