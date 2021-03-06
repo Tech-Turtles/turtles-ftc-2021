@@ -382,11 +382,11 @@ public class FtcRobotControllerActivity extends Activity
       initWifiMute(true);
     }
 
-    // check to see if there is a preferred Wi-Fi to use.
-    checkPreferredChannel();
-
     FtcAboutActivity.setBuildTimeFromBuildConfig(BuildConfig.BUILD_TIME);
     FtcDashboard.start();
+
+    // check to see if there is a preferred Wi-Fi to use.
+    checkPreferredChannel();
   }
 
   protected UpdateUI createUpdateUI() {

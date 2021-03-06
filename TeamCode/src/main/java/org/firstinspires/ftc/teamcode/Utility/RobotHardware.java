@@ -14,16 +14,19 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.Utility.Math.ListMath;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.AutoDrive;
 import org.firstinspires.ftc.teamcode.Utility.Mecanum.Mecanum;
 import org.firstinspires.ftc.teamcode.Utility.Math.ElapsedTimer;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.*;
@@ -31,6 +34,9 @@ import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.Utility.Vision.UGCoffeeDetector;
+
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_OPEN_POS;
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_PUSH_POS;
 
 /**
  * @author Christian
@@ -50,10 +56,14 @@ public class RobotHardware extends OpMode {
     public static DecimalFormat df_precise = new DecimalFormat("0.0000");
 
     public IMUUtilities imuUtil;
+    public VoltageSensor batteryVoltageSensor;
 
     protected LynxModule expansionHub1, expansionHub2;
 
     public final ElapsedTimer period = new ElapsedTimer();
+    public ArrayList<Double> launchVelocityHistory = new ArrayList<>();
+    public double launcherFireTimestamp = 0.0;
+    public double launcherResetTimestamp = 0.0;
 
     public Controller primary, secondary;
 
@@ -279,6 +289,13 @@ public class RobotHardware extends OpMode {
             s = getServo(servo);
             if (s != null)
                 s.setPosition(pos);
+            // Log time shot was fired or reset (log only on change)
+            if (servo == Servos.HOPPER & pos != s.getPosition()) {
+                if (pos == HOPPER_PUSH_POS)
+                    launcherFireTimestamp = getTime();
+                if (pos == HOPPER_OPEN_POS)
+                    launcherResetTimestamp = getTime();
+            }
         }
 
         public double getAngle(Servos servo) {
@@ -367,6 +384,8 @@ public class RobotHardware extends OpMode {
         }
         clearHubCache();
 
+        batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
+
         for (Motors m : Motors.values()) {
             try {
                 motors.put(m, hardwareMap.get(DcMotorEx.class, m.getConfigName()));
@@ -437,6 +456,9 @@ public class RobotHardware extends OpMode {
         }
         clearHubCache();
         period.updatePeriodTime();
+        // Maintain record of launcher velocities of same length as period records
+        ListMath.addRemoveN(launchVelocityHistory,
+                motorUtility.getVelocity(Motors.LAUNCHER), period.getHistoryLength());
         primary.update();
         secondary.update();
     }
@@ -450,13 +472,13 @@ public class RobotHardware extends OpMode {
             dashboard.sendTelemetryPacket(packet);
         packet = null;
         dashboard = null;
-        clearHubCache();
         try {
             lastPosition = mecanumDrive.getPoseEstimate();
             lastWobblePosition = motorUtility.getEncoderValue(Motors.WOBBLE_ARM);
         } catch (Exception e) {
             Log.wtf("Unable to save positions", e.getMessage());
         }
+        clearHubCache();
         motorUtility.stopAllMotors();
         for (ContinuousServo servo : ContinuousServo.values())
             servoUtility.setPower(servo, 0);

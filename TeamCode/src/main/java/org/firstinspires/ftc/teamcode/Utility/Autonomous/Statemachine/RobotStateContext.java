@@ -697,7 +697,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             // If velocity is high enough, and servoDelay elapsed, then isDone = true
             opMode.motorUtility.setPower(Motors.LAUNCHER, this.launchSpeed);
             opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
-            isDone = opMode.motorUtility.getVelocity(Motors.LAUNCHER) > this.launchVelocity_tps && timer.seconds() > servoDelay;
+            isDone = LauncherControl.isErrorLow(opMode.launchVelocityHistory, launchVelocity_tps) || timer.seconds() > servoDelay;
         }
     }
 

@@ -5,6 +5,8 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.ColorSensor;
@@ -14,6 +16,7 @@ import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
 import org.firstinspires.ftc.teamcode.Utility.*;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR;
+import org.firstinspires.ftc.teamcode.Utility.Math.LauncherControl;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.servoDelay;
@@ -58,6 +61,7 @@ public class Manual extends RobotHardware {
     @Override
     public void init() {
         super.init();
+        setPIDFCoefficients(Motors.LAUNCHER, DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(40,0,0,15));
         stateMachine.changeState(DRIVE, new Drive_Manual());
         stateMachine.changeState(LAUNCHER, new LaunchArm_Manual());
         stateMachine.init();
@@ -247,13 +251,24 @@ public class Manual extends RobotHardware {
 
         if (secondary.rightBumper()) {
             servoUtility.setAngle(Servos.HOPPER, HOPPER_PUSH_POS);
-        } else {
+        } else if( !secondary.leftBumper()){
             servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
         }
 
         if (secondary.AOnce() && !secondary.start()) {
             powershotMode = !powershotMode;
             launcherSpeed = powershotMode ? powerShotSpeed : highGoalSpeed;
+        }
+
+        // Smart shoot test
+        if (secondary.leftBumper()) {
+            // Looks like you just shot, wait a bit
+            if(LauncherControl.isErrorLow(launchVelocityHistory,
+                    launcherSpeed * LAUNCHER_THEORETICAL_MAX)) {
+                servoUtility.setAngle(Servos.HOPPER, HOPPER_PUSH_POS);
+            } else {
+                servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
+            }
         }
     }
 
@@ -314,11 +329,11 @@ public class Manual extends RobotHardware {
         telemetry.addData("Y:                   ", df.format(poseEstimate.getY()));
         telemetry.addData("Heading:             ", df.format(Math.toDegrees(poseEstimate.getHeading())));
         if(packet != null) {
-            packet.addLine("--MANUAL--");
             packet.put("Precision mode:      ", df.format(precisionMode));
             packet.put("Launcher speed:      ", df.format(highGoalSpeed));
             packet.put("Powershot mode:      ", powershotMode);
             packet.put("Launch velocity:     ", motorUtility.getVelocity(Motors.LAUNCHER));
+            packet.put("Launch target velocity:", launcherSpeed * LAUNCHER_THEORETICAL_MAX);
             packet.put("Hopper position:     ", servoUtility.getAngle(Servos.HOPPER));
             packet.put("X:                   ", df.format(poseEstimate.getX()));
             packet.put("Y:                   ", df.format(poseEstimate.getY()));
@@ -476,5 +491,13 @@ public class Manual extends RobotHardware {
                 }
             }
         }
+    }
+
+    public void setPIDFCoefficients(Motors motor, DcMotor.RunMode runMode, PIDFCoefficients coefficients) {
+        PIDFCoefficients compensatedCoefficients = new PIDFCoefficients(
+                coefficients.p, coefficients.i, coefficients.d,
+                coefficients.f * 12 / batteryVoltageSensor.getVoltage()
+        );
+        motorUtility.setPIDFCoefficients(runMode, compensatedCoefficients, motor);
     }
 }
