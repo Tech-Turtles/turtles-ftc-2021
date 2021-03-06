@@ -8,6 +8,7 @@ public class Configuration {
 
     public static double HOPPER_OPEN_POS = 0.32;
     public static double HOPPER_PUSH_POS = 0.22;
+    public static double LAUNCH_SERVO_DELAY = 0.3;
 
     public static final double deadzone = 0.49;
 
@@ -21,6 +22,10 @@ public class Configuration {
     public static double powerShotSpeed = 0.50;
     public static double wobblePower = 1.0;
     public static double intakePower = 1.0;
+
+    public static double launchMeanErrorTicksPerSecond = 100.0;
+    public static double launchStdDevErrorTicksPerSecond = 100.0;
+    public static int launchErrorWindowSteps = 10;
 
     /*
         PowerSpeed is meant to be the speed given to the motor, from [-1,1]
