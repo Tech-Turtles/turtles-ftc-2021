@@ -23,8 +23,8 @@ public class Configuration {
     public static double wobblePower = 1.0;
     public static double intakePower = 1.0;
 
-    public static double launchMeanErrorTicksPerSecond = 100.0;
-    public static double launchStdDevErrorTicksPerSecond = 100.0;
+    public static double launchMeanErrorTicksPerSecond = 80.0;
+    public static double launchStdDevErrorTicksPerSecond = 7.0;
     public static int launchErrorWindowSteps = 10;
 
     /*

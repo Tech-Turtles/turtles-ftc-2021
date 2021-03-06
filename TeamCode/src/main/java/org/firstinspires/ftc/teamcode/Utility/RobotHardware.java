@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -55,6 +56,7 @@ public class RobotHardware extends OpMode {
     public static DecimalFormat df_precise = new DecimalFormat("0.0000");
 
     public IMUUtilities imuUtil;
+    public VoltageSensor batteryVoltageSensor;
 
     protected LynxModule expansionHub1, expansionHub2;
 
@@ -381,6 +383,8 @@ public class RobotHardware extends OpMode {
                 packet.put("Error: ", e.getMessage());
         }
         clearHubCache();
+
+        batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
 
         for (Motors m : Motors.values()) {
             try {
