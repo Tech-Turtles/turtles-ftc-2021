@@ -472,13 +472,13 @@ public class RobotHardware extends OpMode {
             dashboard.sendTelemetryPacket(packet);
         packet = null;
         dashboard = null;
-        clearHubCache();
         try {
             lastPosition = mecanumDrive.getPoseEstimate();
             lastWobblePosition = motorUtility.getEncoderValue(Motors.WOBBLE_ARM);
         } catch (Exception e) {
             Log.wtf("Unable to save positions", e.getMessage());
         }
+        clearHubCache();
         motorUtility.stopAllMotors();
         for (ContinuousServo servo : ContinuousServo.values())
             servoUtility.setPower(servo, 0);
