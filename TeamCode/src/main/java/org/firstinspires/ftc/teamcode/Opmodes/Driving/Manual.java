@@ -14,6 +14,7 @@ import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
 import org.firstinspires.ftc.teamcode.Utility.*;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR;
+import org.firstinspires.ftc.teamcode.Utility.Math.LauncherControl;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.servoDelay;
@@ -247,13 +248,29 @@ public class Manual extends RobotHardware {
 
         if (secondary.rightBumper()) {
             servoUtility.setAngle(Servos.HOPPER, HOPPER_PUSH_POS);
-        } else {
+        } else if( !secondary.leftBumper()){
             servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
         }
 
         if (secondary.AOnce() && !secondary.start()) {
             powershotMode = !powershotMode;
             launcherSpeed = powershotMode ? powerShotSpeed : highGoalSpeed;
+        }
+
+        // Smart shoot test
+        if (secondary.leftBumper()) {
+            // Looks like you just shot, wait a bit
+            if(launcherFireTimestamp + LAUNCH_SERVO_DELAY < getTime()) {
+                // Could set servo to push, but it should stay where it is anyhow.
+            } else if(! LauncherControl.isReadyToShoot(launchVelocityHistory,
+                    launcherSpeed * LAUNCHER_THEORETICAL_MAX,
+                    launcherFireTimestamp, launcherResetTimestamp, getTime())) {
+                //Not ready to shoot, but didn't JUST fire. Retract servo
+                servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
+            } else {
+                // Looks like you are ready to shoot
+                servoUtility.setAngle(Servos.HOPPER, HOPPER_PUSH_POS);
+            }
         }
     }
 
