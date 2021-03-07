@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.*;
-import org.firstinspires.ftc.teamcode.Utility.Mecanum.MecanumNavigation;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.IMUUtilities;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.Utility.Vision.UGCoffeeDetector;
@@ -137,6 +136,14 @@ public class RobotHardware extends OpMode {
                 if(m == null) continue;
                 m.setPIDFCoefficients(runmode, pidfCoefficients);
             }
+        }
+
+        public void setPIDFCoefficientsCompensated(Motors motor, DcMotor.RunMode runMode, PIDFCoefficients coefficients) {
+            PIDFCoefficients compensatedCoefficients = new PIDFCoefficients(
+                    coefficients.p, coefficients.i, coefficients.d,
+                    coefficients.f * 12 / batteryVoltageSensor.getVoltage()
+            );
+            setPIDFCoefficients(runMode, compensatedCoefficients, motor);
         }
 
         public void setTypeMotorsRunmode(MotorTypes type, DcMotor.RunMode runMode) {
