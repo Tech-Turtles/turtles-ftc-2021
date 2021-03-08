@@ -36,6 +36,7 @@ public class Manual extends RobotHardware {
     public static boolean powershotMode = false;
     public static double manualWobblePower = 0.5;
     public static double launcherSpeed = highGoalSpeed;
+    public static boolean autoFeedForwardCalibrate = false;  // TODO: Remove after test
 
 //    private DistanceSensor leftRange, backRange;
 
@@ -43,6 +44,9 @@ public class Manual extends RobotHardware {
     private boolean wobbleArrived = false;
     private final Executive.StateMachine<Manual> stateMachine;
     private TrajectoryRR trajectoryRR;
+    // TODO: Switch to FeedForwardClosedLoop to adjust FeedForward on the fly.
+    private LauncherControl launcherControl = new LauncherControl(this,
+            LauncherControl.LaunchControllerState.FeedForwardOpenLoop); // Only closed loop does anything
 
     private Pose2d saveLocation = new Pose2d();
 
@@ -90,6 +94,10 @@ public class Manual extends RobotHardware {
         mecanumDrive.update(packet);
         chordedControls(); // Controls for when left bumper is held down.
         displayTelemetry();
+        // TODO: Remove after testing (just allows toggle from dashboard)
+        launcherControl.launchControllerState = autoFeedForwardCalibrate ?
+                LauncherControl.LaunchControllerState.FeedForwardClosedLoop:
+                LauncherControl.LaunchControllerState.FeedForwardOpenLoop;
 
             //drivetrainControls(); // In Drive_Manual
         //intakeControls(); // In Drive_Manual
@@ -244,7 +252,8 @@ public class Manual extends RobotHardware {
         }
 
         if (secondary.right_trigger > deadzone) {
-            motorUtility.setPower(Motors.LAUNCHER, highGoalSpeed);
+            motorUtility.setPower(Motors.LAUNCHER, launcherSpeed);
+            launcherControl.calibrateFeedForward(launcherSpeed * LAUNCHER_THEORETICAL_MAX);
         } else {
             motorUtility.setPower(Motors.LAUNCHER, 0f);
         }

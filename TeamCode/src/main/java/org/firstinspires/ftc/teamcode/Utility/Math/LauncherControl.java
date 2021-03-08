@@ -21,7 +21,8 @@ public class LauncherControl {
     }
 
     private RobotHardware opmode;
-    private LaunchControllerState launchControllerState = FeedForwardClosedLoop;
+    // TODO: Make Private.  Only here to make toggling on dashboard easier.
+    public LaunchControllerState launchControllerState = FeedForwardClosedLoop;
 
     public LauncherControl(RobotHardware opmode, LaunchControllerState launchControllerState) {
         this.opmode = opmode;
