@@ -36,6 +36,13 @@ public class LauncherControl {
      * If Calibration is needed AND LaunchControllerState = FeedForwardClosedLoop,
      * Calculate an increment for the F parameter and add it, recording previous F and error.
      *
+     * How do we calculate the increment to F
+     *     Assumption 0: F_correct / targetVelocity = F_current / currentVelocity
+     *     =>           F_correct = F_current / avgVel * targetVel
+     *     =>           F_increment = (F_current * targetVel / avgVel) - F_current
+     *     Note that this assumes a linear relationship between F and velocity, which is
+     *     probably not true.  However, it may work just the same
+     *
     @return false if calibration is not needed
      */
     public boolean calibrateFeedForward(double targetVelocityTicksPerSecond) {
@@ -46,21 +53,17 @@ public class LauncherControl {
             double velocityErrorTPS = targetVelocityTicksPerSecond - averageVelocityTPS;
             double F_new;
 
-            // Might add logic to check if previous calibration error was better
+            // Logic to check if previous calibration error was better
             if(Math.abs(velocityErrorTPS) > Math.abs(error_previous)) {
                 // Scale down increment and reapply.
                 F_new = F_previous + F_increment_previous * Configuration.F_overshoot_scale;
                 F_increment_previous *= Configuration.F_overshoot_scale; // Scale down in case still overshooting
             } else {
-          /* How do we calculate the increment to F
-          Assumption 1: F_correct / targetVelocity = F_current / currentVelocity
-           =>           F_correct = F_current / avgVel * targetVel
-           =>           F_increment = (F_current * targetVel / avgVel) - F_current
-                Note that this assumes a linear relationship between F and velocity, which is
-                probably not true.  However, it may work just the same
-           */
+                // See How do we calculate the increment to F, above
                 double F_increment = ( F_current * targetVelocityTicksPerSecond / averageVelocityTPS ) - F_current;
                 F_increment *= Configuration.F_increment_scale;
+                // Bound F_increment range
+                F_increment = Math.min(Math.max(F_increment, Configuration.F_increment_min), Configuration.F_increment_max);
                 this.F_previous = F_current;
                 this.error_previous = velocityErrorTPS;
                 this.F_increment_previous = F_increment;

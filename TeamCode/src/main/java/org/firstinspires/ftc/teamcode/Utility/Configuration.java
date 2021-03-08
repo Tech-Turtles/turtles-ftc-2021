@@ -33,10 +33,12 @@ public class Configuration {
     public static PIDFCoefficients pidfCoeffOriginalIntegral =  new PIDFCoefficients(10,3,0,0);
     public static double minVelocityToCalibrateTPS = 100; // Min speed to calibrate launcher feed forward
     public static double minVelocityErrorToCalibrateTPS = 30;
-    public static double F_increment_scale = 1.0; // Scale calculated increment by this before adding it
+    public static double F_increment_scale = 0.8; // Scale calculated increment by this before adding it
     public static double F_overshoot_scale = 0.5; // Scale down increment if error grows
-    public static double F_min = 5.0;
-    public static double F_max = 30.0;
+    public static double F_min = 8.0;
+    public static double F_max = 25.0;
+    public static double F_increment_min = 0.1; // If F needs to change, it should change at lest this much.
+    public static double F_increment_max = 5.0; // No reason to change F more than this in one step.
 
     /*
         PowerSpeed is meant to be the speed given to the motor, from [-1,1]
