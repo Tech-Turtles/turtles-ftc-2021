@@ -66,7 +66,7 @@ public class AutoOpmode extends RobotHardware {
         mecanumDrive = new SampleMecanumDrive(hardwareMap);
         mecanumDrive.setPoseEstimate(new Pose2d(0, 0, 0));
 
-        motorUtility.setPIDFCoefficientsCompensated(Motors.LAUNCHER, DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(40,0,0,15));
+        motorUtility.setPIDFCoefficientsCompensated(Motors.LAUNCHER, DcMotor.RunMode.RUN_USING_ENCODER, Configuration.pidfCoeffFeedForward);
 
         robotStateContext.init();
         telemetry.addData("Initialization: ", "Successful!");
