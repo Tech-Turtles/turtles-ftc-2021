@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.Utility.Math;
 
+import org.apache.commons.math3.stat.regression.SimpleRegression;
+
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -161,4 +164,75 @@ public class ListMath
 
         return I;
     }
+
+
+    /**
+     * Convert List of Doubles to primitive array double[]
+     * @param list<Double>
+     * @return double[]
+     */
+    public static double[] toPrimitive(final List<Double> list) {
+        final double[] out = new double[list.size()];
+        Arrays.setAll(out, list::get);
+        return out;
+    }
+
+    /**
+     * Merge two equal length primative double arrays into a 2d primative double array.
+     * @param x double[]
+     * @param y double[]
+     * @return double[][2]
+     */
+    public static double[][] merge2D(double[] x, double[] y) {
+        if(x.length != y.length) {
+            throw new RuntimeException("ERROR: x and y vectors must have same length") ;
+        }
+        final double[][] out = new double[x.length][2];
+        for(int i = 0; i < x.length; ++i) {
+            out[i][0] = x[i];
+            out[i][1] = y[i];
+        }
+        return out;
+    }
+
+    /**
+     * Calculate Linear regression slope, provides SimpleRegression object instance.
+     * Test Apache Commons Math3 regression tools
+     * @see <a href="https://commons.apache.org/proper/commons-math/javadocs/api-3.3/org/apache/commons/math3/stat/regression/SimpleRegression.html">SimpleRegression JavaDoc</a>
+     * @see <a href="https://www.bmj.com/about-bmj/resources-readers/publications/statistics-square-one/11-correlation-and-regression">Regression Reference</a>
+     * @param time List of Doubles
+     * @param data List of Doubles
+     * @return SimpleRegression object
+     */
+    public static SimpleRegression getLinearRegression(List<Double> time, List<Double> data) {
+        SimpleRegression simpleRegression = new SimpleRegression();
+        double[][] dataXY = merge2D(toPrimitive(time), toPrimitive(data));
+        simpleRegression.addData(dataXY);
+        return simpleRegression;
+    }
+
+    /**
+     * Calculate Linear regression slope, provides SimpleRegression object instance.
+     * Ignores all but the last 'numSteps' worth of data.
+     * @param time List of Doubles
+     * @param data List of Doubles
+     * @param numSteps int, Use only the last numSteps in the calculation
+     * @return SimpleRegression object
+     */
+    public static SimpleRegression getLinearRegression(List<Double> time, List<Double> data, int numSteps) {
+        if(time.size() != data.size()) {
+            throw new RuntimeException("ERROR: time and data vectors must have same length") ;
+        }
+        int size = time.size();
+        if(numSteps > time.size())
+            numSteps = time.size();
+        int startIndex = time.size() - numSteps;
+        SimpleRegression simpleRegression = new SimpleRegression();
+        double[][] dataXY = merge2D(
+                toPrimitive( time.subList(startIndex,size - 1)),
+                toPrimitive( data.subList(startIndex,size - 1)));
+        simpleRegression.addData(dataXY);
+        return simpleRegression;
+    }
+
 }

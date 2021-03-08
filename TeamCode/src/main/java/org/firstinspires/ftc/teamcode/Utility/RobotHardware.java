@@ -61,6 +61,7 @@ public class RobotHardware extends OpMode {
 
     public final ElapsedTimer period = new ElapsedTimer();
     public ArrayList<Double> launchVelocityHistory = new ArrayList<>();
+    public ArrayList<Double> timeStampHistory = new ArrayList<>();
     public double launcherFireTimestamp = 0.0;
     public double launcherResetTimestamp = 0.0;
 
@@ -473,6 +474,8 @@ public class RobotHardware extends OpMode {
         period.updatePeriodTime();
         // Maintain record of launcher velocities of same length as period records
         ListMath.addRemoveN(launchVelocityHistory,
+                motorUtility.getVelocity(Motors.LAUNCHER), period.getHistoryLength());
+        ListMath.addRemoveN(timeStampHistory,
                 motorUtility.getVelocity(Motors.LAUNCHER), period.getHistoryLength());
         primary.update();
         secondary.update();
