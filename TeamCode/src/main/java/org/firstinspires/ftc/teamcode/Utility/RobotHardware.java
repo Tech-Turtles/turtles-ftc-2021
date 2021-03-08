@@ -146,6 +146,14 @@ public class RobotHardware extends OpMode {
             setPIDFCoefficients(runMode, compensatedCoefficients, motor);
         }
 
+        public PIDFCoefficients getPIDFCoefficients(DcMotor.RunMode runmode, Motors motor) {
+            getMotor(motor);
+            if(m != null)
+                return m.getPIDFCoefficients(runmode);
+            else
+                return null;
+        }
+
         public void setTypeMotorsRunmode(MotorTypes type, DcMotor.RunMode runMode) {
             for (Motors motor : Motors.values()) {
                 if (!motor.getType().equals(type)) continue;
