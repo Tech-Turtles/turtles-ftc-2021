@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.HardwareTypes.ColorSensor;
 import org.firstinspires.ftc.teamcode.HardwareTypes.ContinuousServo;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
@@ -347,8 +348,8 @@ public class Manual extends RobotHardware {
             packet.put("X:                   ", df.format(poseEstimate.getX()));
             packet.put("Y:                   ", df.format(poseEstimate.getY()));
             packet.put("Heading:             ", df.format(Math.toDegrees(poseEstimate.getHeading())));
-//            packet.put("leftDistance range   ", df_precise.format(leftRange.getDistance(DistanceUnit.INCH)));
-//            packet.put("backDistance range   ", df_precise.format(backRange.getDistance(DistanceUnit.INCH)));
+//            packet.put("leftDistance range   ", df.format(distanceSensorUtility.getLeftRangeInches()));
+//            packet.put("backDistance range   ", df.format(distanceSensorUtility.getBackRangeInches()));
             try {
                 packet.put("Wobble Distance: ", df.format(getDistance(getColorSensor(ColorSensor.WOBBLE_SENSOR))));
             } catch (NullPointerException ignore) {}

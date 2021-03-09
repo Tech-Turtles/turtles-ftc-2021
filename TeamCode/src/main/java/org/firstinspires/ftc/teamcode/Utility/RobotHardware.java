@@ -50,6 +50,7 @@ public class RobotHardware extends OpMode {
 
     public final MotorUtility motorUtility = new MotorUtility();
     public final ServoUtility servoUtility = new ServoUtility();
+    public final DistanceSensorUtility distanceSensorUtility = new DistanceSensorUtility();
 
     public static DecimalFormat df = new DecimalFormat("0.00");
     public static DecimalFormat df_precise = new DecimalFormat("0.0000");
@@ -349,6 +350,71 @@ public class RobotHardware extends OpMode {
         }
     }
 
+
+    public class DistanceSensorUtility {
+        private boolean cacheValid = false;
+        private double leftRangeInches = 0.0;
+        private double backRangeInches = 0.0;
+
+        private final DistanceSensor leftRangeSensor = hardwareMap.get(DistanceSensor.class, "leftDistance");
+        private final DistanceSensor backRangeSensor = hardwareMap.get(DistanceSensor.class, "backDistance");
+
+        /**
+         * Must be called before any distance sensors are accessed this loop. Invalidates
+         */
+        public void invalidateCache() {
+            cacheValid = false;
+        }
+
+        /**
+         * Called by get methods when cache is invalid.
+         */
+        private void updateDistanceMeasurementCaches() {
+            leftRangeInches = leftRangeSensor.getDistance(DistanceUnit.INCH);
+            backRangeInches = backRangeSensor.getDistance(DistanceUnit.INCH);
+           cacheValid = true;
+       }
+
+       public double getLeftRangeInches() {
+            if (!cacheValid)
+                updateDistanceMeasurementCaches();
+            return leftRangeInches;
+       }
+
+        public double getBackRangeInches() {
+            if (!cacheValid)
+                updateDistanceMeasurementCaches();
+            return backRangeInches;
+        }
+
+
+        // At high goal shooting position, heading 180.0, what is distance to red driver area?
+        private final double leftRangeTargetInches = 36.0;
+        // At high goal shooting position, heading 180.0, what is distance to high goal wall?
+        private final double backRangeTargetInches = 62.0;
+        // Calibrated position is at the high goal shooting position.
+        private final Pose2d calibratedPosition = new Pose2d(-2.0, -40.0, Math.toRadians(180.0));
+        /**
+         * Calculates robot Pose from IMU heading and two orthogonal range measurements.  Only works
+         * if heading is 180.0 degrees, otherwise returns previous pose estimate.
+         * @param currentPositionEstimate
+         * @return Pose2d
+         */
+        public Pose2d getPositionFromRange(Pose2d currentPositionEstimate) {
+            double headingRadians = currentPositionEstimate.getHeading();
+            // Use calibrated XY but use heading from current position
+            Pose2d newPosition = new Pose2d(calibratedPosition.getX(),calibratedPosition.getY(),headingRadians).plus(
+                    new Pose2d(-getBackRangeInches(),getLeftRangeInches(),0.0)).plus(
+                    new Pose2d(backRangeTargetInches,-leftRangeTargetInches,0.0));
+            if ( Math.abs( Math.toDegrees(headingRadians) - 180.0) < 2.0 )
+                return newPosition;
+            else
+                return currentPositionEstimate;
+        }
+
+    }
+
+
     public RevColorSensorV3 getColorSensor(ColorSensor colorSensor) {
         RevColorSensorV3 revColorSensorV3 = colorSensors.get(colorSensor);
         if(revColorSensorV3 == null && packet != null)
@@ -477,10 +543,11 @@ public class RobotHardware extends OpMode {
                 motorUtility.getVelocity(Motors.LAUNCHER), period.getHistoryLength());
         ListMath.addRemoveN(timeStampHistory,
                 motorUtility.getVelocity(Motors.LAUNCHER), period.getHistoryLength());
+        distanceSensorUtility.invalidateCache();
         primary.update();
         secondary.update();
     }
-    
+
     /**
      * Stops all motors and calls requestOpModeStop() to end the opmode
      */

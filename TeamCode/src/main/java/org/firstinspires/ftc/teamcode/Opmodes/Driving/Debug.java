@@ -51,6 +51,10 @@ public class Debug extends Manual {
             telemetry.addData(servo.name() + ": ", servoUtility.getAngle(servo));
         }
 
+        // No delay if not polled
+        packet.put("leftDistance range   ", df.format(distanceSensorUtility.getLeftRangeInches()));
+        packet.put("backDistance range   ", df.format(distanceSensorUtility.getBackRangeInches()));
+
         telemetry.addData("Period Average: ", df_precise.format(period.getAveragePeriodSec()) + "s");
         telemetry.addData("Period Max:     ", df_precise.format(period.getMaxPeriodSec()) + "s");
 
