@@ -12,6 +12,7 @@ import org.firstinspires.ftc.teamcode.Utility.Autonomous.AllianceColor;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.StartPosition;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR;
 import org.firstinspires.ftc.teamcode.Utility.Configuration;
+import org.firstinspires.ftc.teamcode.Utility.Math.LauncherControl;
 import org.firstinspires.ftc.teamcode.Utility.Vision.RingDetectionAmount;
 
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.DRIVE;
@@ -27,6 +28,7 @@ import static org.firstinspires.ftc.teamcode.Utility.Configuration.highGoalSpeed
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.intakePower;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.powerShotSpeed;
 import static org.firstinspires.ftc.teamcode.Utility.RobotHardware.df;
+
 
 
 @Config

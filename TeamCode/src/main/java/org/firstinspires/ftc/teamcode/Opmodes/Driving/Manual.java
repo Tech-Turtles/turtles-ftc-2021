@@ -61,7 +61,7 @@ public class Manual extends RobotHardware {
     @Override
     public void init() {
         super.init();
-        setPIDFCoefficients(Motors.LAUNCHER, DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(40,0,0,15));
+        motorUtility.setPIDFCoefficientsCompensated(Motors.LAUNCHER, DcMotor.RunMode.RUN_USING_ENCODER,  Configuration.pidfCoeffFeedForward);
         stateMachine.changeState(DRIVE, new Drive_Manual());
         stateMachine.changeState(LAUNCHER, new LaunchArm_Manual());
         stateMachine.init();
@@ -493,11 +493,4 @@ public class Manual extends RobotHardware {
         }
     }
 
-    public void setPIDFCoefficients(Motors motor, DcMotor.RunMode runMode, PIDFCoefficients coefficients) {
-        PIDFCoefficients compensatedCoefficients = new PIDFCoefficients(
-                coefficients.p, coefficients.i, coefficients.d,
-                coefficients.f * 12 / batteryVoltageSensor.getVoltage()
-        );
-        motorUtility.setPIDFCoefficients(runMode, compensatedCoefficients, motor);
-    }
 }

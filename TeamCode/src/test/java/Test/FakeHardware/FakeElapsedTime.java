@@ -1,6 +1,5 @@
-package FakeHardware;
+package Test.FakeHardware;
 
-import com.qualcomm.robotcore.robot.Robot;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Utility.RobotHardware;

@@ -1,4 +1,4 @@
-package TestUtilities;
+package Test.TestUtilities;
 
 import java.text.DecimalFormat;
 

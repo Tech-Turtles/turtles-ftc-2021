@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.Opmodes.Autonomous;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
@@ -67,7 +66,7 @@ public class AutoOpmode extends RobotHardware {
         mecanumDrive = new SampleMecanumDrive(hardwareMap);
         mecanumDrive.setPoseEstimate(new Pose2d(0, 0, 0));
 
-        setPIDFCoefficients(Motors.LAUNCHER, DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(40,0,0,15));
+        motorUtility.setPIDFCoefficientsCompensated(Motors.LAUNCHER, DcMotor.RunMode.RUN_USING_ENCODER, Configuration.pidfCoeffFeedForward);
 
         robotStateContext.init();
         telemetry.addData("Initialization: ", "Successful!");
@@ -101,13 +100,5 @@ public class AutoOpmode extends RobotHardware {
             packet.put("Period Max:     ", df_precise.format(period.getMaxPeriodSec()) + "s");
             packet.put("State:          ", robotStateContext.getCurrentState());
         }
-    }
-
-    public void setPIDFCoefficients(Motors motor, DcMotor.RunMode runMode, PIDFCoefficients coefficients) {
-        PIDFCoefficients compensatedCoefficients = new PIDFCoefficients(
-                coefficients.p, coefficients.i, coefficients.d,
-                coefficients.f * 12 / batteryVoltageSensor.getVoltage()
-        );
-        motorUtility.setPIDFCoefficients(runMode, compensatedCoefficients, motor);
     }
 }
