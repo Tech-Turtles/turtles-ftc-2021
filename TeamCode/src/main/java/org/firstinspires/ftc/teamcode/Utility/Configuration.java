@@ -25,8 +25,8 @@ public class Configuration {
     public static double intakePower = 1.0;
 
     public static double launchMeanErrorTicksPerSecond = 80.0;
-    public static double launchStdDevErrorTicksPerSecond = 7.0;
-    public static int launchErrorWindowSteps = 10;
+    public static double launchStdDevErrorTicksPerSecond = 30.0;
+    public static int launchErrorWindowSteps = 18;
 
     public static PIDFCoefficients pidfCoeffFeedForward =  new PIDFCoefficients(40,0,0,15);
     public static PIDFCoefficients pidfCoeffOriginalIntegral =  new PIDFCoefficients(10,3,0,0);
