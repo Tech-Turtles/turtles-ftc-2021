@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 public class Configuration {
 
     public static double HOPPER_OPEN_POS = 0.32;
-    public static double HOPPER_PUSH_POS = 0.22;
+    public static double HOPPER_PUSH_POS = 0.21;
     public static double LAUNCH_SERVO_DELAY = 0.3;
 
     public static final double deadzone = 0.49;
