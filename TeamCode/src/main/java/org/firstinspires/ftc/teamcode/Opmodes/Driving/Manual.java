@@ -6,7 +6,6 @@ import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.HardwareTypes.ColorSensor;
@@ -33,9 +32,9 @@ public class Manual extends RobotHardware {
     public static double linearSpeed = 1.0;
     public static double lateralSpeed = 1.0;
     public static double rotationSpeed = 1.0;
-    public static boolean powershotMode = false;
     public static double manualWobblePower = 0.5;
-    public static double launcherSpeed = highGoalSpeed;
+    public static double launcherSpeedOffset = 0.0;
+    private double currentLauncherSpeed = 0;
 
 //    private DistanceSensor leftRange, backRange;
 
@@ -237,34 +236,31 @@ public class Manual extends RobotHardware {
     }
 
     void launcherControls() {
-        if (secondary.dpadUpOnce()) {
-            highGoalSpeed = Math.min(highGoalSpeed + 0.01, 1.0);
-        } else if (secondary.dpadDownOnce()) {
-            highGoalSpeed = Math.max(highGoalSpeed - 0.01, 0);
-        }
+        if (secondary.dpadUpOnce())
+            launcherSpeedOffset = Math.min(launcherSpeedOffset + 0.01, 1.0);
+        else if (secondary.dpadDownOnce())
+            launcherSpeedOffset = Math.max(launcherSpeedOffset - 0.01, 0);
 
         if (secondary.right_trigger > deadzone) {
-            motorUtility.setPower(Motors.LAUNCHER, highGoalSpeed);
+            currentLauncherSpeed = Math.min(highGoalSpeed + launcherSpeedOffset, 1.0);
+        } else if (secondary.left_trigger > deadzone) {
+            currentLauncherSpeed = Math.min(powerShotSpeed + launcherSpeedOffset, 1.0);
         } else {
-            motorUtility.setPower(Motors.LAUNCHER, 0f);
+            currentLauncherSpeed = 0;
         }
 
-        if (secondary.rightBumper()) {
+        motorUtility.setPower(Motors.LAUNCHER, currentLauncherSpeed);
+
+        if (secondary.rightBumper())
             servoUtility.setAngle(Servos.HOPPER, HOPPER_PUSH_POS);
-        } else if( !secondary.leftBumper()){
+        else if( !secondary.leftBumper())
             servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
-        }
-
-        if (secondary.AOnce() && !secondary.start()) {
-            powershotMode = !powershotMode;
-            launcherSpeed = powershotMode ? powerShotSpeed : highGoalSpeed;
-        }
 
         // Smart shoot test
         if (secondary.leftBumper()) {
             // Looks like you just shot, wait a bit
             if(LauncherControl.isErrorLow(launchVelocityHistory,
-                    launcherSpeed * LAUNCHER_THEORETICAL_MAX)) {
+                    currentLauncherSpeed * LAUNCHER_THEORETICAL_MAX)) {
                 servoUtility.setAngle(Servos.HOPPER, HOPPER_PUSH_POS);
             } else {
                 servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
@@ -293,22 +289,19 @@ public class Manual extends RobotHardware {
 //
             if(primary.BOnce()) {
                 // Do powershots
-                // Hopefully no problem is created from constructing all state objects
-                // before using them.
                 stateMachine.changeState(DRIVE,
                         new Drive_moveAndShoot(trajectoryRR.getPOWERSHOT_RIGHT(),
                                 new Drive_moveAndShoot(trajectoryRR.getPOWERSHOT_CENTER(),
                                         new Drive_moveAndShoot(trajectoryRR.getPOWERSHOT_LEFT(),
                                                 new Drive_Manual_AllStates()))));
             }
-//
+
 //            if(primary.XOnce()) {
 //                // Drive test to show angle error in start position
 //                stateMachine.changeState(DRIVE,
 //                        new Drive_ToPose(trajectoryRR.getSTART_CENTER()
 //                        .plus(new Pose2d(96,0,0))));
 //            }
-
         }
     }
 
@@ -323,17 +316,15 @@ public class Manual extends RobotHardware {
         Pose2d poseEstimate = mecanumDrive.getPoseEstimate();
 
         telemetry.addData("Precision mode:      ", df.format(precisionMode));
-        telemetry.addData("Launcher speed:      ", df.format(highGoalSpeed));
-        telemetry.addData("Powershot mode:      ", powershotMode);
+        telemetry.addData("Launcher speed Offset:", df.format(launcherSpeedOffset));
         telemetry.addData("X:                   ", df.format(poseEstimate.getX()));
         telemetry.addData("Y:                   ", df.format(poseEstimate.getY()));
         telemetry.addData("Heading:             ", df.format(Math.toDegrees(poseEstimate.getHeading())));
         if(packet != null) {
             packet.put("Precision mode:      ", df.format(precisionMode));
-            packet.put("Launcher speed:      ", df.format(highGoalSpeed));
-            packet.put("Powershot mode:      ", powershotMode);
+            packet.put("Launcher speed:      ", df.format(currentLauncherSpeed));
             packet.put("Launch velocity:     ", motorUtility.getVelocity(Motors.LAUNCHER));
-            packet.put("Launch target velocity:", launcherSpeed * LAUNCHER_THEORETICAL_MAX);
+            packet.put("Launch target velocity:",currentLauncherSpeed * LAUNCHER_THEORETICAL_MAX);
             packet.put("Hopper position:     ", servoUtility.getAngle(Servos.HOPPER));
             packet.put("X:                   ", df.format(poseEstimate.getX()));
             packet.put("Y:                   ", df.format(poseEstimate.getY()));
