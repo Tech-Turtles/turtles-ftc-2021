@@ -194,7 +194,7 @@ public class Manual extends RobotHardware {
     }
 
     boolean autoRunForward = false;
-    void intakeControls() {
+    void intakeToggleControls() {
         if (primary.rightTriggerOnce()) {
             autoRunForward = true;
         }
@@ -206,6 +206,18 @@ public class Manual extends RobotHardware {
             motorUtility.setPower(Motors.INTAKE, autoRunForward ? intakePower : 0);
         }
     }
+
+    void intakeControls() {
+        if (primary.right_trigger > deadzone) {
+            motorUtility.setPower(Motors.INTAKE, intakePower);
+        }
+        else if(primary.left_trigger > deadzone) {
+            motorUtility.setPower(Motors.INTAKE, -intakePower);
+        } else {
+            motorUtility.setPower(Motors.INTAKE, 0.0);
+        }
+    }
+
 
     void armControls() {
         if (secondary.XOnce())
