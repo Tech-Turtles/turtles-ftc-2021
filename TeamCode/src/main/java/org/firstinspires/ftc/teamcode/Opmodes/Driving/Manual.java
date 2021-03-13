@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Opmodes.Driving;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.roadrunner.control.PIDFController;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
@@ -16,6 +17,7 @@ import org.firstinspires.ftc.teamcode.Utility.*;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive;
 import org.firstinspires.ftc.teamcode.Utility.Autonomous.TrajectoryRR;
 import org.firstinspires.ftc.teamcode.Utility.Math.LauncherControl;
+import org.firstinspires.ftc.teamcode.Utility.Odometry.DriveConstants;
 import org.firstinspires.ftc.teamcode.Utility.Odometry.SampleMecanumDrive;
 
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.RobotStateContext.servoDelay;
@@ -45,6 +47,16 @@ public class Manual extends RobotHardware {
 
     private Pose2d saveLocation = new Pose2d();
 
+    // Align to Point code
+    enum DriveMode {
+        NORMAL_CONTROL,
+        ALIGN_TO_POINT,
+    }
+    private DriveMode currentDriveMode = DriveMode.NORMAL_CONTROL;
+    private PIDFController headingController = new PIDFController(SampleMecanumDrive.HEADING_PID);
+    private Vector2d targetPosition = new Vector2d(12*6,-12);
+
+
     private enum WobbleStates {
         MANUAL,
         UP,
@@ -64,6 +76,7 @@ public class Manual extends RobotHardware {
         stateMachine.changeState(DRIVE, new Drive_Manual());
         stateMachine.changeState(LAUNCHER, new LaunchArm_Manual());
         stateMachine.init();
+        headingController.setInputBounds(-Math.PI, Math.PI);
     }
 
     @Override
@@ -159,18 +172,46 @@ public class Manual extends RobotHardware {
 
     void drivetrainFieldCentricControls() {
         Pose2d poseEstimate = mecanumDrive.getPoseEstimate();
-        Vector2d input = new Vector2d(
-                -gamepad1.left_stick_y * linearSpeed * precisionMode,
-                -gamepad1.left_stick_x * lateralSpeed * precisionMode)
-                .rotated(-poseEstimate.getHeading());
+        Pose2d driveDirection = new Pose2d();
 
-        mecanumDrive.setWeightedDrivePower(
-                new Pose2d(
-                        input.getX(),
-                        input.getY(),
-                        -gamepad1.right_stick_x * rotationSpeed * precisionMode
-                )
-        );
+        Vector2d fieldFrameInput = new Vector2d(
+                -gamepad1.left_stick_y * linearSpeed * precisionMode,
+                -gamepad1.left_stick_x * lateralSpeed * precisionMode);
+
+       Vector2d robotFrameInput = fieldFrameInput
+               .rotated(-poseEstimate.getHeading() + Math.toRadians(90.0));
+
+
+       switch (currentDriveMode) {
+           case NORMAL_CONTROL:
+               driveDirection = new Pose2d(
+                       robotFrameInput.getX(), robotFrameInput.getY(),
+                       -gamepad1.right_stick_x * rotationSpeed * precisionMode
+               );
+               break;
+           case ALIGN_TO_POINT:
+               // Difference between the target vector and the bot's position
+               Vector2d difference = targetPosition.minus(poseEstimate.vec());
+               // Obtain the target angle for feedback and derivative for feedforward
+               double theta = difference.angle();
+
+               // Not technically omega because its power. This is the derivative of atan2
+               double thetaFF = -fieldFrameInput.rotated(-Math.PI / 2).dot(difference) / (difference.norm() * difference.norm());
+
+               // Set the target heading for the heading controller to our desired angle
+               headingController.setTargetPosition(theta);
+
+               // Set desired angular velocity to the heading controller output + angular
+               // velocity feedforward
+               double headingInput = (headingController.update(poseEstimate.getHeading())
+                       * DriveConstants.kV + thetaFF)
+                       * DriveConstants.TRACK_WIDTH;
+
+               // Combine the field centric x/y velocity with our derived angular velocity
+               driveDirection = new Pose2d( robotFrameInput, headingInput );
+       }
+
+        mecanumDrive.setWeightedDrivePower( driveDirection );
     }
 
     void drivetrainUtilityControls() {
