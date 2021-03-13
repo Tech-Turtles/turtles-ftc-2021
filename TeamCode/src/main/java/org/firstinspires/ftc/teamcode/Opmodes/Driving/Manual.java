@@ -49,10 +49,13 @@ public class Manual extends RobotHardware {
 
     // Align to Point code
     enum DriveMode {
-        NORMAL_CONTROL,
+        NORMAL_ROBOT_CENTRIC,
+        NORMAL_FIELD_CENTRIC,
         ALIGN_TO_POINT,
+        ALIGN_FORWARD,
+        ALIGN_DIAGONAL
     }
-    private DriveMode currentDriveMode = DriveMode.NORMAL_CONTROL;
+    private DriveMode currentDriveMode = DriveMode.NORMAL_ROBOT_CENTRIC;
     private PIDFController headingController = new PIDFController(SampleMecanumDrive.HEADING_PID);
     private Vector2d targetPosition = new Vector2d(12*6,-12);
 
@@ -77,6 +80,8 @@ public class Manual extends RobotHardware {
         stateMachine.changeState(LAUNCHER, new LaunchArm_Manual());
         stateMachine.init();
         headingController.setInputBounds(-Math.PI, Math.PI);
+        mecanumDrive = new SampleMecanumDrive(hardwareMap);
+        trajectoryRR = new TrajectoryRR(this.mecanumDrive);
     }
 
     @Override
@@ -87,9 +92,7 @@ public class Manual extends RobotHardware {
     @Override
     public void start() {
         super.start();
-        mecanumDrive = new SampleMecanumDrive(hardwareMap);
         mecanumDrive.setPoseEstimate(lastPosition == null ? new TrajectoryRR(mecanumDrive).getSTART_CENTER() : lastPosition);
-        trajectoryRR = new TrajectoryRR(this.mecanumDrive);
 //
 //        leftRange = hardwareMap.get(DistanceSensor.class, "leftDistance");
 //        backRange = hardwareMap.get(DistanceSensor.class, "backDistance");
@@ -127,23 +130,9 @@ public class Manual extends RobotHardware {
         @Override
         public void update() {
             super.update();
-            opMode.drivetrainStandardControls();
+            opMode.drivetrainAdvancedControls();
             opMode.drivetrainUtilityControls();
-            opMode.intakeControls();
-            if(opMode.primary.leftBumper() && opMode.primary.startOnce())
-                nextState(DRIVE, new Drive_ManualFieldCentric());
-        }
-    }
-
-    static class Drive_ManualFieldCentric extends Executive.StateBase<Manual> {
-        @Override
-        public void update() {
-            super.update();
-            opMode.drivetrainFieldCentricControls();
-            opMode.drivetrainUtilityControls();
-            opMode.intakeControls();
-            if(opMode.primary.leftBumper() && opMode.primary.startOnce())
-                nextState(DRIVE, new Drive_Manual());
+            opMode.intakeToggleControls();
         }
     }
 
@@ -170,7 +159,7 @@ public class Manual extends RobotHardware {
         );
     }
 
-    void drivetrainFieldCentricControls() {
+    void drivetrainAdvancedControls() {
         Pose2d poseEstimate = mecanumDrive.getPoseEstimate();
         Pose2d driveDirection = new Pose2d();
 
@@ -182,8 +171,19 @@ public class Manual extends RobotHardware {
                .rotated(-poseEstimate.getHeading() + Math.toRadians(90.0));
 
 
+        Vector2d difference;
+        double theta;
+        double thetaFF;
+        double headingInput;
        switch (currentDriveMode) {
-           case NORMAL_CONTROL:
+           case NORMAL_ROBOT_CENTRIC:
+              driveDirection = new Pose2d(
+                       -gamepad1.left_stick_y * linearSpeed * precisionMode,
+                       -gamepad1.left_stick_x * lateralSpeed * precisionMode,
+                       -gamepad1.right_stick_x * rotationSpeed * precisionMode
+               );
+                break;
+           case NORMAL_FIELD_CENTRIC:
                driveDirection = new Pose2d(
                        robotFrameInput.getX(), robotFrameInput.getY(),
                        -gamepad1.right_stick_x * rotationSpeed * precisionMode
@@ -191,26 +191,59 @@ public class Manual extends RobotHardware {
                break;
            case ALIGN_TO_POINT:
                // Difference between the target vector and the bot's position
-               Vector2d difference = targetPosition.minus(poseEstimate.vec());
+               difference = targetPosition.minus(poseEstimate.vec());
                // Obtain the target angle for feedback and derivative for feedforward
-               double theta = difference.angle();
+               theta = difference.angle() + Math.toRadians(180.0);
 
                // Not technically omega because its power. This is the derivative of atan2
-               double thetaFF = -fieldFrameInput.rotated(-Math.PI / 2).dot(difference) / (difference.norm() * difference.norm());
+               thetaFF = -fieldFrameInput.rotated(-Math.PI / 2).dot(difference) / (difference.norm() * difference.norm());
 
                // Set the target heading for the heading controller to our desired angle
                headingController.setTargetPosition(theta);
 
                // Set desired angular velocity to the heading controller output + angular
                // velocity feedforward
-               double headingInput = (headingController.update(poseEstimate.getHeading())
+               headingInput = (headingController.update(poseEstimate.getHeading())
+                       * DriveConstants.kV + thetaFF)
+                       * DriveConstants.TRACK_WIDTH;
+
+               // Combine the field centric x/y velocity with our derived angular velocity
+               driveDirection = new Pose2d( robotFrameInput, headingInput );
+               break;
+           case ALIGN_FORWARD:
+               theta = Math.toRadians(180.0);
+               thetaFF = 0;
+               // Set the target heading for the heading controller to our desired angle
+               headingController.setTargetPosition(theta);
+
+               // Set desired angular velocity to the heading controller output + angular
+               // velocity feedforward
+               headingInput = (headingController.update(poseEstimate.getHeading())
+                       * DriveConstants.kV + thetaFF)
+                       * DriveConstants.TRACK_WIDTH;
+
+               // Combine the field centric x/y velocity with our derived angular velocity
+               driveDirection = new Pose2d( robotFrameInput, headingInput );
+               break;
+           case ALIGN_DIAGONAL:
+               theta = Math.toRadians(157.0);
+               thetaFF = 0;
+               // Set the target heading for the heading controller to our desired angle
+               headingController.setTargetPosition(theta);
+
+               // Set desired angular velocity to the heading controller output + angular
+               // velocity feedforward
+               headingInput = (headingController.update(poseEstimate.getHeading())
                        * DriveConstants.kV + thetaFF)
                        * DriveConstants.TRACK_WIDTH;
 
                // Combine the field centric x/y velocity with our derived angular velocity
                driveDirection = new Pose2d( robotFrameInput, headingInput );
        }
-
+       // If any heading input is given, revert to robot centric.
+        if(currentDriveMode != DriveMode.NORMAL_FIELD_CENTRIC && Math.abs(primary.right_stick_x) > 0.1) {
+            currentDriveMode = DriveMode.NORMAL_ROBOT_CENTRIC;
+        }
         mecanumDrive.setWeightedDrivePower( driveDirection );
     }
 
@@ -220,16 +253,20 @@ public class Manual extends RobotHardware {
 //                mecanumDrive.clearEstimatedPose();
 //            }
 
-            if(primary.YOnce()) { // set pose to nearest corner
-                mecanumDrive.setPoseEstimate(
-                        TrajectoryRR.getNearestCornerPose2d(
-                                mecanumDrive.getPoseEstimate())
-                );
-            }
-
             if (primary.AOnce() && !primary.start()) {
                 rotationSpeed = precisionMode == 1.0 ? 0.75 : 1.0;
                 precisionMode = precisionMode == 1.0 ? precisionPercentage : 1.0;
+            }
+
+            if(primary.rightStickButtonOnce()) {
+                currentDriveMode = DriveMode.NORMAL_ROBOT_CENTRIC;
+                stateMachine.changeState(DRIVE, new Drive_Manual_AllStates());
+            } else if(primary.dpadUpOnce()) {
+                currentDriveMode = DriveMode.ALIGN_DIAGONAL;
+                stateMachine.changeState(DRIVE, new Drive_Manual_AllStates());
+            } else if(primary.dpadDownOnce()) {
+                currentDriveMode = DriveMode.ALIGN_FORWARD;
+                stateMachine.changeState(DRIVE, new Drive_Manual_AllStates());
             }
         }
     }
@@ -339,7 +376,14 @@ public class Manual extends RobotHardware {
 //
 //            if (primary.dpadUpOnce())
 //                stateMachine.changeState(DRIVE, new Drive_ToPose(trajectoryRR.getSHOOT_HIGHGOAL()));
-//
+
+            if(primary.YOnce()) { // set pose to nearest corner
+                mecanumDrive.setPoseEstimate(
+                        TrajectoryRR.getNearestCornerPose2d(
+                                mecanumDrive.getPoseEstimate())
+                );
+            }
+
             if(primary.BOnce()) {
                 // Do powershots
                 stateMachine.changeState(DRIVE,
@@ -536,5 +580,4 @@ public class Manual extends RobotHardware {
             }
         }
     }
-
 }
