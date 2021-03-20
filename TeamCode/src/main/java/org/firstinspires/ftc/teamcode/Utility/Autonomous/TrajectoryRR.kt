@@ -27,7 +27,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
     private val offsetWobbleDropoffShallow = Pose2d(-offsetWobbleArmReach - 2.0, wobbleDropoffLateral, 0.0)
     private val wobbleDropoffRotationRadians: Double = 0.0.toRadians
 
-    private val offsetWobblePickupAlign = Pose2d(-offsetWobbleArmReach - 8.0, wobblePickupLateral, 0.0)
+    private val offsetWobblePickupAlign = Pose2d(-offsetWobbleArmReach - 8.0 + 6.0, wobblePickupLateral, 0.0)
     private val offsetWobblePickupGrab = Pose2d(-offsetWobbleArmReach + 3.0 + 4.0 + 3.0, wobblePickupLateral, 0.0) // Drive through wobble goal
     private val wobblePickupRotationRadians: Double = (165.0).toRadians
 
@@ -158,7 +158,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
     private var ringVelocityConstraint: TrajectoryVelocityConstraint? = null
     private var ringAccelerationConstraint: TrajectoryAccelerationConstraint? = null
 
-    private val slowVelocity: Double = 20.0
+    private val slowVelocity: Double = 10.0
     private val slowAcceleration: Double = 40.0
     private val ringVelocity: Double = 60.0
     private val ringAcceleration: Double = 40.0
