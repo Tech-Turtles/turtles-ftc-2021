@@ -315,6 +315,7 @@ public class Manual extends RobotHardware {
         else if (secondary.YOnce())
             wobbleState = WobbleStates.UP;
 
+        wobbleState = wobbleArrived || Math.abs(secondary.right_stick_y) > deadzone ? WobbleStates.MANUAL : wobbleState;
         switch (wobbleState) {
             case UP:
                 wobbleArrived = motorUtility.goToPosition(Motors.WOBBLE_ARM, WOBBLE_UP, wobblePower);
@@ -328,11 +329,9 @@ public class Manual extends RobotHardware {
             case MANUAL:
                 motorUtility.setPower(Motors.WOBBLE_ARM, -secondary.right_stick_y * manualWobblePower);
         }
-        wobbleState = wobbleArrived ? WobbleStates.MANUAL : wobbleState;
 
         servoUtility.setPower(ContinuousServo.WOBBLE_LEFT, secondary.left_stick_y);
         servoUtility.setPower(ContinuousServo.WOBBLE_RIGHT, secondary.left_stick_y);
-
     }
 
     void launcherControls() {
@@ -433,9 +432,6 @@ public class Manual extends RobotHardware {
             packet.put("Launch velocity:     ", motorUtility.getVelocity(Motors.LAUNCHER));
             packet.put("Launch target velocity:",currentLauncherSpeed * LAUNCHER_THEORETICAL_MAX);
             packet.put("Hopper position:     ", servoUtility.getAngle(Servos.HOPPER));
-            packet.put("X:                   ", df.format(poseEstimate.getX()));
-            packet.put("Y:                   ", df.format(poseEstimate.getY()));
-            packet.put("Heading:             ", df.format(Math.toDegrees(poseEstimate.getHeading())));
 //            packet.put("leftDistance range   ", df_precise.format(leftRange.getDistance(DistanceUnit.INCH)));
 //            packet.put("backDistance range   ", df_precise.format(backRange.getDistance(DistanceUnit.INCH)));
             try {
