@@ -15,14 +15,19 @@ public class Configuration {
 
     public static final double LAUNCHER_THEORETICAL_MAX = 3387.096774;
 
-    public static int WOBBLE_STORE = 0;
-    public static int WOBBLE_UP = 977;
-    public static int WOBBLE_DOWN = 3110;
+    public static int WOBBLE_STORE  = 0;
+    public static int WOBBLE_UP     = 977;
+    public static int WOBBLE_DOWN   = 3110;
 
-    public static double highGoalSpeed = 0.54;
-    public static double powerShotSpeed = 0.50;
-    public static double wobblePower = 1.0;
-    public static double intakePower = 1.0;
+    public static double WOBBLE_GRABBED_IN = 0.5;
+
+    public static double SPATULA_STORE  = 0.3;
+    public static double SPATULA_DOWN   = 0.9;
+
+    public static double highGoalSpeed  = 0.54;
+    public static double powerShotSpeed = 0.48;
+    public static double wobblePower    = 1.0;
+    public static double intakePower    = 1.0;
 
     public static double launchMeanErrorTicksPerSecond = 80.0;
     public static double launchStdDevErrorTicksPerSecond = 30.0;

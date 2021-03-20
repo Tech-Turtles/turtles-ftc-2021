@@ -9,6 +9,7 @@
             <Servo name="hopper" port="0" />
             <ContinuousRotationServo name="wobble_left" port="1" />
             <ContinuousRotationServo name="wobble_right" port="2" />
+            <Servo name="spatula" port="3" />
             <RevTouchSensor name="wobbleTouch" port="0" />
             <LynxEmbeddedIMU name="IMU_1" port="0" bus="0" />
             <REV_VL53L0X_RANGE_SENSOR name="leftDistance" port="1" bus="0" />

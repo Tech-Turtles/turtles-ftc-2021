@@ -31,8 +31,8 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
     private val offsetWobblePickupGrab = Pose2d(-offsetWobbleArmReach + 3.0 + 4.0 + 3.0, wobblePickupLateral, 0.0) // Drive through wobble goal
     private val wobblePickupRotationRadians: Double = (165.0).toRadians
 
-    private val offsetRingPickupAlign = Pose2d(-14.0, -5.0, 0.0)
-    private val offsetRingPickupGrab = Pose2d(-7.0, -5.0, 0.0)
+    private val offsetRingPickupAlign = Pose2d(-18.0, -5.0, 0.0)
+    private val offsetRingPickupGrab = Pose2d(10.0, -5.0, 0.0)
     private val ringPickupRotationRadians: Double = (149.0).toRadians
 
     private val spacingPowershot: Double = 7.0 // Spacing between the powershot sticks in the y axis, inches
@@ -56,7 +56,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
     var START_CENTER = Pose2d(-62.0, -18.0, Math.toRadians(180.0 + 0.0))
 
 
-    var SHOOT_HIGHGOAL      = Pose2d(-2.0, -42.0 + 2.0 , Math.toRadians(180.0 - 0.0))
+    var SHOOT_HIGHGOAL      = Pose2d(-4.0, -42.0 + 2.0 + 10.0, Math.toRadians(180.0 - 0.0))
     var POWERSHOT_LEFT      = Pose2d(-4.0, -6.5 + spacingPowershot + -3.0 + 1.0, Math.toRadians(180.0 - 0.0))
     var POWERSHOT_CENTER    = POWERSHOT_LEFT.plus(Pose2d(0.0, -1.0 * spacingPowershot - 1.5 + 2.0 - 1.0 -0.75, 0.0))
     var POWERSHOT_RIGHT     = POWERSHOT_LEFT.plus(Pose2d(0.0, -2.0 * spacingPowershot - 1.5 + 3.0 - 2.5 , 0.0))
@@ -65,7 +65,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
     // Offset added to rings
     var RINGS = RINGS_ACTUAL.plus(Pose2d(8.0, 4.0, 0.0)
             .rotateFrame(-45.0.toRadians))//.plus(ringOffset)
-    var SHOOT = Pose2d(-2.0, -42.0 + 2.0, Math.toRadians(180.0 - 0.0))
+    var SHOOT = SHOOT_HIGHGOAL
 
 
     // Variable waypoints
@@ -155,9 +155,13 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
     private var accelerationConstraint: TrajectoryAccelerationConstraint? = null
     private var slowVelocityConstraint: TrajectoryVelocityConstraint? = null
     private var slowAccelerationConstraint: TrajectoryAccelerationConstraint? = null
+    private var ringVelocityConstraint: TrajectoryVelocityConstraint? = null
+    private var ringAccelerationConstraint: TrajectoryAccelerationConstraint? = null
 
-    private val slowVelocity: Double = 10.0
-    private val slowAcceleration: Double = 10.0
+    private val slowVelocity: Double = 20.0
+    private val slowAcceleration: Double = 40.0
+    private val ringVelocity: Double = 60.0
+    private val ringAcceleration: Double = 40.0
 
     val list = ArrayList<Trajectory>()
 
@@ -188,6 +192,10 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
 
         slowVelocityConstraint = getMinVelocityConstraint(slowVelocity)
         slowAccelerationConstraint = getMinAccelerationConstraint(slowAcceleration)
+
+        ringVelocityConstraint = getMinVelocityConstraint(ringVelocity)
+        ringAccelerationConstraint = getMinAccelerationConstraint(ringAcceleration)
+
         buildTrajectories()
         setZone(ZERO)
     }
@@ -319,21 +327,21 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
                 trajectoryBuilder(START_CENTER, 0.0.toRadians)
                         //.splineToConstantHeading(POWERSHOT_LEFT.vec(),45.0.toRadians)
                         .lineToConstantHeading(POWERSHOT_LEFT.vec())
-                        .build();
+                        .build()
         this.trajParkCenterToPowershotLeft = traj_parkCenterToPowershotLeft
 
 
         var traj_PowershotLeftToPowershotCenter: Trajectory =
                 trajectoryBuilder(traj_parkCenterToPowershotLeft.end(), -90.0.toRadians)
                         .lineToConstantHeading(POWERSHOT_CENTER.vec())
-                        .build();
+                        .build()
         this.trajPowershotLeftToPowershotCenter = traj_PowershotLeftToPowershotCenter
 
 
         var traj_PowershotCenterPowershotRight: Trajectory =
                 trajectoryBuilder(traj_PowershotLeftToPowershotCenter.end(), -90.0.toRadians)
                         .lineToConstantHeading(POWERSHOT_RIGHT.vec())
-                        .build();
+                        .build()
         this.trajPowershotCenterPowershotRight = traj_PowershotCenterPowershotRight
 
 
@@ -380,15 +388,15 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
                     ZONE_A_CENTER ->
                         trajectoryBuilder(traj_PowershotRightToWobbleDropoff.end(), 120.0.toRadians)
                                 .splineToSplineHeading(wobblePickupAlign, wobblePickupRotationRadians)
-                                .build();
+                                .build()
                     ZONE_B_CENTER ->
                         trajectoryBuilder(traj_PowershotRightToWobbleDropoff.end(), 180.0.toRadians)
                                 .splineToSplineHeading(wobblePickupAlign, wobblePickupRotationRadians)
-                                .build();
+                                .build()
                     else ->
                         trajectoryBuilder(traj_PowershotRightToWobbleDropoff.end(), 150.0.toRadians)
                                 .splineToSplineHeading(wobblePickupAlign, wobblePickupRotationRadians)
-                                .build();
+                                .build()
                 }
         this.trajWobbleDropoffToWobblePickupAlign = trajWobbleDropoffToWobblePickupAlign
 
@@ -468,17 +476,16 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
         // Pickup Rings
         var trajRingAlignToRingGrab: Trajectory =
                 trajectoryBuilder(ringPickupAlign, 0.0.toRadians)
-                        .lineToConstantHeading(ringPickupGrab.vec())
-                        .build();
+                        .lineToConstantHeading(ringPickupGrab.vec(), ringVelocityConstraint, ringAccelerationConstraint)
+                        .build()
         this.trajRingAlignToRingGrab = trajRingAlignToRingGrab
 
 
         // Take picked up rings to shoot
         var trajRingGrabToShootHighGoal: Trajectory =
                 trajectoryBuilder(ringPickupGrab, 0.0.toRadians)
-                        .lineToConstantHeading(ringPickupAlign.vec())
-                        .splineToSplineHeading(SHOOT_HIGHGOAL, 0.0)
-                        .build();
+                        .lineToLinearHeading(SHOOT_HIGHGOAL)
+                        .build()
         this.trajRingGrabToShootHighGoal = trajRingGrabToShootHighGoal
 
 

@@ -21,6 +21,8 @@ import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Exe
 import static org.firstinspires.ftc.teamcode.Utility.Autonomous.Statemachine.Executive.StateMachine.StateType.WOBBLE;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_OPEN_POS;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_PUSH_POS;
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.SPATULA_DOWN;
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.SPATULA_STORE;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_DOWN;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_STORE;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_UP;
@@ -46,11 +48,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     public static double servoDelay = 0.3;
     public static double wobbleOuttakeDelay = 0.75;
     public static double wobbleIntakeDelay = 0.5;
+    public static double intakeDelay = 2.0;
 
     public static int wobbleDownOffset = -700;
 
     public static double wobbleArmSpeed = 1.0;
     public static double wobbleIntakeSpeed = 1.0;
+    public static boolean pickupRings = false;
+    public static boolean doPowershot = true;
 
     private RingDetectionAmount rings = RingDetectionAmount.ZERO;
 
@@ -127,6 +132,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
             opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
+            opMode.servoUtility.setAngle(Servos.SPATULA, SPATULA_STORE);
         }
 
         @Override
@@ -141,7 +147,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * State for setting everything associated with the amount of rings detected
      *
      * Trajectory: none
-     * Next State: WallStartToCenter / CenterStartToLeftPowershot
+     * Next State: WallStartToCenter / (CenterStartToLeftPowershot / CenterStartToHighGoal)
      */
     class Scan extends Executive.StateBase<AutoOpmode> {
         @Override
@@ -158,7 +164,10 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                     stateMachine.changeState(DRIVE, new WallStartToCenterStart());
                     break;
                 case CENTER:
-                    stateMachine.changeState(DRIVE, new CenterStartToLeftPowershot());
+                    if(doPowershot)
+                        stateMachine.changeState(DRIVE, new CenterStartToLeftPowershot());
+                    else
+                        stateMachine.changeState(DRIVE, new CenterStartToHighGoal());
             }
         }
     }
@@ -267,8 +276,33 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             }
             if(isDone && stateMachine.getStateReferenceByType(LAUNCHER).isDone) {
                 nextState(LAUNCHER, new StopMotors(Motors.LAUNCHER));
-                nextState(DRIVE, new RightPowershotToWobbleDropZone());
+                nextState(DRIVE, pickupRings && !rings.equals(RingDetectionAmount.ZERO) ? new RightPowershotToRingAlignment() : new RightPowershotToWobbleDropZone());
             }
+        }
+    }
+
+    /**
+     * RightPowershotToRingAlignment State
+     * State that drives from the high goal position to the ring alignment position.
+     *
+     *
+     * Trajectory: trajPowershotRightToRingPickupAlign
+     * Next State: RingAlignmentToRingPickup
+     */
+    class RightPowershotToRingAlignment extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode>stateMachine) {
+            super.init(stateMachine);
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajPowershotRightToRingPickupAlign());
+            if (rings.equals(RingDetectionAmount.FOUR))
+                opMode.servoUtility.setAngle(Servos.SPATULA, SPATULA_DOWN);
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opMode.mecanumDrive.isIdle())
+                nextState(DRIVE, new RingAlignmentToRingPickup());
         }
     }
 
@@ -309,7 +343,10 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                         break;
                     case ONE:
                     case FOUR:
-                        nextState(DRIVE, new HighGoalToRingAlignment());
+                        if(pickupRings)
+                            nextState(DRIVE, new HighGoalToRingAlignment());
+                        else
+                            nextState(DRIVE, new HighGoalToWobbleDropZone());
                 }
             }
         }
@@ -351,13 +388,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
             opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajRingAlignToRingGrab());
+
         }
 
         @Override
         public void update() {
             super.update();
             opMode.motorUtility.setPower(Motors.INTAKE, intakePower);
-            if(opMode.mecanumDrive.isIdle())
+            if(opMode.mecanumDrive.isIdle() && timer.seconds() > intakeDelay)
                 nextState(DRIVE, new RingPickupToHighGoal());
         }
     }
@@ -394,6 +432,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 isDone = false;
 
             if(index == 3 && opMode.mecanumDrive.isIdle() && stateMachine.getStateReferenceByType(LAUNCHER).isDone) {
+                opMode.servoUtility.setAngle(Servos.SPATULA, SPATULA_STORE);
                 nextState(LAUNCHER, new StopMotors(Motors.LAUNCHER));
                 nextState(DRIVE, new HighGoalToWobbleDropZone());
             }
@@ -461,6 +500,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
 
             if(isDone && timer.seconds() > wobbleOuttakeDelay) {
                 nextState(WOBBLE, new WobblePosition(WOBBLE_UP));
+                nextState(INTAKE, new WobbleIntake(0));
                 nextState(DRIVE, new WobbleDropZoneToWobblePickupAlign());
             }
         }

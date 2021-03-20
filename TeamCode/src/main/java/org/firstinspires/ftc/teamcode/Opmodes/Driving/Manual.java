@@ -36,6 +36,7 @@ public class Manual extends RobotHardware {
     public static double rotationSpeed = 1.0;
     public static double manualWobblePower = 0.5;
     public static double launcherSpeedOffset = 0.0;
+    public static double spatulaPosition = SPATULA_STORE;
     private double currentLauncherSpeed = 0;
 
 //    private DistanceSensor leftRange, backRange;
@@ -283,6 +284,15 @@ public class Manual extends RobotHardware {
         } else {
             motorUtility.setPower(Motors.INTAKE, autoRunForward ? intakePower : 0);
         }
+
+
+        if(primary.XOnce()) {
+            spatulaPosition = SPATULA_DOWN;
+        } else if(primary.BOnce()) {
+            spatulaPosition = SPATULA_STORE;
+        }
+
+        servoUtility.setAngle(Servos.SPATULA, spatulaPosition);
     }
 
     void intakeControls() {
