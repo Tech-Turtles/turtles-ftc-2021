@@ -57,7 +57,7 @@ public class Manual extends RobotHardware {
         ALIGN_DIAGONAL
     }
     private DriveMode currentDriveMode = DriveMode.NORMAL_ROBOT_CENTRIC;
-    private PIDFController headingController = new PIDFController(SampleMecanumDrive.HEADING_PID);
+    private final PIDFController headingController = new PIDFController(SampleMecanumDrive.HEADING_PID);
     private Vector2d targetPosition = new Vector2d(12*6,-12);
 
 

@@ -31,7 +31,7 @@ public class Executive {
     static public class StateMachine <T_opmode extends RobotHardware> {
 
         private final Map<StateType, StateBase<T_opmode>> stateMap = new HashMap<>();
-        T_opmode opMode;
+        private final T_opmode opMode;
 
         /**
          * State Machine will support one additional concurrent state for each possible StateType.
