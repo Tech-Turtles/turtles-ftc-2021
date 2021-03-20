@@ -254,7 +254,7 @@ public class Manual extends RobotHardware {
 //                mecanumDrive.clearEstimatedPose();
 //            }
 
-            if (primary.AOnce() && !primary.start()) {
+            if (primary.rightBumperOnce()) {
                 rotationSpeed = precisionMode == 1.0 ? 0.75 : 1.0;
                 precisionMode = precisionMode == 1.0 ? precisionPercentage : 1.0;
             }
