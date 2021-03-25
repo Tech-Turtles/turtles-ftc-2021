@@ -308,6 +308,8 @@ public class Manual extends RobotHardware {
 
 
     void armControls() {
+        wobbleState = wobbleArrived || Math.abs(secondary.right_stick_y) > deadzone ? WobbleStates.MANUAL : wobbleState;
+
         if (secondary.XOnce())
             wobbleState = WobbleStates.STORE;
         else if (secondary.BOnce() && !secondary.start())
@@ -315,7 +317,6 @@ public class Manual extends RobotHardware {
         else if (secondary.YOnce())
             wobbleState = WobbleStates.UP;
 
-        wobbleState = wobbleArrived || Math.abs(secondary.right_stick_y) > deadzone ? WobbleStates.MANUAL : wobbleState;
         switch (wobbleState) {
             case UP:
                 wobbleArrived = motorUtility.goToPosition(Motors.WOBBLE_ARM, WOBBLE_UP, wobblePower);
