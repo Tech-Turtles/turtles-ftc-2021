@@ -50,11 +50,11 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     public static double wobbleIntakeDelay = 0.5;
     public static double intakeDelay = 2.0;
 
-    public static int wobbleDownOffset = -700;
+    public static int wobbleDownOffset = -500;
 
     public static double wobbleArmSpeed = 1.0;
     public static double wobbleIntakeSpeed = 1.0;
-    public static boolean pickupRings = false;
+    public static boolean pickupRings = true;
     public static boolean doPowershot = true;
 
     private RingDetectionAmount rings = RingDetectionAmount.ZERO;
@@ -311,7 +311,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * State that drives from the CENTER_START start position to the high goal position.
      *
      *
-     * Trajectory:
+     * Trajectory: TrajCenterStartToHighGoa
      * Next State: HighGoalToWobbleDropZone / HighGoalToRingAlignment
      */
     class CenterStartToHighGoal extends Executive.StateBase<AutoOpmode> {
@@ -357,7 +357,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * State that drives from the high goal position to the ring alignment position.
      *
      *
-     * Trajectory:
+     * Trajectory: TrajHighGoalToRingAlign
      * Next State: RingAlignmentToRingPickup
      */
     class HighGoalToRingAlignment extends Executive.StateBase<AutoOpmode> {
@@ -380,8 +380,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * State that drives from the ring alignment position to the ring pickup position.
      *
      *
-     * Trajectory:
-     * Next State:
+     * Trajectory: TrajRingAlignToRingGrab
+     * Next State: RingPickupToHighGoal
      */
     class RingAlignmentToRingPickup extends Executive.StateBase<AutoOpmode> {
         @Override
@@ -401,12 +401,12 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     }
 
     /**
-     * RingAlignmentToRingPickup State
-     * State that drives from the ring alignment position to the ring pickup position.
+     * RingPickupToHighGoal State
+     * State that drives from the ring pickup position to the high goal position and shoots 1/3 rings.
      *
      *
-     * Trajectory:
-     * Next State:
+     * Trajectory: TrajRingGrabToShootHighGoal
+     * Next State: HighGoalToWobbleDropZone
      */
     class RingPickupToHighGoal extends Executive.StateBase<AutoOpmode> {
         private int index = 0;
@@ -424,7 +424,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             if(opMode.mecanumDrive.isIdle() && !isDone) {
                 isDone = true;
                 nextState(LAUNCHER, new Launch_fire(highGoalSpeed));
-                opMode.motorUtility.setPower(Motors.INTAKE, 0);
                 index++;
             }
 
@@ -433,6 +432,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
 
             if(index == 3 && opMode.mecanumDrive.isIdle() && stateMachine.getStateReferenceByType(LAUNCHER).isDone) {
                 opMode.servoUtility.setAngle(Servos.SPATULA, SPATULA_STORE);
+                opMode.motorUtility.setPower(Motors.INTAKE, 0);
                 nextState(LAUNCHER, new StopMotors(Motors.LAUNCHER));
                 nextState(DRIVE, new HighGoalToWobbleDropZone());
             }
@@ -444,8 +444,8 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * State that drives from the high goal position to the wobble drop zone position.
      *
      *
-     * Trajectory:
-     * Next State:
+     * Trajectory: TrajHighGoalToWobbleDropoffDeep
+     * Next State: WobbleDropZoneToWobblePickupAlign
      */
     class HighGoalToWobbleDropZone extends Executive.StateBase<AutoOpmode> {
         @Override
