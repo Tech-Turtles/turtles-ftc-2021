@@ -25,7 +25,7 @@ public class Configuration {
     public static double SPATULA_DOWN   = 0.9;
 
     public static double highGoalSpeed  = 0.54;
-    public static double powerShotSpeed = 0.48;
+    public static double powerShotSpeed = 0.47;
     public static double wobblePower    = 1.0;
     public static double intakePower    = 1.0;
 

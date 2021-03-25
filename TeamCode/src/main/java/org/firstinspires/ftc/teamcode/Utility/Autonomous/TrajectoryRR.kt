@@ -56,7 +56,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
     var START_CENTER = Pose2d(-62.0, -18.0, Math.toRadians(180.0 + 0.0))
 
 
-    var SHOOT_HIGHGOAL      = Pose2d(-4.0, -42.0 + 2.0 + 10.0, Math.toRadians(180.0 - 0.0))
+    var SHOOT_HIGHGOAL      = Pose2d(-4.0, -42.0 + 2.0 + 10.0 - 4.0, Math.toRadians(180.0 - 0.0))
     var POWERSHOT_LEFT      = Pose2d(-4.0, -6.5 + spacingPowershot + -3.0 + 1.0, Math.toRadians(180.0 - 0.0))
     var POWERSHOT_CENTER    = POWERSHOT_LEFT.plus(Pose2d(0.0, -1.0 * spacingPowershot - 1.5 + 2.0 - 1.0 -0.75, 0.0))
     var POWERSHOT_RIGHT     = POWERSHOT_LEFT.plus(Pose2d(0.0, -2.0 * spacingPowershot - 1.5 + 3.0 - 2.5 , 0.0))
@@ -378,7 +378,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
                                 //.lineToLinearHeading(wobbleDropoffDeep)
                                 // FANCY OPTION - turns away from the wall
                                 .splineToSplineHeading(wobbleDropoffDeep.plus(Pose2d(-15.0, 5.0, 1.0.toRadians)), (-20.0).toRadians)
-                                .splineToSplineHeading(wobbleDropoffDeep, (-20.0).toRadians)
+                                .splineToSplineHeading(wobbleDropoffDeep.plus(Pose2d(3.0, 0.0 , 0.0)), (-20.0).toRadians)
                                 .build()
                 }
         this.trajPowershotRightToWobbleDropOff = traj_PowershotRightToWobbleDropoff
