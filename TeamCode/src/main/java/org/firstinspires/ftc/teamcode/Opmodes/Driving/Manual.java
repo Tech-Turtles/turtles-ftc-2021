@@ -106,22 +106,6 @@ public class Manual extends RobotHardware {
         mecanumDrive.update(packet);
         chordedControls(); // Controls for when left bumper is held down.
         displayTelemetry();
-
-            //drivetrainControls(); // In Drive_Manual
-        //intakeControls(); // In Drive_Manual
-        //armControls(); // In LaunchArm_Manual
-        //launcherControls(); // In LaunchArm_Manual
-
-        /*  Exit auto operation if driver inputs are used.
-        if(isDrivetrainManualInputActive() && !stateMachine.getCurrentStates(DRIVE).equals("Drive_Manual")) {
-            stopAutoDriving();
-            stateMachine.changeState(DRIVE, new Drive_Manual());
-            stateMachine.changeState(LAUNCHER, new LaunchArm_Manual());
-        }
-        */
-        if(secondary.right_trigger > deadzone && !stateMachine.getCurrentStateByType(LAUNCHER).equals(LaunchArm_Manual.class)) {
-            stateMachine.changeState(LAUNCHER, new LaunchArm_Manual());
-        }
     }
 
     /*
@@ -474,7 +458,7 @@ public class Manual extends RobotHardware {
             super.update();
             if(mecanumDrive.isIdle() || isDrivetrainManualInputActive()) {
                 stopAutoDriving(); // In case still mid trajectory
-                nextState(DRIVE, new Drive_Manual());
+                nextState(DRIVE, new Drive_Manual_AllStates());
             }
         }
     }
@@ -506,8 +490,7 @@ public class Manual extends RobotHardware {
 
             if(isDrivetrainManualInputActive()) { // Return manual control
                 stopAutoDriving();
-                stateMachine.changeState(LAUNCHER, new LaunchArm_Manual());
-                stateMachine.changeState(DRIVE, new Drive_Manual());
+                stateMachine.changeState(DRIVE, new Drive_Manual_AllStates());
             }
             if(opMode.mecanumDrive.isIdle() && !arrived) {
                 arrived = true;
