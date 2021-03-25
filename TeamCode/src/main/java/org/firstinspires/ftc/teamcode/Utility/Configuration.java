@@ -20,6 +20,7 @@ public class Configuration {
     public static int WOBBLE_DOWN   = 3110;
 
     public static double WOBBLE_GRABBED_IN = 0.5;
+    public static double WOBBLE_GRABBED_MAX_IN = 2.4;
 
     public static double SPATULA_STORE  = 0.3;
     public static double SPATULA_DOWN   = 0.9;
