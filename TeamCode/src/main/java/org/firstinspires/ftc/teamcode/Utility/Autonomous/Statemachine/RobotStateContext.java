@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 
+import org.firstinspires.ftc.teamcode.HardwareTypes.ColorSensor;
 import org.firstinspires.ftc.teamcode.HardwareTypes.ContinuousServo;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Motors;
 import org.firstinspires.ftc.teamcode.HardwareTypes.Servos;
@@ -24,6 +25,8 @@ import static org.firstinspires.ftc.teamcode.Utility.Configuration.HOPPER_PUSH_P
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.SPATULA_DOWN;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.SPATULA_STORE;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_DOWN;
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_GRABBED_IN;
+import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_OUT_IN;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_STORE;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_UP;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.highGoalSpeed;
@@ -56,6 +59,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     public static double wobbleIntakeSpeed = 1.0;
     public static boolean pickupRings = true;
     public static boolean doPowershot = true;
+    public static boolean doSecondWobble = true;
 
     private RingDetectionAmount rings = RingDetectionAmount.ZERO;
 
@@ -465,7 +469,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 timer.reset();
             }
 
-            if(isDone && timer.seconds() > wobbleOuttakeDelay) {
+            if(isDone && timer.seconds() > wobbleOuttakeDelay || opMode.getDistance(opMode.getColorSensor(ColorSensor.WOBBLE_SENSOR)) >= WOBBLE_OUT_IN) {
                 nextState(WOBBLE, new WobblePosition(WOBBLE_UP));
                 nextState(DRIVE, new WobbleDropZoneToWobblePickupAlign());
             }
@@ -498,10 +502,13 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 timer.reset();
             }
 
-            if(isDone && timer.seconds() > wobbleOuttakeDelay) {
+            if(isDone && timer.seconds() > wobbleOuttakeDelay || opMode.getDistance(opMode.getColorSensor(ColorSensor.WOBBLE_SENSOR)) >= WOBBLE_OUT_IN) {
                 nextState(WOBBLE, new WobblePosition(WOBBLE_UP));
                 nextState(INTAKE, new WobbleIntake(0));
-                nextState(DRIVE, new WobbleDropZoneToWobblePickupAlign());
+                if(doSecondWobble)
+                    nextState(DRIVE, new WobbleDropZoneToWobblePickupAlign());
+                else
+                    nextState(DRIVE, new WobbleDropZoneToPark());
             }
         }
     }
@@ -561,7 +568,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 isDone = true;
             }
 
-            if(timer.seconds() > wobbleIntakeDelay) {
+            if(timer.seconds() > wobbleIntakeDelay || opMode.getDistance(opMode.getColorSensor(ColorSensor.WOBBLE_SENSOR)) <= WOBBLE_GRABBED_IN) {
                 nextState(INTAKE, new WobbleIntake(0));
                 nextState(WOBBLE, new WobblePosition(WOBBLE_UP));
                 nextState(DRIVE, new WobblePickupToWobbleDropZoneAlign());
