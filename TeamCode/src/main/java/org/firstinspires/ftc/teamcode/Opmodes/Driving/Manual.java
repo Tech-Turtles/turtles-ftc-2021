@@ -381,7 +381,8 @@ public class Manual extends RobotHardware {
             if(primary.BOnce()) {
                 // Do powershots
                 stateMachine.changeState(DRIVE,
-                        new Drive_moveAndShoot(trajectoryRR.getPOWERSHOT_RIGHT(),
+//                        new Drive_ToPose(new Pose2d(trajectoryRR.getPOWERSHOT_LEFT().getX(), -59.0, Math.toRadians(180.0)),
+                            new Drive_moveAndShoot(trajectoryRR.getPOWERSHOT_RIGHT(),
                                 new Drive_moveAndShoot(trajectoryRR.getPOWERSHOT_CENTER(),
                                         new Drive_moveAndShoot(trajectoryRR.getPOWERSHOT_LEFT(),
                                                 new Drive_Manual_AllStates()))));
@@ -439,9 +440,16 @@ public class Manual extends RobotHardware {
     class Drive_ToPose extends Executive.StateBase<Manual> {
         Trajectory trajectory;
         Pose2d final_pose;
+        Executive.StateBase<Manual> nextDriveState;
 
         Drive_ToPose(Pose2d final_pose) {
             this.final_pose = final_pose;
+            this.nextDriveState = new Drive_Manual_AllStates();
+        }
+
+        Drive_ToPose(Pose2d final_pose, Executive.StateBase<Manual> nextDriveState) {
+            this.final_pose = final_pose;
+            this.nextDriveState = nextDriveState;
         }
 
         @Override
@@ -458,7 +466,7 @@ public class Manual extends RobotHardware {
             super.update();
             if(mecanumDrive.isIdle() || isDrivetrainManualInputActive()) {
                 stopAutoDriving(); // In case still mid trajectory
-                nextState(DRIVE, new Drive_Manual_AllStates());
+                nextState(DRIVE, nextDriveState);
             }
         }
     }
