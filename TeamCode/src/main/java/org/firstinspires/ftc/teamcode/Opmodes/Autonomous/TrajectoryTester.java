@@ -22,7 +22,7 @@ public class TrajectoryTester extends RobotHardware {
         trajectoryRR = new TrajectoryRR(mecanumDrive);
         startPosition = trajectoryRR.getSTART_CENTER();
         mecanumDrive.setPoseEstimate(startPosition);
-        routine = trajectoryRR.getTrajParkCenterToPowershotLeft();
+        routine = trajectoryRR.getTrajCenterStartToPowershotLeft();
     }
 
     @Override

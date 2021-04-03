@@ -207,7 +207,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajParkCenterToPowershotLeft());
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajCenterStartToPowershotLeft());
             nextState(LAUNCHER, new Launch_windUp(powerShotSpeed));
         }
 
