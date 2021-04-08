@@ -130,6 +130,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
     // New Trajectories
     var trajWobbleDropoffToWobblePickupAlign: Trajectory? = null
     var trajWobbleAlignToWobblePickup: Trajectory? = null
+    var trajWobblePickupToPark: Trajectory? = null
     var trajWobblePickupToDropoffAlign: Trajectory? = null
     var trajWobbleAlignToSecondDropoff: Trajectory? = null
     var trajSecondWobbleDropoffToPark: Trajectory? = null
@@ -413,6 +414,12 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
                         .build()
         this.trajWobbleAlignToWobblePickup = trajWobbleAlignToWobblePickup
 
+        val trajWobblePickupToPark: Trajectory =
+                trajectoryBuilder(trajWobbleAlignToWobblePickup.end(), 0.0.toRadians)
+                        .lineToLinearHeading(FAR_PARK)
+                        .build()
+        this.trajWobblePickupToPark = trajWobblePickupToPark
+
         // Align to dropoff second wobble goal
         val zoneBShallowOffset = Pose2d(-5.0, -2.0, 0.0)
         val zoneCShallowOffset = Pose2d(0.0, 5.0, 0.0)
@@ -432,7 +439,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
                     else -> // Zone C
                         trajectoryBuilder(trajWobbleAlignToWobblePickup.end(), wobblePickupRotationRadians + (180.0).toRadians)
                                 //.lineToConstantHeading(wobblePickupAlign.vec())
-                                .splineToSplineHeading(wobbleDropoffAlign.plus(zoneCShallowOffset), -20.0.toRadians)
+                                .splineToSplineHeading(wobbleDropoffAlign.plus(zoneCShallowOffset), (-20.0).toRadians)
                                 .build()
                 }
         this.trajWobblePickupToDropoffAlign = trajWobblePickupToDropoffAlign

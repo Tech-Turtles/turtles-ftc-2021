@@ -571,7 +571,10 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             if(timer.seconds() > wobbleIntakeDelay || opMode.getDistance(opMode.getColorSensor(ColorSensor.WOBBLE_SENSOR)) <= WOBBLE_GRABBED_IN) {
                 nextState(INTAKE, new WobbleIntake(0));
                 nextState(WOBBLE, new WobblePosition(WOBBLE_DOWN + wobbleDownOffset));
-                nextState(DRIVE, new WobblePickupToWobbleDropZoneAlign());
+                if(opMode.getDistance(opMode.getColorSensor(ColorSensor.WOBBLE_SENSOR)) > WOBBLE_GRABBED_IN)
+                    nextState(DRIVE, new WobblePickupToPark());
+                else
+                    nextState(DRIVE, new WobblePickupToWobbleDropZoneAlign());
             }
         }
     }
@@ -627,6 +630,23 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 nextState(INTAKE, new WobbleIntake(0));
                 nextState(DRIVE, new WobbleDropZoneToPark());
             }
+        }
+    }
+
+    class WobblePickupToPark extends Executive.StateBase<AutoOpmode> {
+        @Override
+        public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
+            super.init(stateMachine);
+            nextState(WOBBLE, new WobblePosition(WOBBLE_STORE));
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobblePickupToPark());
+        }
+
+        @Override
+        public void update() {
+            super.update();
+            if(opMode.mecanumDrive.isIdle())
+                nextState(DRIVE, autoReturnToStart ? new ReturnToStart(startPosition.equals(StartPosition.CENTER) ?
+                        trajectoryRR.getSTART_CENTER() : trajectoryRR.getSTART_WALL()) : new Stop());
         }
     }
 
