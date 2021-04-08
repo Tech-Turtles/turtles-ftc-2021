@@ -80,12 +80,12 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     public void update() {
         stateMachine.update();
         Pose2d poseEstimate = opmode.mecanumDrive.getPoseEstimate();
-        opmode.telemetry.addData("Rings:", rings.name());
+        opmode.telemetry.addData("Rings:    ", rings.name());
+        opmode.telemetry.addData("X:        ", df.format(poseEstimate.getX()));
+        opmode.telemetry.addData("Y:        ", df.format(poseEstimate.getY()));
+        opmode.telemetry.addData("Heading:  ", df.format(Math.toDegrees(poseEstimate.getHeading())));
         if(opmode.packet != null) {
-            opmode.packet.put("Rings:   ", rings.name());
-            opmode.packet.put("X:       ", df.format(poseEstimate.getX()));
-            opmode.packet.put("Y:       ", df.format(poseEstimate.getY()));
-            opmode.packet.put("Heading: ", df.format(Math.toDegrees(poseEstimate.getHeading())));
+            opmode.packet.put("Rings:", rings.name());
         }
     }
 
@@ -536,8 +536,10 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
                 isDone = true;
             }
 
-            if(opMode.mecanumDrive.isIdle() && stateMachine.getStateReferenceByType(WOBBLE).isDone)
+            if(opMode.mecanumDrive.isIdle() && stateMachine.getStateReferenceByType(WOBBLE).isDone) {
+                nextState(INTAKE, new WobbleIntake(wobbleIntakeSpeed));
                 nextState(DRIVE, new WobblePickupAlignToWobblePickup());
+            }
         }
     }
 
@@ -549,12 +551,10 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * Trajectory: TrajWobbleAlignToWobblePickup
      * Next State: WobblePickupToWobbleDropZoneAlign
      */
-    //ToDo Use color sensor to detect whether a wobble goal has been intaked or not
     class WobblePickupAlignToWobblePickup extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            nextState(INTAKE, new WobbleIntake(wobbleIntakeSpeed));
             opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobbleAlignToWobblePickup());
         }
 
@@ -570,7 +570,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
 
             if(timer.seconds() > wobbleIntakeDelay || opMode.getDistance(opMode.getColorSensor(ColorSensor.WOBBLE_SENSOR)) <= WOBBLE_GRABBED_IN) {
                 nextState(INTAKE, new WobbleIntake(0));
-                nextState(WOBBLE, new WobblePosition(WOBBLE_UP));
+                nextState(WOBBLE, new WobblePosition(WOBBLE_DOWN + wobbleDownOffset));
                 nextState(DRIVE, new WobblePickupToWobbleDropZoneAlign());
             }
         }
@@ -583,7 +583,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * Trajectory: TrajWobblePickupToDropoffAlign
      * Next State: WobbleDropZoneAlignToWobbleDropZone
      */
-    //ToDo Lower wobble arm?
     class WobblePickupToWobbleDropZoneAlign extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
@@ -626,7 +625,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
 
             if(timer.seconds() > wobbleOuttakeDelay) {
                 nextState(INTAKE, new WobbleIntake(0));
-                nextState(WOBBLE, new WobblePosition(WOBBLE_STORE));
                 nextState(DRIVE, new WobbleDropZoneToPark());
             }
         }
@@ -643,6 +641,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
+            nextState(WOBBLE, new WobblePosition(WOBBLE_STORE));
             opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajSecondWobbleDropoffToPark());
         }
 
