@@ -85,7 +85,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         opmode.telemetry.addData("Y:        ", df.format(poseEstimate.getY()));
         opmode.telemetry.addData("Heading:  ", df.format(Math.toDegrees(poseEstimate.getHeading())));
         if(opmode.packet != null) {
-            opmode.packet.put("Rings:", rings.name());
+            opmode.packet.put("Rings:       ", rings.name());
         }
     }
 
@@ -180,14 +180,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * WallStartToCenter State
      * State that drives from the WALL_START start position, to the CENTER_START start position.
      *
-     * Trajectory: TrajStartWallToStartCenter
+     * Trajectory: TrajectoryStartWallToStartCenter
      * Next State: CenterStartToLeftPowershot
      */
     class WallStartToCenterStart extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajStartWallToStartCenter());
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajectoryStartWallToStartCenter());
         }
 
         @Override
@@ -204,14 +204,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * State that drives from the CENTER_START start position, to the left powershot.
      * The launcher winds up while driving and fires when the robot has arrived.
      *
-     * Trajectory: TrajParkCenterToPowershotLeft
+     * Trajectory: TrajectoryParkCenterToPowershotLeft
      * Next State: LeftPowershotToCenterPowershot
      */
     class CenterStartToLeftPowershot extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajCenterStartToPowershotLeft());
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajectoryCenterStartToPowershotLeft());
             nextState(LAUNCHER, new Launch_windUp(powerShotSpeed));
         }
 
@@ -233,14 +233,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * State that drives from the left powershot to the center powershot.
      * The launcher winds up while driving and fires when the robot has arrived.
      *
-     * Trajectory: TrajPowershotLeftToPowershotCenter
+     * Trajectory: TrajectoryPowershotLeftToPowershotCenter
      * Next State: CenterPowershotToRightPowershot
      */
     class LeftPowershotToCenterPowershot extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajPowershotLeftToPowershotCenter());
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajectoryPowershotLeftToPowershotCenter());
         }
 
        @Override
@@ -261,14 +261,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * State that drives from the center powershot to the right powershot.
      * The launcher winds up while driving and fires when the robot has arrived.
      *
-     * Trajectory: TrajPowershotCenterPowershotRight
+     * Trajectory: TrajectoryPowershotCenterPowershotRight
      * Next State: RightPowershotToWobbleDropZone
      */
     class CenterPowershotToRightPowershot extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajPowershotCenterPowershotRight());
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajectoryPowershotCenterPowershotRight());
         }
 
         @Override
@@ -290,14 +290,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * State that drives from the high goal position to the ring alignment position.
      *
      *
-     * Trajectory: trajPowershotRightToRingPickupAlign
+     * Trajectory: TrajectoryPowershotRightToRingPickupAlign
      * Next State: RingAlignmentToRingPickup
      */
     class RightPowershotToRingAlignment extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode>stateMachine) {
             super.init(stateMachine);
-            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajPowershotRightToRingPickupAlign());
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajectoryPowershotRightToRingPickupAlign());
             if (rings.equals(RingDetectionAmount.FOUR))
                 opMode.servoUtility.setAngle(Servos.SPATULA, SPATULA_DOWN);
         }
@@ -315,7 +315,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * State that drives from the CENTER_START start position to the high goal position.
      *
      *
-     * Trajectory: TrajCenterStartToHighGoa
+     * Trajectory: TrajectoryCenterStartToHighGoa
      * Next State: HighGoalToWobbleDropZone / HighGoalToRingAlignment
      */
     class CenterStartToHighGoal extends Executive.StateBase<AutoOpmode> {
@@ -323,7 +323,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajCenterStartToHighGoal());
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajectoryCenterStartToHighGoal());
             nextState(LAUNCHER, new Launch_windUp(highGoalSpeed));
         }
 
@@ -361,14 +361,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * State that drives from the high goal position to the ring alignment position.
      *
      *
-     * Trajectory: TrajHighGoalToRingAlign
+     * Trajectory: TrajectoryHighGoalToRingAlign
      * Next State: RingAlignmentToRingPickup
      */
     class HighGoalToRingAlignment extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode>stateMachine) {
             super.init(stateMachine);
-            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajHighGoalToRingAlign());
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajectoryHighGoalToRingAlign());
         }
 
         @Override
@@ -384,14 +384,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * State that drives from the ring alignment position to the ring pickup position.
      *
      *
-     * Trajectory: TrajRingAlignToRingGrab
+     * Trajectory: TrajectoryRingAlignToRingGrab
      * Next State: RingPickupToHighGoal
      */
     class RingAlignmentToRingPickup extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajRingAlignToRingGrab());
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajectoryRingAlignToRingGrab());
 
         }
 
@@ -409,7 +409,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * State that drives from the ring pickup position to the high goal position and shoots 1/3 rings.
      *
      *
-     * Trajectory: TrajRingGrabToShootHighGoal
+     * Trajectory: TrajectoryRingGrabToShootHighGoal
      * Next State: HighGoalToWobbleDropZone
      */
     class RingPickupToHighGoal extends Executive.StateBase<AutoOpmode> {
@@ -417,7 +417,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajRingGrabToShootHighGoal());
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajectoryRingGrabToShootHighGoal());
             nextState(LAUNCHER, new Launch_windUp(highGoalSpeed));
             index = rings.equals(RingDetectionAmount.ONE) ? 2 : index;
         }
@@ -448,14 +448,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * State that drives from the high goal position to the wobble drop zone position.
      *
      *
-     * Trajectory: TrajHighGoalToWobbleDropoffDeep
+     * Trajectory: TrajectoryHighGoalToWobbleDropoffDeep
      * Next State: WobbleDropZoneToWobblePickupAlign
      */
     class HighGoalToWobbleDropZone extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajHighGoalToWobbleDropoffDeep());
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajectoryHighGoalToWobbleDropoffDeep());
             nextState(WOBBLE, new WobblePosition(WOBBLE_DOWN + wobbleDownOffset));
         }
 
@@ -481,14 +481,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * State that drives from the right powershot to the wobble zone set in the Scan state.
      * Drops the wobble goal once it has arrived to the wobble zone.
      *
-     * Trajectory: TrajPowershotRightToWobbleDropOff
+     * Trajectory: TrajectoryPowershotRightToWobbleDropOff
      * Next State: WobbleDropZoneToWobblePickupAlign
      */
     class RightPowershotToWobbleDropZone extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajPowershotRightToWobbleDropOff());
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajectoryPowershotRightToWobbleDropOff());
             nextState(WOBBLE, new WobblePosition(WOBBLE_DOWN + wobbleDownOffset));
         }
 
@@ -518,14 +518,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * State that drives from the wobble zone set in the Scan state to the alignment location for
      * the second wobble goal. Lowers the wobble arm.
      *
-     * Trajectory: TrajWobbleDropoffToWobblePickupAlign
+     * Trajectory: TrajectoryWobbleDropoffToWobblePickupAlign
      * Next State: WobblePickupAlignToWobblePickup
      */
     class WobbleDropZoneToWobblePickupAlign extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobbleDropoffToWobblePickupAlign());
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajectoryWobbleDropoffToWobblePickupAlign());
         }
 
         @Override
@@ -548,14 +548,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * State that drives from the alignment location for the second wobble goal to the pickup location.
      * Grabs the wobble goal and raises the wobble arm.
      *
-     * Trajectory: TrajWobbleAlignToWobblePickup
+     * Trajectory: TrajectoryWobbleAlignToWobblePickup
      * Next State: WobblePickupToWobbleDropZoneAlign
      */
     class WobblePickupAlignToWobblePickup extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobbleAlignToWobblePickup());
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajectoryWobbleAlignToWobblePickup());
         }
 
         @Override
@@ -583,14 +583,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * WobblePickupToWobbleDropZoneAlign State
      * State that drives from the second wobble goal pickup location to the wobble zone alignment.
      *
-     * Trajectory: TrajWobblePickupToDropoffAlign
+     * Trajectory: TrajectoryWobblePickupToDropoffAlign
      * Next State: WobbleDropZoneAlignToWobbleDropZone
      */
     class WobblePickupToWobbleDropZoneAlign extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobblePickupToDropoffAlign());
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajectoryWobblePickupToDropoffAlign());
         }
 
         @Override
@@ -606,14 +606,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * State that drives from the wobble zone alignment to the wobble zone.
      * Drops the wobble goal.
      *
-     * Trajectory: TrajWobbleAlignToSecondDropoff
+     * Trajectory: TrajectoryWobbleAlignToSecondDropoff
      * Next State: WobbleDropZoneToPark
      */
     class WobbleDropZoneAlignToWobbleDropZone extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobbleAlignToSecondDropoff());
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajectoryWobbleAlignToSecondDropoff());
         }
 
         @Override
@@ -638,7 +638,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
             nextState(WOBBLE, new WobblePosition(WOBBLE_STORE));
-            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajWobblePickupToPark());
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajectoryWobblePickupToPark());
         }
 
         @Override
@@ -654,7 +654,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
      * WobbleDropZoneToPark State
      * State that drives from the wobble zone to the park position.
      *
-     * Trajectory: TrajSecondWobbleDropoffToPark
+     * Trajectory: TrajectorySecondWobbleDropoffToPark
      * Next State: ReturnToStart / Stop
      */
     class WobbleDropZoneToPark extends Executive.StateBase<AutoOpmode> {
@@ -662,7 +662,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
             nextState(WOBBLE, new WobblePosition(WOBBLE_STORE));
-            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajSecondWobbleDropoffToPark());
+            opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajectorySecondWobbleDropoffToPark());
         }
 
         @Override
@@ -744,14 +744,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         }
     }
 
-    /*
+    /**
     *   launchSpeed (percent) and launchVelocity_tps (ticks per second) are arguments of the
     *   constructor, so this mode works with powershots and high goal shots.
     *   However, the feedback that shows we're ready to shoot is to support moving powershots.
     */
     static class Launch_windUp extends Executive.StateBase<AutoOpmode> {
         double launchSpeed;
-        double launchVelocity_tps; // encoder ticks per second
+        double launchVelocity_tps;
 
         Launch_windUp(double launchSpeed) {
             this.launchSpeed = launchSpeed;
@@ -762,16 +762,13 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void update() {
             super.update();
             // Set launch speed and servo position.
-            // If velocity is high enough, and servoDelay elapsed, then isDone = true
+            // If velocity is high enough, or servoDelay elapsed, then isDone = true
             opMode.motorUtility.setPower(Motors.LAUNCHER, this.launchSpeed);
             opMode.servoUtility.setAngle(Servos.HOPPER, HOPPER_OPEN_POS);
             isDone = LauncherControl.isErrorLow(opMode.launchVelocityHistory, launchVelocity_tps) || timer.seconds() > servoDelay;
         }
     }
 
-    /*
-     * Launch_fire
-     */
     static class Launch_fire extends Executive.StateBase<AutoOpmode> {
         double launchSpeed;
         double launchVelocity_tps; // encoder ticks per second
