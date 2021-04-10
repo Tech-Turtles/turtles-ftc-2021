@@ -26,11 +26,11 @@ public class TrajectoryTester extends RobotHardware {
         trajectoryRR = new TrajectoryRR(mecanumDrive);
         startPosition = trajectoryRR.getSTART_CENTER();
         mecanumDrive.setPoseEstimate(startPosition);
-        trajectories.add(0, trajectoryRR.getTrajCenterStartToHighGoal());
-        trajectories.add(1, trajectoryRR.getTrajHighGoalToRingAlign());
-        trajectories.add(2, trajectoryRR.getTrajRingAlignToRingGrab());
-        trajectories.add(3, trajectoryRR.getTrajRingGrabToShootHighGoal());
-        trajectories.add(4, trajectoryRR.getTrajHighGoalToWobbleDropoffDeep());
+//        trajectories.add(0, trajectoryRR.getTrajCenterStartToHighGoal());
+//        trajectories.add(1, trajectoryRR.getTrajHighGoalToRingAlign());
+//        trajectories.add(2, trajectoryRR.getTrajRingAlignToRingGrab());
+//        trajectories.add(3, trajectoryRR.getTrajRingGrabToShootHighGoal());
+//        trajectories.add(4, trajectoryRR.getTrajHighGoalToWobbleDropoffDeep());
         routine = trajectories.get(index);
         index++;
     }
