@@ -93,7 +93,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
     var ZONE_B = ZONE_B_CENTER.plus(wobbleOffset)
     var ZONE_C = ZONE_C_CENTER.plus(wobbleOffset)
     var PARK = Pose2d(12.0, -42.0, Math.toRadians(180.0))
-    var FAR_PARK = Pose2d(12.0, -15.0, Math.toRadians(180.0))
+    var FAR_PARK = Pose2d(12.0, +10.0,Math.toRadians(0.0))
     var WOBBLE_WALL = Pose2d(-48.0, -50.0, Math.toRadians(180.0)).plus(wobblePickup)
 
 
@@ -414,9 +414,11 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
                         .build()
         this.trajWobbleAlignToWobblePickup = trajWobbleAlignToWobblePickup
 
+        // If 2nd wobble pickup fails, park early
         val trajWobblePickupToPark: Trajectory =
-                trajectoryBuilder(trajWobbleAlignToWobblePickup.end(), 0.0.toRadians)
-                        .lineToLinearHeading(FAR_PARK)
+                trajectoryBuilder(trajWobbleAlignToWobblePickup.end(), wobblePickupRotationRadians + 180.0.toRadians)
+                        .lineToConstantHeading(wobblePickupAlign.vec())
+                        .splineToSplineHeading(FAR_PARK,90.0.toRadians)
                         .build()
         this.trajWobblePickupToPark = trajWobblePickupToPark
 
