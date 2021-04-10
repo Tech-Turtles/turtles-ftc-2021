@@ -47,6 +47,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
     private TrajectoryRR trajectoryRR;
 
     public static boolean autoReturnToStart = false;
+    public static double returnToStartDelay = 1;
 
     public static double servoDelay = 0.3;
     public static double wobbleOuttakeDelay = 0.75;
@@ -633,6 +634,14 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         }
     }
 
+    /**
+     * WobblePickupToPark State
+     * State that drives from the second wobble pickup to the park position.
+     * Used for when the robot fails to pickup the wobble goal.
+     *
+     * Trajectory: TrajectoryWobblePickupToPark
+     * Next State: ReturnToStart / Stop
+     */
     class WobblePickupToPark extends Executive.StateBase<AutoOpmode> {
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
@@ -646,7 +655,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.update();
             if(opMode.mecanumDrive.isIdle())
                 nextState(DRIVE, autoReturnToStart ? new ReturnToStart(startPosition.equals(StartPosition.CENTER) ?
-                        trajectoryRR.getSTART_CENTER() : trajectoryRR.getSTART_WALL()) : new Stop());
+                        trajectoryRR.getSTART_CENTER() : trajectoryRR.getSTART_WALL(), returnToStartDelay) : new Stop());
         }
     }
 
@@ -670,7 +679,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.update();
             if(opMode.mecanumDrive.isIdle())
                 nextState(DRIVE, autoReturnToStart ? new ReturnToStart(startPosition.equals(StartPosition.CENTER) ?
-                        trajectoryRR.getSTART_CENTER() : trajectoryRR.getSTART_WALL()) : new Stop());
+                        trajectoryRR.getSTART_CENTER() : trajectoryRR.getSTART_WALL(), returnToStartDelay) : new Stop());
         }
     }
 
@@ -680,12 +689,6 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.init(stateMachine);
             for (Executive.StateMachine.StateType type : Executive.StateMachine.StateType.values())
                 stateMachine.removeStateByType(type);
-            opMode.stop();
-        }
-
-        @Override
-        public void update() {
-            super.update();
             opMode.stop();
         }
     }
@@ -739,7 +742,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         @Override
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
-            for(Motors motor : motors)
+            for (Motors motor : motors)
                 opMode.motorUtility.setPower(motor, 0);
         }
     }
