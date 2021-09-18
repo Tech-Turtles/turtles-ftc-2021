@@ -7,8 +7,8 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 @Config
 public class Configuration {
 
-    public static double HOPPER_OPEN_POS = 0.32;
-    public static double HOPPER_PUSH_POS = 0.21;
+    public static double HOPPER_OPEN_POS    = 0.32;
+    public static double HOPPER_PUSH_POS    = 0.21;
     public static double LAUNCH_SERVO_DELAY = 0.3;
 
     public static final double deadzone = 0.49;
@@ -28,7 +28,6 @@ public class Configuration {
 
     public static double highGoalSpeed  = 0.55;
     public static double powerShotSpeed = 0.48;
-    public static double manualPowerShotSpeed = 0.49;
     public static double wobblePower    = 1.0;
     public static double intakePower    = 1.0;
 

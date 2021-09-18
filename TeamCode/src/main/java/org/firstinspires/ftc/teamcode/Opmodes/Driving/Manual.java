@@ -39,8 +39,6 @@ public class Manual extends RobotHardware {
     public static double spatulaPosition = SPATULA_STORE;
     private double currentLauncherSpeed = 0;
 
-//    private DistanceSensor leftRange, backRange;
-
     private WobbleStates wobbleState = WobbleStates.MANUAL;
     private boolean wobbleArrived = false;
     private final Executive.StateMachine<Manual> stateMachine;

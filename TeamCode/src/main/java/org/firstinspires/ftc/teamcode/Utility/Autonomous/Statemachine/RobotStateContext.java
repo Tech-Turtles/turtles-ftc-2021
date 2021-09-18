@@ -29,12 +29,9 @@ import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_GRABBE
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_OUT_IN;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_STORE;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.WOBBLE_UP;
-import static org.firstinspires.ftc.teamcode.Utility.Configuration.highGoalSpeed;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.intakePower;
 import static org.firstinspires.ftc.teamcode.Utility.Configuration.powerShotSpeed;
 import static org.firstinspires.ftc.teamcode.Utility.RobotHardware.df;
-
-
 
 @Config
 public class RobotStateContext implements Executive.RobotStateMachineContextInterface {
@@ -58,6 +55,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
 
     public static double wobbleArmSpeed = 1.0;
     public static double wobbleIntakeSpeed = 1.0;
+    public static double highGoalSpeed_Auto = 0.55;
     public static boolean pickupRings = true;
     public static boolean doPowershot = true;
     public static boolean doSecondWobble = true;
@@ -325,7 +323,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
             opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajectoryCenterStartToHighGoal());
-            nextState(LAUNCHER, new Launch_windUp(highGoalSpeed));
+            nextState(LAUNCHER, new Launch_windUp(highGoalSpeed_Auto));
         }
 
         @Override
@@ -333,7 +331,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.update();
             if(opMode.mecanumDrive.isIdle() && !isDone) {
                 isDone = true;
-                nextState(LAUNCHER, new Launch_fire(highGoalSpeed));
+                nextState(LAUNCHER, new Launch_fire(highGoalSpeed_Auto));
                 index++;
             }
 
@@ -419,7 +417,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
         public void init(Executive.StateMachine<AutoOpmode> stateMachine) {
             super.init(stateMachine);
             opMode.mecanumDrive.followTrajectoryAsync(trajectoryRR.getTrajectoryRingGrabToShootHighGoal());
-            nextState(LAUNCHER, new Launch_windUp(highGoalSpeed));
+            nextState(LAUNCHER, new Launch_windUp(highGoalSpeed_Auto));
             index = rings.equals(RingDetectionAmount.ONE) ? 2 : index;
         }
 
@@ -428,7 +426,7 @@ public class RobotStateContext implements Executive.RobotStateMachineContextInte
             super.update();
             if(opMode.mecanumDrive.isIdle() && !isDone) {
                 isDone = true;
-                nextState(LAUNCHER, new Launch_fire(highGoalSpeed));
+                nextState(LAUNCHER, new Launch_fire(highGoalSpeed_Auto));
                 index++;
             }
 

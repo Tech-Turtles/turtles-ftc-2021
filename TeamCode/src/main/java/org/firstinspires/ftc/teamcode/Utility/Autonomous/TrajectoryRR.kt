@@ -38,7 +38,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
 
     private val offsetRingPickupAlign = Pose2d(-18.0, -5.0, 0.0)
     private val offsetRingPickupGrab = Pose2d(10.0, -5.0, 0.0)
-    private val ringPickupRotationRadians: Double = (149.0).toRadians
+    private val ringPickupRotationRadians: Double = (170.0).toRadians
 
     private val spacingPowershot: Double = 7.0 // Spacing between the powershot sticks in the y axis, inches
 
@@ -84,7 +84,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
     var ZONE_B = ZONE_B_CENTER.plus(wobbleOffset)
     var ZONE_C = ZONE_C_CENTER.plus(wobbleOffset)
     var PARK = Pose2d(12.0, -42.0, Math.toRadians(180.0))
-    var FAR_PARK = Pose2d(12.0, +10.0,Math.toRadians(0.0))
+    var FAR_PARK = Pose2d(12.0, -15.0, Math.toRadians(180.0))
     var WOBBLE_WALL = Pose2d(-48.0, -50.0, Math.toRadians(180.0)).plus(wobblePickup)
 
 
@@ -185,7 +185,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
 
         // Demo relative start position placement
         val trajectoryStartWallToStartCenter: Trajectory =
-                TrajectoryBuilder(START_WALL, (90.0 - 20.0).toRadians)
+                trajectoryBuilder(START_WALL, (90.0 - 20.0).toRadians)
                         .splineToConstantHeading(START_CENTER.vec(), (20.0 + 90.0).toRadians)
                         .build()
         this.trajectoryStartWallToStartCenter = trajectoryStartWallToStartCenter
@@ -200,7 +200,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
         ringPickupGrab = RINGS_ACTUAL.plus(offsetRingPickupGrab.rotateFrame(ringPickupRotationRadians))
 
         val trajectoryCenterStartToPowershotLeft: Trajectory=
-                TrajectoryBuilder(START_CENTER, 0.0.toRadians)
+                trajectoryBuilder(START_CENTER, 0.0.toRadians)
                         //.splineToConstantHeading(POWERSHOT_LEFT.vec(),45.0.toRadians)
                         .lineToConstantHeading(POWERSHOT_LEFT.vec())
                         .build()
@@ -208,14 +208,14 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
 
 
         val trajectoryPowershotLeftToPowershotCenter: Trajectory=
-                TrajectoryBuilder(trajectoryCenterStartToPowershotLeft.end(), -90.0.toRadians)
+                trajectoryBuilder(trajectoryCenterStartToPowershotLeft.end(), -90.0.toRadians)
                         .lineToConstantHeading(POWERSHOT_CENTER.vec())
                         .build()
         this.trajectoryPowershotLeftToPowershotCenter = trajectoryPowershotLeftToPowershotCenter
 
 
         val trajectoryPowershotCenterPowershotRight: Trajectory=
-                TrajectoryBuilder(trajectoryPowershotLeftToPowershotCenter.end(), -90.0.toRadians)
+                trajectoryBuilder(trajectoryPowershotLeftToPowershotCenter.end(), -90.0.toRadians)
                         .lineToConstantHeading(POWERSHOT_RIGHT.vec())
                         .build()
         this.trajectoryPowershotCenterPowershotRight = trajectoryPowershotCenterPowershotRight
@@ -226,7 +226,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
          */
         // Powershot Right to Ring Align
         val trajectoryPowershotRightToRingPickupAlign: Trajectory=
-                TrajectoryBuilder(trajectoryPowershotCenterPowershotRight.end(), -90.0.toRadians)
+                trajectoryBuilder(trajectoryPowershotCenterPowershotRight.end(), -90.0.toRadians)
                         .lineToLinearHeading(ringPickupAlign)
                         .build()
         this.trajectoryPowershotRightToRingPickupAlign = trajectoryPowershotRightToRingPickupAlign
@@ -238,17 +238,17 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
         val trajectoryPowershotRightToWobbleDropoff: Trajectory=
                 when(ZONE_CENTER_VARIABLE) {
                     ZONE_A_CENTER ->
-                        TrajectoryBuilder(trajectoryPowershotCenterPowershotRight.end(), (-90.0).toRadians)
+                        trajectoryBuilder(trajectoryPowershotCenterPowershotRight.end(), (-90.0).toRadians)
                                 .splineToSplineHeading(wobbleDropoffDeep.plus(Pose2d(0.0, 6.0, 0.0)), Math.toRadians(-90.0))
                                 .lineToConstantHeading(wobbleDropoffDeep.vec())
                                 .build()
                     ZONE_B_CENTER ->
-                        TrajectoryBuilder(trajectoryPowershotCenterPowershotRight.end(), (-50.0).toRadians)
+                        trajectoryBuilder(trajectoryPowershotCenterPowershotRight.end(), (-50.0).toRadians)
                                 .splineToSplineHeading(wobbleDropoffAlign.plus(zoneBDeepOffset), 0.0)
                                 .lineToConstantHeading(wobbleDropoffDeep.plus(zoneBDeepOffset).vec())
                                 .build()
                     else -> // Zone C
-                        TrajectoryBuilder(trajectoryPowershotCenterPowershotRight.end(), 0.0.toRadians)
+                        trajectoryBuilder(trajectoryPowershotCenterPowershotRight.end(), 0.0.toRadians)
                                 // SIMPLE OPTION - turns wrong way near the wall
 //                                .lineToLinearHeading(wobbleDropoffDeep)
                                 // FANCY OPTION - turns away from the wall
@@ -262,15 +262,15 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
         val trajectoryWobbleDropoffToWobblePickupAlign: Trajectory=
                 when (ZONE_CENTER_VARIABLE) {
                     ZONE_A_CENTER ->
-                        TrajectoryBuilder(trajectoryPowershotRightToWobbleDropoff.end(), 120.0.toRadians)
+                        trajectoryBuilder(trajectoryPowershotRightToWobbleDropoff.end(), 120.0.toRadians)
                                 .splineToSplineHeading(wobblePickupAlign, wobblePickupRotationRadians)
                                 .build()
                     ZONE_B_CENTER ->
-                        TrajectoryBuilder(trajectoryPowershotRightToWobbleDropoff.end(), 180.0.toRadians)
+                        trajectoryBuilder(trajectoryPowershotRightToWobbleDropoff.end(), 180.0.toRadians)
                                 .splineToSplineHeading(wobblePickupAlign, wobblePickupRotationRadians)
                                 .build()
                     else ->
-                        TrajectoryBuilder(trajectoryPowershotRightToWobbleDropoff.end(), 150.0.toRadians)
+                        trajectoryBuilder(trajectoryPowershotRightToWobbleDropoff.end(), 150.0.toRadians)
                                 .splineToSplineHeading(wobblePickupAlign, wobblePickupRotationRadians)
                                 .build()
                 }
@@ -279,16 +279,14 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
 
         // Grab Wobble Goal
         val trajectoryWobbleAlignToWobblePickup: Trajectory=
-                TrajectoryBuilder(trajectoryWobbleDropoffToWobblePickupAlign.end(), 0.0.toRadians)
+                trajectoryBuilder(trajectoryWobbleDropoffToWobblePickupAlign.end(), 0.0.toRadians)
                         .lineToConstantHeading(wobblePickupGrab.vec(), slowVelocityConstraint, slowAccelerationConstraint)
                         .build()
         this.trajectoryWobbleAlignToWobblePickup = trajectoryWobbleAlignToWobblePickup
 
-        // If 2nd wobble pickup fails, park early
-        val trajectoryWobblePickupToPark: Trajectory=
-                TrajectoryBuilder(trajectoryWobbleAlignToWobblePickup.end(), wobblePickupRotationRadians + 180.0.toRadians)
-                        .lineToConstantHeading(wobblePickupAlign.vec())
-                        .splineToSplineHeading(FAR_PARK,90.0.toRadians)
+        val trajectoryWobblePickupToPark: Trajectory =
+                trajectoryBuilder(trajectoryWobbleAlignToWobblePickup.end(), false)
+                        .lineToLinearHeading(FAR_PARK)
                         .build()
         this.trajectoryWobblePickupToPark = trajectoryWobblePickupToPark
 
@@ -296,18 +294,18 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
         val trajectoryWobblePickupToDropoffAlign: Trajectory=
                 when(ZONE_CENTER_VARIABLE) {
                     ZONE_A_CENTER ->
-                        TrajectoryBuilder(trajectoryWobbleAlignToWobblePickup.end(), wobblePickupRotationRadians + 180.0.toRadians)
+                        trajectoryBuilder(trajectoryWobbleAlignToWobblePickup.end(), wobblePickupRotationRadians + 180.0.toRadians)
                                 .splineToSplineHeading(wobbleDropoffAlign, Math.toRadians(-30.0))
 //                                .lineToConstantHeading(wobbleDropoffAlign.vec())
                                 .build()
                     ZONE_B_CENTER ->
-                        TrajectoryBuilder(trajectoryWobbleAlignToWobblePickup.end(), wobblePickupRotationRadians + 180.0.toRadians)
+                        trajectoryBuilder(trajectoryWobbleAlignToWobblePickup.end(), wobblePickupRotationRadians + 180.0.toRadians)
                                 .lineToConstantHeading(wobblePickupAlign.plus(zoneBShallowOffset).vec())
                                 .splineToSplineHeading(wobbleDropoffAlign.plus(zoneBShallowOffset), 25.0.toRadians)
 //                                .lineToConstantHeading(wobbleDropoffDeep.vec())
                                 .build()
                     else -> // Zone C
-                        TrajectoryBuilder(trajectoryWobbleAlignToWobblePickup.end(), wobblePickupRotationRadians + (180.0).toRadians)
+                        trajectoryBuilder(trajectoryWobbleAlignToWobblePickup.end(), wobblePickupRotationRadians + (180.0).toRadians)
 //                                .lineToConstantHeading(wobblePickupAlign.vec())
                                 .splineToSplineHeading(wobbleDropoffAlign.plus(zoneCShallowOffset), (-20.0).toRadians)
                                 .build()
@@ -318,15 +316,15 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
         val trajectoryWobbleAlignToSecondDropoff: Trajectory=
                 when(ZONE_CENTER_VARIABLE) {
                     ZONE_B_CENTER ->
-                        TrajectoryBuilder(trajectoryWobblePickupToDropoffAlign.end(), 0.0.toRadians)
+                        trajectoryBuilder(trajectoryWobblePickupToDropoffAlign.end(), 0.0.toRadians)
                                 .lineToConstantHeading(wobbleDropoffShallow.plus(zoneBShallowOffset).vec())
                                 .build()
                     ZONE_C_CENTER ->
-                        TrajectoryBuilder(trajectoryWobblePickupToDropoffAlign.end(), 0.0.toRadians)
+                        trajectoryBuilder(trajectoryWobblePickupToDropoffAlign.end(), 0.0.toRadians)
                                 .lineToConstantHeading(wobbleDropoffShallow.plus(zoneCShallowOffset).vec())
                                 .build()
                     else ->
-                        TrajectoryBuilder(trajectoryWobblePickupToDropoffAlign.end(), 0.0.toRadians)
+                        trajectoryBuilder(trajectoryWobblePickupToDropoffAlign.end(), 0.0.toRadians)
                                 .lineToConstantHeading(wobbleDropoffShallow.vec())
                                 .build()
                 }
@@ -337,12 +335,12 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
         val trajectorySecondWobbleDropoffToPark: Trajectory=
                 when(ZONE_CENTER_VARIABLE) {
                     ZONE_A_CENTER ->
-                        TrajectoryBuilder(trajectoryWobbleAlignToSecondDropoff.end(), 180.0.toRadians)
+                        trajectoryBuilder(trajectoryWobbleAlignToSecondDropoff.end(), 180.0.toRadians)
                                 .lineToConstantHeading(wobbleDropoffAlign.vec())
                                 .splineToConstantHeading(PARK.vec().plus(Vector2d(0.0, 12.0)), 0.0.toRadians)
                                 .build()
                     else ->
-                        TrajectoryBuilder(trajectoryWobbleAlignToSecondDropoff.end(), 135.0.toRadians)
+                        trajectoryBuilder(trajectoryWobbleAlignToSecondDropoff.end(), 135.0.toRadians)
                                 .lineToConstantHeading(PARK.vec().plus(Vector2d(-8.0, 12.0)))
                                 .build()
                 }
@@ -353,13 +351,13 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
         val trajectorySecondWobbleDropoffToRingPickupAlign: Trajectory=
                 when(ZONE_CENTER_VARIABLE) {
                     ZONE_A_CENTER ->
-                        TrajectoryBuilder(trajectoryWobbleAlignToSecondDropoff.end(), 180.0.toRadians)
+                        trajectoryBuilder(trajectoryWobbleAlignToSecondDropoff.end(), 180.0.toRadians)
                                 .lineToConstantHeading(wobbleDropoffAlign.vec().plus(Vector2d(0.0, 7.0)))
                                 .splineToSplineHeading(ringPickupAlign, 90.0.toRadians + 0.0 * ringPickupRotationRadians)
 //                                .lineToLinearHeading(ringPickupAlign)
                                 .build()
                     else ->
-                        TrajectoryBuilder(trajectoryWobbleAlignToSecondDropoff.end(), 180.0.toRadians)
+                        trajectoryBuilder(trajectoryWobbleAlignToSecondDropoff.end(), 180.0.toRadians)
                                 .lineToLinearHeading(ringPickupAlign)
                                 .build()
                 }
@@ -368,7 +366,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
 
         // Pickup Rings
         val trajectoryRingAlignToRingGrab: Trajectory=
-                TrajectoryBuilder(ringPickupAlign, 0.0.toRadians)
+                trajectoryBuilder(ringPickupAlign, 0.0.toRadians)
                         .lineToConstantHeading(ringPickupGrab.vec(), ringVelocityConstraint, ringAccelerationConstraint)
                         .build()
         this.trajectoryRingAlignToRingGrab = trajectoryRingAlignToRingGrab
@@ -376,7 +374,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
 
         // Take picked up rings to shoot
         val trajectoryRingGrabToShootHighGoal: Trajectory=
-                TrajectoryBuilder(ringPickupGrab, 0.0.toRadians)
+                trajectoryBuilder(ringPickupGrab, 0.0.toRadians)
                         .lineToLinearHeading(SHOOT_HIGHGOAL)
                         .build()
         this.trajectoryRingGrabToShootHighGoal = trajectoryRingGrabToShootHighGoal
@@ -384,7 +382,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
 
         // After shooting into high goal, go park
         val trajectoryFromShootHighGoalToPark: Trajectory=
-                TrajectoryBuilder(SHOOT_HIGHGOAL, 0.0.toRadians)
+                trajectoryBuilder(SHOOT_HIGHGOAL, 0.0.toRadians)
                         .lineToLinearHeading(PARK)
                         .build()
         this.trajectoryFromShootHighGoalToPark = trajectoryFromShootHighGoalToPark
@@ -403,7 +401,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
         val xPositionWeighted = (2.0 * RINGS_ACTUAL.x + 1.0 * SHOOT_HIGHGOAL.x) / 3.0
         val ringLeftToHighGoal = Pose2d(xPositionWeighted, START_CENTER.y, 0.0.toRadians);
         val trajectoryCenterStartToHighGoal: Trajectory=
-                TrajectoryBuilder(START_CENTER, 0.0.toRadians)
+                trajectoryBuilder(START_CENTER, 0.0.toRadians)
                         .splineTo(ringLeftToHighGoal.vec(), 0.0.toRadians)
                         .splineToLinearHeading(SHOOT_HIGHGOAL, (-80.0).toRadians) // Approach direction
 //                        .splineTo(ringLeftToHighGoal)
@@ -415,7 +413,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
 
         // High Goal to Ring Align
         val trajectoryHighGoalToRingAlign: Trajectory=
-                TrajectoryBuilder(SHOOT_HIGHGOAL, 180.0.toRadians)
+                trajectoryBuilder(SHOOT_HIGHGOAL, 180.0.toRadians)
                         .lineToLinearHeading(ringPickupAlign)
                         .build();
         this.trajectoryHighGoalToRingAlign = trajectoryHighGoalToRingAlign
@@ -424,7 +422,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
         val trajectoryHighGoalToWobbleDropoffDeep: Trajectory=
                 when(ZONE_CENTER_VARIABLE) {
                     ZONE_A_CENTER ->
-                        TrajectoryBuilder(trajectoryRingGrabToShootHighGoal.end(), (-60.0).toRadians)
+                        trajectoryBuilder(trajectoryRingGrabToShootHighGoal.end(), (-60.0).toRadians)
                                 // SIMPLE OPTION - turns wrong way near the wall
 //                                .splineToSplineHeading(wobbleDropoffDeep.plus(Pose2d(0.0,6.0,0.0)),Math.toRadians(-90.0))
 //                                .lineToConstantHeading(wobbleDropoffDeep.vec())
@@ -433,13 +431,13 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
                                 .lineToSplineHeading(wobbleDropoffDeep)
                                 .build();
                     ZONE_B_CENTER ->
-                        TrajectoryBuilder(trajectoryRingGrabToShootHighGoal.end(), 30.0.toRadians)
+                        trajectoryBuilder(trajectoryRingGrabToShootHighGoal.end(), 30.0.toRadians)
 //                                .lineToLinearHeading(wobbleDropoffDeep)
                                 .splineToSplineHeading(wobbleDropoffAlign.plus(zoneBDeepOffset), 0.0)
                                 .lineToConstantHeading(wobbleDropoffDeep.plus(zoneBDeepOffset).vec())
                                 .build();
                     else -> // Zone C
-                        TrajectoryBuilder(trajectoryRingGrabToShootHighGoal.end(), (-20.0).toRadians)
+                        trajectoryBuilder(trajectoryRingGrabToShootHighGoal.end(), (-20.0).toRadians)
                                 // SIMPLE OPTION - turns wrong way near the wall
 //                                .lineToLinearHeading(wobbleDropoffDeep)
                                 // FANCY OPTION - turns away from the wall
@@ -450,7 +448,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
         this.trajectoryHighGoalToWobbleDropoffDeep = trajectoryHighGoalToWobbleDropoffDeep
 
         val trajectoryCenterStartToPark: Trajectory=
-                TrajectoryBuilder(START_CENTER, 0.0.toRadians)
+                trajectoryBuilder(START_CENTER, 0.0.toRadians)
 //                        .splineToConstantHeading(POWERSHOT_LEFT.vec(),45.0.toRadians)
                         .lineToConstantHeading(FAR_PARK.vec())
                         .build()
@@ -461,7 +459,7 @@ class TrajectoryRR constructor(sampleMecanumDrive: SampleMecanumDrive){
         return Vector2d(pose.x, pose.y)
     }
 
-    fun  TrajectoryBuilder(pose: Pose2d, heading: Double): TrajectoryBuilder{
+    fun  trajectoryBuilder(pose: Pose2d, heading: Double): TrajectoryBuilder{
         return drive.trajectoryBuilder(pose, heading)
     }
 
